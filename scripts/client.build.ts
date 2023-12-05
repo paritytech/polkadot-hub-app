@@ -29,6 +29,7 @@ function getBuildConfig(): BuildOptions {
     target: 'es2016',
     loader: { '.js': 'jsx' } as { '.js': Loader },
     incremental: !!buildConfig.watch,
+    preserveSymlinks: true,
     define: {
       'process.env.NODE_ENV': JSON.stringify(buildConfig.env),
       'process.env.APP_MODULES': JSON.stringify(
