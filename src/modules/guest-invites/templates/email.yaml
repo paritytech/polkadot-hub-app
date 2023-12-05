@@ -1,0 +1,34 @@
+newInvitationSubject: |
+  Office Invitation @ {{ companyName }}, {{ office.name }} office
+newInvitationHtml: |
+  Dear {{ guest.fullName }},<br><br>
+  You have received an invitation to visit {{ companyName }} at their {{ office.name }} office.<br><br>
+  To confirm your reservation, kindly fill out the <a href="{{ formUrl }}">Guest form</a>.
+  <br><br>
+  Thank you,<br>
+  {{ companyName }}
+invitationConfirmedByAdminSubject: |
+  Confirmed: Office Invitation @ {{ companyName }}, {{ office.name }} office
+invitationConfirmedByAdminHtml: |
+  Dear {{ guest.fullName }},<br><br>
+  Thank you for submitting your request to come to the {{ companyName }} {{ office.name }} office at {{ office.address }}.<br><br>
+  Your visit dates:<br>
+  {{#visitDates}}
+    <code>{{ date }}</code>
+  {{/visitDates}}
+  <br><br>
+  Thank you,<br>
+  {{ companyName }}
+invitationCancelledByUserSubject: |
+  Cancelled: Office Invitation @ {{ companyName }}, {{ office.name }} office
+invitationCancelledByUserHtml: |
+  Dear {{ guest.fullName }},<br><br>
+  You invitation to the {{ companyName }} {{ office.name }} office for the following dates was cancelled: <br>
+  <ul>
+    {{#visitDates}}
+      <li>{{ date }}</li>
+    {{/visitDates}}
+  </ul>
+  <br><br>
+  Thank you,<br>
+  {{ companyName }}

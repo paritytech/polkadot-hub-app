@@ -1,0 +1,10 @@
+formSubmissionChangeSubject: |
+  {{ form.title }} submission change from {{ user.fullName }}
+formSubmissionChangeHtml: |
+  Hello, <br/><br/>
+
+  {{ user.fullName }} ({{ user.email }}) changed their submission of {{ form.title }}<br/><br/>
+
+  Submission:  <a href='{{ userFormSubmissionUrl }}'>View/edit</a><br/>
+  Changes: {{ changes }}<br/>
+  All Form Submissions: <a href='{{ formSubmissionsUrl }}'>{{ form.title }}</a>

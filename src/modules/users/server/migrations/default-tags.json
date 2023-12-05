@@ -1,0 +1,884 @@
+[
+  {
+    "category": "What Parity tech are you good at?",
+    "tags": [
+      {
+        "name": "Runtime",
+        "altNames": ["runtime"]
+      },
+      {
+        "name": "P2P Networking",
+        "altNames": ["p2p", "p2p networking"]
+      },
+      {
+        "name": "Cumulus",
+        "altNames": ["cumulus"]
+      },
+      {
+        "name": "Blockchain Tooling",
+        "altNames": ["tooling", "blockchain tooling"]
+      },
+      {
+        "name": "Substrate",
+        "altNames": ["substrate"]
+      },
+      {
+        "name": "Staking",
+        "altNames": ["staking"]
+      },
+      {
+        "name": "Ink!",
+        "altNames": ["ink", "ink!"]
+      },
+      {
+        "name": "Parachains",
+        "altNames": ["parachains"]
+      },
+      {
+        "name": "Polkadot Academy",
+        "altNames": ["polkadot academy"]
+      },
+      {
+        "name": "Kusama",
+        "altNames": ["kusama"]
+      },
+      {
+        "name": "Polkadot",
+        "altNames": ["polkadot"]
+      },
+      {
+        "name": "CAPI",
+        "altNames": ["capi"]
+      },
+      {
+        "name": "Validators",
+        "altNames": ["validators"]
+      },
+      {
+        "name": "Proxies and multisigs",
+        "altNames": ["proxies and multisigs"]
+      },
+      {
+        "name": "Signer",
+        "altNames": ["signer"]
+      },
+      {
+        "name": "Substrate Connect",
+        "altNames": ["substrate connect", "smoldot"]
+      },
+      {
+        "name": "Bridges",
+        "altNames": ["bridges"]
+      },
+      {
+        "name": "XCM",
+        "altNames": ["xcm"]
+      },
+      {
+        "name": "Node SDK",
+        "altNames": ["node sdk"]
+      },
+      {
+        "name": "Polkadot JS",
+        "altNames": ["polkadot js"]
+      },
+      {
+        "name": "Consensus",
+        "altNames": ["consensus", "consensus algorithms"]
+      }
+    ]
+  },
+  {
+    "category": "Choose general tags to help describe yourself at work",
+    "tags": [
+      {
+        "name": "MacOS",
+        "altNames": ["macos"]
+      },
+      {
+        "name": "Ubuntu",
+        "altNames": ["ubuntu"]
+      },
+      {
+        "name": "Debian",
+        "altNames": ["debian"]
+      },
+      {
+        "name": "Arch",
+        "altNames": ["arch"]
+      },
+      {
+        "name": "Other Linux",
+        "altNames": ["other linux"]
+      },
+      {
+        "name": "iPhone",
+        "altNames": ["iphone"]
+      },
+      {
+        "name": "Android",
+        "altNames": ["android"]
+      },
+      {
+        "name": "Framework Laptop",
+        "altNames": ["framework"]
+      },
+      {
+        "name": "Git",
+        "altNames": ["git"]
+      },
+      {
+        "name": "Notion Guru",
+        "altNames": ["notion guru"]
+      },
+      {
+        "name": "Matrix Master",
+        "altNames": ["matrix master"]
+      },
+      {
+        "name": "AI",
+        "altNames": ["ai"]
+      },
+      {
+        "name": "Security",
+        "altNames": ["security"]
+      },
+      {
+        "name": "Robotics",
+        "altNames": ["robotics"]
+      },
+      {
+        "name": "Computer Vision",
+        "altNames": ["computer vision"]
+      },
+      {
+        "name": "Quantum Computing",
+        "altNames": ["quantum computing"]
+      },
+      {
+        "name": "NFT",
+        "altNames": ["nft"]
+      },
+      {
+        "name": "IoT",
+        "altNames": ["iot"]
+      },
+      {
+        "name": "Metaverse",
+        "altNames": ["metaverse"]
+      },
+      {
+        "name": "Gentoo",
+        "altNames": ["gentoo"]
+      },
+      {
+        "name": "Kali Linux",
+        "altNames": ["kali", "kali linux"]
+      },
+      {
+        "name": "Asana Aficionado",
+        "altNames": ["asana aficionado"]
+      },
+      {
+        "name": "Fediverse",
+        "altNames": ["fediverse"]
+      },
+      {
+        "name": "ChatGPT Addict",
+        "altNames": ["chatgpt addict"]
+      }
+    ]
+  },
+  {
+    "category": "Programming, scripting, and markup languages",
+    "tags": [
+      {
+        "name": "Go",
+        "altNames": ["go"]
+      },
+      {
+        "name": "OCaml",
+        "altNames": ["ocaml"]
+      },
+      {
+        "name": "Erlang",
+        "altNames": ["erlang"]
+      },
+      {
+        "name": "F#",
+        "altNames": ["f#"]
+      },
+      {
+        "name": "LISP",
+        "altNames": ["lisp"]
+      },
+      {
+        "name": "Solidity",
+        "altNames": ["solidity"]
+      },
+      {
+        "name": "Clojure",
+        "altNames": ["clojure"]
+      },
+      {
+        "name": "Julia",
+        "altNames": ["julia"]
+      },
+      {
+        "name": "Elixir",
+        "altNames": ["elixir"]
+      },
+      {
+        "name": "Haskell",
+        "altNames": ["haskell"]
+      },
+      {
+        "name": "Perl",
+        "altNames": ["perl"]
+      },
+      {
+        "name": "Objective-C",
+        "altNames": ["objective-c"]
+      },
+      {
+        "name": "Scala",
+        "altNames": ["scala"]
+      },
+      {
+        "name": "Lua",
+        "altNames": ["lua"]
+      },
+      {
+        "name": "MATLAB",
+        "altNames": ["matlab"]
+      },
+      {
+        "name": "R",
+        "altNames": ["r"]
+      },
+      {
+        "name": "Swift",
+        "altNames": ["swift"]
+      },
+      {
+        "name": "WebAssembly",
+        "altNames": ["wasm", "assembly", "webassembly"]
+      },
+      {
+        "name": "Dart",
+        "altNames": ["dart"]
+      },
+      {
+        "name": "Rust",
+        "altNames": ["rust"]
+      },
+      {
+        "name": "JavaScript/TypeScript",
+        "altNames": ["javascript"]
+      },
+      {
+        "name": "Python",
+        "altNames": ["python"]
+      },
+      {
+        "name": "Ruby",
+        "altNames": ["ruby"]
+      },
+      {
+        "name": "Java",
+        "altNames": ["java"]
+      },
+      {
+        "name": "Bash",
+        "altNames": ["bash/shell", "shell", "bash"]
+      },
+      {
+        "name": "C/C++",
+        "altNames": ["c", "c++", "c/c++"]
+      },
+      {
+        "name": "C#",
+        "altNames": ["c#"]
+      },
+      {
+        "name": "PHP",
+        "altNames": ["php"]
+      },
+      {
+        "name": "HTML/CSS",
+        "altNames": ["html/css"]
+      },
+      {
+        "name": "SQL",
+        "altNames": ["sql"]
+      },
+      {
+        "name": "PowerShell",
+        "altNames": ["powershell"]
+      },
+      {
+        "name": "Kotlin",
+        "altNames": ["kotlin"]
+      }
+    ]
+  },
+  {
+    "category": "Clouds and infrastructure",
+    "tags": [
+      {
+        "name": "OpenStack",
+        "altNames": ["openstack"]
+      },
+      {
+        "name": "Virtualization",
+        "altNames": ["virtualisation"]
+      },
+      {
+        "name": "GOD OF YAML",
+        "altNames": ["yaml", "i'm a yaml god"]
+      },
+      {
+        "name": "AWS",
+        "altNames": ["aws", "amazon web services"]
+      },
+      {
+        "name": "Azure",
+        "altNames": ["azure", "microsoft azure"]
+      },
+      {
+        "name": "Google Cloud",
+        "altNames": ["gcp", "google cloud"]
+      },
+      {
+        "name": "Docker",
+        "altNames": ["docker"]
+      },
+      {
+        "name": "CI/CD",
+        "altNames": ["ci", "cd"]
+      },
+      {
+        "name": "Kubernetes",
+        "altNames": ["kubernetes"]
+      },
+      {
+        "name": "Terraform",
+        "altNames": ["terraform"]
+      },
+      {
+        "name": "Ansible",
+        "altNames": ["ansible"]
+      },
+      {
+        "name": "Prometheus",
+        "altNames": ["prometheus"]
+      },
+      {
+        "name": "Grafana",
+        "altNames": ["grafana"]
+      },
+      {
+        "name": "Github Actions",
+        "altNames": ["github actions"]
+      },
+      {
+        "name": "Gitlab CI",
+        "altNames": ["gitlab", "gitlab ci"]
+      },
+      {
+        "name": "Jenkins",
+        "altNames": ["jenkins"]
+      }
+    ]
+  },
+  {
+    "category": "Design",
+    "tags": [
+      {
+        "name": "InDesign",
+        "altNames": ["indesign"]
+      },
+      {
+        "name": "UI Design",
+        "altNames": ["ui", "ui design"]
+      },
+      {
+        "name": "UX Design",
+        "altNames": ["ux", "ux design"]
+      },
+      {
+        "name": "Figma",
+        "altNames": ["figma"]
+      },
+      {
+        "name": "Photoshop",
+        "altNames": ["photoshop"]
+      },
+      {
+        "name": "Illustrator",
+        "altNames": ["illustrator"]
+      },
+      {
+        "name": "Sketch",
+        "altNames": ["sketch"]
+      },
+      {
+        "name": "Graphic Design",
+        "altNames": ["graphic", "graphic design"]
+      },
+      {
+        "name": "Typography",
+        "altNames": ["typography"]
+      },
+      {
+        "name": "Color Theory",
+        "altNames": ["colors", "color theory"]
+      },
+      {
+        "name": "Motion Design",
+        "altNames": ["motion", "motion design"]
+      },
+      {
+        "name": "Icon Design",
+        "altNames": ["icons", "icon design"]
+      },
+      {
+        "name": "Vector Illustration",
+        "altNames": ["vector", "vector illustration"]
+      },
+      {
+        "name": "Wireframing",
+        "altNames": ["wireframing"]
+      },
+      {
+        "name": "Design Systems",
+        "altNames": ["design systems"]
+      },
+      {
+        "name": "UI Kits",
+        "altNames": ["ui kits"]
+      }
+    ]
+  },
+  {
+    "category": "Marketing",
+    "tags": [
+      {
+        "name": "Customer Retention",
+        "altNames": ["customer retention"]
+      },
+      {
+        "name": "SMM",
+        "altNames": ["smm"]
+      },
+      {
+        "name": "Videos",
+        "altNames": ["videos"]
+      },
+      {
+        "name": "Podcasting",
+        "altNames": ["podcast", "podcasting"]
+      },
+      {
+        "name": "Content Marketing",
+        "altNames": ["content marketing"]
+      },
+      {
+        "name": "Marketing Automation",
+        "altNames": ["marketing automation"]
+      },
+      {
+        "name": "Market Research",
+        "altNames": ["market research"]
+      },
+      {
+        "name": "Influencer Marketing",
+        "altNames": ["influencer marketing"]
+      },
+      {
+        "name": "Advertising",
+        "altNames": ["advertising"]
+      },
+      {
+        "name": "Analytics",
+        "altNames": ["analytics"]
+      },
+      {
+        "name": "Mobile Marketing",
+        "altNames": ["mobile marketing"]
+      },
+      {
+        "name": "Affiliate Marketing",
+        "altNames": ["affiliate marketing"]
+      },
+      {
+        "name": "Product Marketing",
+        "altNames": ["product marketing"]
+      },
+      {
+        "name": "SEO",
+        "altNames": ["seo"]
+      },
+      {
+        "name": "Events",
+        "altNames": ["events"]
+      },
+      {
+        "name": "PR",
+        "altNames": ["pr", "public relations"]
+      },
+      {
+        "name": "Branding",
+        "altNames": ["branding"]
+      }
+    ]
+  },
+  {
+    "category": "Project Management (Methodologies)",
+    "tags": [
+      {
+        "name": "Lean",
+        "altNames": ["lean"]
+      },
+      {
+        "name": "Waterfall",
+        "altNames": ["waterfall"]
+      },
+      {
+        "name": "PMP",
+        "altNames": ["pmp"]
+      },
+      {
+        "name": "Technical Project Management (TPM)",
+        "altNames": ["technical project management (tpm)"]
+      },
+      {
+        "name": "Crystal Clear methodology",
+        "altNames": ["crystal clear methodology"]
+      },
+      {
+        "name": "Adaptive Project Framework (APF)",
+        "altNames": ["adaptive project framework (apf)"]
+      },
+      {
+        "name": "Feature Driven Development (FDD)",
+        "altNames": ["feature driven development (fdd)"]
+      },
+      {
+        "name": "Extreme Programming (XP)",
+        "altNames": ["extreme programming (xp)"]
+      },
+      {
+        "name": "Rapid Application Development (RAD)",
+        "altNames": ["rapid application development (rad)"]
+      },
+      {
+        "name": "Event Chain Methodology (ECM)",
+        "altNames": ["event chain methodology (ecm)"]
+      },
+      {
+        "name": "Critical Path Method (CPM)",
+        "altNames": ["critical path method (cpm)"]
+      },
+      {
+        "name": "PMBOK",
+        "altNames": ["pmbok"]
+      },
+      {
+        "name": "PRINCE2",
+        "altNames": ["prince2"]
+      },
+      {
+        "name": "Six Sigma",
+        "altNames": ["six sigma"]
+      },
+      {
+        "name": "Kanban",
+        "altNames": ["kanban"]
+      },
+      {
+        "name": "Scrum",
+        "altNames": ["scrum"]
+      },
+      {
+        "name": "Agile",
+        "altNames": ["agile"]
+      }
+    ]
+  },
+  {
+    "category": "Support skills",
+    "tags": [
+      {
+        "name": "Team assistance",
+        "altNames": ["team assistance"]
+      },
+      {
+        "name": "International Shipment",
+        "altNames": ["international shipment"]
+      },
+      {
+        "name": "Follow-up emails",
+        "altNames": ["follow-up emails"]
+      },
+      {
+        "name": "Meeting coordination",
+        "altNames": ["meeting coordination"]
+      },
+      {
+        "name": "Internal event coordination",
+        "altNames": ["internal event coordination"]
+      },
+      {
+        "name": "Meeting notes",
+        "altNames": ["meeting notes"]
+      },
+      {
+        "name": "Calendar management",
+        "altNames": ["calendar management"]
+      },
+      {
+        "name": "Travel arrangements",
+        "altNames": ["travel arrangements"]
+      },
+      {
+        "name": "Travel emergency",
+        "altNames": ["travel emergency"]
+      },
+      {
+        "name": "Insurance claims",
+        "altNames": ["insurance claims"]
+      },
+      {
+        "name": "Expense requests",
+        "altNames": ["expense requests"]
+      },
+      {
+        "name": "Customer service",
+        "altNames": ["customer service"]
+      },
+      {
+        "name": "Administrative support",
+        "altNames": ["administrative support"]
+      },
+      {
+        "name": "Swag distribution",
+        "altNames": ["swag distribution"]
+      },
+      {
+        "name": "Equipment inventory",
+        "altNames": ["equipment inventory"]
+      }
+    ]
+  },
+  {
+    "category": "Core skills",
+    "tags": [
+      {
+        "name": "Communication",
+        "altNames": ["communication"]
+      },
+      {
+        "name": "Team player",
+        "altNames": ["team player"]
+      },
+      {
+        "name": "Persistence",
+        "altNames": ["persistence"]
+      },
+      {
+        "name": "Reliability",
+        "altNames": ["reliability"]
+      },
+      {
+        "name": "Strategic planning",
+        "altNames": ["strategic planning"]
+      },
+      {
+        "name": "First principles thinking",
+        "altNames": ["first principles thinking"]
+      },
+      {
+        "name": "Autonomous",
+        "altNames": ["autonomous"]
+      },
+      {
+        "name": "Organisation",
+        "altNames": ["organisation"]
+      },
+      {
+        "name": "Transparency",
+        "altNames": ["transparency"]
+      },
+      {
+        "name": "Honesty",
+        "altNames": ["honesty"]
+      },
+      {
+        "name": "Mentoring",
+        "altNames": ["mentoring"]
+      },
+      {
+        "name": "Motivator",
+        "altNames": ["motivator"]
+      },
+      {
+        "name": "Storytelling",
+        "altNames": ["storytelling"]
+      },
+      {
+        "name": "Negotiation",
+        "altNames": ["negotiation"]
+      },
+      {
+        "name": "Creativity",
+        "altNames": ["creativity"]
+      },
+      {
+        "name": "Adaptability",
+        "altNames": ["adaptability"]
+      },
+      {
+        "name": "Problem-solving",
+        "altNames": ["problem-solving"]
+      },
+      {
+        "name": "Empathy",
+        "altNames": ["empathy"]
+      },
+      {
+        "name": "Conflict resolution",
+        "altNames": ["conflict resolution"]
+      },
+      {
+        "name": "Decision-making",
+        "altNames": ["decision-making"]
+      },
+      {
+        "name": "Time management",
+        "altNames": ["time management"]
+      }
+    ]
+  },
+  {
+    "category": "Personal Interests",
+    "tags": [
+      {
+        "name": "Cooking/Baking",
+        "altNames": ["cooking/baking"]
+      },
+      {
+        "name": "Astronomy",
+        "altNames": ["astronomy"]
+      },
+      {
+        "name": "Science",
+        "altNames": ["science"]
+      },
+      {
+        "name": "Technology",
+        "altNames": ["technology"]
+      },
+      {
+        "name": "Theatre",
+        "altNames": ["theatre"]
+      },
+      {
+        "name": "Books",
+        "altNames": ["books"]
+      },
+      {
+        "name": "Art",
+        "altNames": ["art"]
+      },
+      {
+        "name": "Movies/TV shows",
+        "altNames": ["movies/tv shows"]
+      },
+      {
+        "name": "DJing",
+        "altNames": ["djing"]
+      },
+      {
+        "name": "Music",
+        "altNames": ["music"]
+      },
+      {
+        "name": "Mindfulness",
+        "altNames": ["mindfulness"]
+      },
+      {
+        "name": "Sports",
+        "altNames": ["sports"]
+      },
+      {
+        "name": "Foodie",
+        "altNames": ["foodie"]
+      },
+      {
+        "name": "Travel",
+        "altNames": ["travel"]
+      },
+      {
+        "name": "Coffee",
+        "altNames": ["coffee"]
+      },
+      {
+        "name": "Wine/Cocktails",
+        "altNames": ["wine/cocktails"]
+      },
+      {
+        "name": "Spirituality",
+        "altNames": ["spirituality"]
+      },
+      {
+        "name": "Personal development",
+        "altNames": ["personal development"]
+      },
+      {
+        "name": "Fashion",
+        "altNames": ["fashion"]
+      },
+      {
+        "name": "Politics and current affairs",
+        "altNames": ["politics and current affairs"]
+      },
+      {
+        "name": "Learning languages",
+        "altNames": ["learning languages"]
+      },
+      {
+        "name": "Gaming",
+        "altNames": ["gaming"]
+      },
+      {
+        "name": "DIY projects",
+        "altNames": ["diy projects"]
+      },
+      {
+        "name": "Painting/Drawing",
+        "altNames": ["painting/drawing"]
+      },
+      {
+        "name": "Volunteering",
+        "altNames": ["volunteering"]
+      },
+      {
+        "name": "Camping",
+        "altNames": ["camping"]
+      },
+      {
+        "name": "Hiking",
+        "altNames": ["hiking"]
+      },
+      {
+        "name": "Nature",
+        "altNames": ["nature"]
+      },
+      {
+        "name": "History/Archaeology",
+        "altNames": ["history/archaeology"]
+      }
+    ]
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "id": "profile-questions",
+  "name": "ProfileQuestions",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": ["ProfileQuestionAnswer"],
+  "clientRouter": {
+    "user": {
+      "profileQuestions": {
+        "path": "/me/profile-questions",
+        "componentId": "ProfileQuestionForm"
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+unavailableDesks: |
+  Failed to create a reservation. The following desks are not available: {{ conflictedVisitLabels }}
+unavailableArea: |
+  Failed to create a reservation. The following area(s) is fully unavailable: {{ reservedAreaNames }}
+failedBookingArea: |
+  Failed to book an entire area(s): {{ areaNames }}

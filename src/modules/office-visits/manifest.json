@@ -1,0 +1,8 @@
+{
+  "id": "office-visits",
+  "name": "Office visits",
+  "dependencies": ["visits", "guest-invites", "room-reservation", "users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": []
+}

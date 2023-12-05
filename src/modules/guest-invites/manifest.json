@@ -1,0 +1,36 @@
+{
+  "id": "guest-invites",
+  "name": "Guest Invites",
+  "dependencies": ["users", "visits"],
+  "requiredIntegrations": ["email-smtp"],
+  "recommendedIntegrations": ["matrix"],
+  "models": ["GuestInvite"],
+  "clientRouter": {
+    "public": {
+      "guestInviteForm": {
+        "path": "/guest-invite/:inviteCode",
+        "componentId": "GuestInviteForm"
+      }
+    },
+    "user": {
+      "guestInviteRequestForm": {
+        "path": "/guest-invites/request",
+        "componentId": "GuestInviteRequestForm"
+      },
+      "guestInviteDetail": {
+        "path": "/guest-invites/:inviteId",
+        "componentId": "GuestInviteDetail"
+      }
+    },
+    "admin": {
+      "adminGuestInvites": {
+        "path": "/admin/guest-invites",
+        "componentId": "AdminGuestInvites"
+      },
+      "adminGuestInvite": {
+        "path": "/admin/guest-invites/:inviteId",
+        "componentId": "AdminGuestInvite"
+      }
+    }
+  }
+}

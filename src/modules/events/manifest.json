@@ -1,0 +1,46 @@
+{
+  "id": "events",
+  "name": "Events",
+  "dependencies": ["users", "forms"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": ["matrix", "notion", "email-smtp"],
+  "models": [
+    "Event",
+    "EventApplication",
+    "EventCheckmark",
+    "EventChecklistReminderJob"
+  ],
+  "clientRouter": {
+    "public": {
+      "eventPage": {
+        "path": "/event/:eventId",
+        "componentId": "EventPage",
+        "fullScreen": true
+      },
+      "eventForm": {
+        "path": "/event/:eventId/application",
+        "componentId": "EventForm",
+        "fullScreen": true
+      }
+    },
+    "user": {},
+    "admin": {
+      "adminEvents": {
+        "path": "/admin/events",
+        "componentId": "AdminEvents"
+      },
+      "adminEvent": {
+        "path": "/admin/events/:eventId",
+        "componentId": "AdminEventEditor"
+      },
+      "adminEventApplications": {
+        "path": "/admin/events/:eventId/applications",
+        "componentId": "AdminEventApplications"
+      },
+      "adminEventApplication": {
+        "path": "/admin/events/:eventId/applications/:eventApplicationId",
+        "componentId": "AdminEventApplicationEditor"
+      }
+    }
+  }
+}

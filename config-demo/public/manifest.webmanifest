@@ -1,0 +1,8 @@
+{
+  "name": "Polkadot Hub Sample",
+  "short_name": "PH Sample",
+  "description": "Sample Polkadot Hub config",
+  "display": "fullscreen",
+  "theme_color": "#f9f9f9",
+  "start_url": "/"
+}

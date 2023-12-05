@@ -1,0 +1,2 @@
+roleChanged: |
+  {{ admin.fullName }} ({{ admin.email }}) assigned {{ user.fullName }}'s ({{ user.email }}) role: "{{ previousRoleName }}" -> "{{ targetRoleName }}"

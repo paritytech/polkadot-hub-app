@@ -1,0 +1,37 @@
+{
+  "id": "room-reservation",
+  "name": "Meeting Rooms",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": ["email-smtp", "matrix"],
+  "models": ["RoomReservation", "RoomDisplayDevice"],
+  "clientRouter": {
+    "public": {
+      "roomDisplay": {
+        "path": "/room-display",
+        "componentId": "RoomDisplay",
+        "fullScreen": true
+      }
+    },
+    "user": {
+      "roomReservationRequest": {
+        "path": "/room-reservation/request",
+        "componentId": "RoomReservationRequest"
+      },
+      "roomReservationDetail": {
+        "path": "/room-reservations/:roomReservationId",
+        "componentId": "RoomReservationDetail"
+      }
+    },
+    "admin": {
+      "roomDisplayDevice": {
+        "path": "/admin/room-reservation/device/:deviceId",
+        "componentId": "RoomDisplayDevice"
+      },
+      "adminRoomReservations": {
+        "path": "/admin/room-reservation",
+        "componentId": "AdminRoomReservations"
+      }
+    }
+  }
+}

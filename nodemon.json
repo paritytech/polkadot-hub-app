@@ -1,0 +1,15 @@
+{
+  "watch": ["src"],
+  "ext": "ts,json",
+  "ignore": [
+    "src/client",
+    "src/modules/*/client",
+    "src/modules/*/server/migrations",
+    "*.tsx"
+  ],
+  "exec": "yarn server:build && yarn server:start",
+  "env": {
+    "NODE_DEBUG": 9229,
+    "NODE_ENV": "development"
+  }
+}

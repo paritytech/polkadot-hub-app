@@ -1,0 +1,20 @@
+eventApplicationCancelledUserSubject: |
+  {{ user.fullName }} opted out from {{ event.title }}
+eventApplicationCancelledUserHtml: |
+  Hello, <br/><br/>
+  <a href="{{ user.profileUrl }}">{{ user.fullName }}</a> ({{ user.email }}) opted out of the event.<br/><br/>
+  Event: {{ event.title }}<br/>
+  {{ user.fullName }}'s application: <a href="{{ user.applicationUrl }}">View/edit</a> <br/> 
+  All applications: <a href="{{ event.applicationsUrl }}">" {{ event.title }}"</a> <br/> <br/>
+  Have a nice day,
+  Your {{ appName }}
+eventApplicationDeletedSubject: |
+  Event application deleted for {{ user.fullName }}
+eventApplicationDeletedHtml: |
+  Hello, <br/><br/>
+  Application for event was deleted because the user was removed. <br/> <br/>
+  Event: <a href="{{ event.url }}">{{ event.title }} </a> <br/>
+  User: {{ user.fullName }} ({{ user.email }}) <br/>
+  All applications: <a href="{{ event.applicationsUrl }}">"{{ event.title }}"</a> <br/><br/>
+  Have a nice day,
+  Your {{ appName }}

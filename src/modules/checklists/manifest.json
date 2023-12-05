@@ -1,0 +1,20 @@
+{
+  "id": "checklists",
+  "name": "Checklist",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": ["Checklist", "ChecklistAnswer"],
+  "clientRouter": {
+    "admin": {
+      "adminChecklist": {
+        "path": "/admin/checklists",
+        "componentId": "AdminChecklist"
+      },
+      "adminChecklistEditor": {
+        "path": "/admin/checklists/:checklistId",
+        "componentId": "AdminChecklistEditor"
+      }
+    }
+  }
+}

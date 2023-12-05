@@ -1,0 +1,53 @@
+{
+  "name": "Polkadot Hub Sample",
+  "auth": {
+    "providers": ["polkadot"]
+  },
+  "layout": {
+    "mobile": {
+      "fixed": [
+        ["users", "NewjoinerDetector"],
+        ["users", "UserStatus"]
+      ],
+      "office": [
+        ["office-visits", "Actions", { "offices": ["berlin"] }],
+        ["announcements", "Announcement"],
+        ["checklists", "Checklist"],
+        ["working-hours", "WorkingHoursWidget"],
+        ["events", "UncompletedActions"],
+        ["events", "MyEvents"],
+        ["office-visits", "MyOfficeVisits", { "offices": ["berlin"] }],
+        ["visits", "WhoIsInOffice", { "offices": ["berlin"] }],
+        ["quick-navigation", "QuickNav"],
+        ["users", "UsersMapWidget"],
+        ["events", "GlobalEvents", { "offices": ["global"] }]
+      ],
+      "events": [["events", "UpcomingEvents"]],
+      "news": [["news", "LatestNews"]]
+    },
+    "desktop": [
+      [
+        ["users", "NewjoinerDetector"],
+        ["users", "ProfileCard"],
+        ["quick-navigation", "QuickNav"]
+      ],
+      [
+        ["users", "UserStatus"],
+        ["office-visits", "Actions", { "offices": ["berlin"] }],
+        ["announcements", "Announcement"],
+        ["checklists", "Checklist"],
+        ["events", "UncompletedActions"],
+        ["office-visits", "MyOfficeVisits", { "offices": ["berlin"] }],
+        ["visits", "WhoIsInOffice", { "offices": ["berlin"] }],
+        ["users", "UsersMapWidget"],
+        ["events", "GlobalEvents", { "offices": ["global"] }]
+      ],
+      [
+        ["working-hours", "WorkingHoursWidget"],
+        ["events", "MyEvents"],
+        ["events", "UpcomingEvents"],
+        ["news", "LatestNews"]
+      ]
+    ]
+  }
+}

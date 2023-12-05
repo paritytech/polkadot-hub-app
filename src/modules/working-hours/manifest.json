@@ -1,0 +1,26 @@
+{
+  "id": "working-hours",
+  "name": "Working hours",
+  "dependencies": ["users", "time-off"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": ["matrix", "bamboohr"],
+  "models": [
+    "WorkingHoursEntry",
+    "DefaultWorkingHoursEntry",
+    "WorkingHoursUserConfig"
+  ],
+  "clientRouter": {
+    "user": {
+      "workingHoursEditor": {
+        "path": "/working-hours",
+        "componentId": "WorkingHoursEditor"
+      }
+    },
+    "admin": {
+      "adminWorkingHours": {
+        "path": "/admin/working-hours",
+        "componentId": "AdminWorkingHours"
+      }
+    }
+  }
+}

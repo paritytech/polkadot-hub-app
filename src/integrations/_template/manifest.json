@@ -1,0 +1,5 @@
+{
+  "id": "<INTEGRATION_ID>",
+  "name": "<INTEGRATION_NAME>",
+  "credentials": ["INTEGRATION_API_KEY", "INTEGRATION_SECRET"]
+}

@@ -1,0 +1,68 @@
+version: '3.7'
+services:
+  app:
+    container_name: app
+    volumes:
+      - ./config:/app/config/
+      - ./src:/app/src
+      - ./dist_client:/app/dist_client
+    env_file:
+      - .env
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    command: yarn server:watch
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '3000:3000'
+  postgres:
+    container_name: postgres
+    image: postgres:14
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U test']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    ports:
+      - '5432:5432'
+  migrations:
+    build:
+      context: ./
+    volumes:
+      - ./config:/app/config/
+    container_name: migrations
+    working_dir: /app
+    command: yarn migrations:up
+    depends_on:
+      postgres:
+        condition: service_healthy
+  css_watcher:
+    build:
+      context: ./
+    container_name: css_watcher
+    tty: true
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    working_dir: /app
+    command: yarn client:css:watch
+  js_watcher:
+    build:
+      context: ./
+    container_name: js_watcher
+    tty: true
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    working_dir: /app
+    command: yarn client:js:watch

@@ -1,0 +1,11 @@
+node_modules
+npm-debug.log
+
+dist_client
+dist_server
+
+.vscode
+.DS_Store
+
+config
+config-demo

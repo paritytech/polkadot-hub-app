@@ -1,0 +1,4 @@
+{
+  "id": "google",
+  "requiredCredentials": ["OAUTH2_GOOGLE_CLIENT_ID", "OAUTH2_GOOGLE_CLIENT_SECRET"]
+}

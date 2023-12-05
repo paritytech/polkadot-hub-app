@@ -1,0 +1,12 @@
+{
+  "id": "matrix",
+  "name": "Matrix",
+  "credentials": [
+    "MATRIX_SERVER",
+    "MATRIX_DOMAIN",
+    "MATRIX_ADMIN_ROOM_ID",
+    "MATRIX_API_TOKEN",
+    "MATRIX_BOT_NAME",
+    "MATRIX_BOT_USERNAME"
+  ]
+}

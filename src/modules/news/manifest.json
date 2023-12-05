@@ -1,0 +1,27 @@
+{
+  "id": "news",
+  "name": "News",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": ["News"],
+  "clientRouter": {
+    "public": {
+      "newsPage": {
+        "path": "/news/:newsId",
+        "componentId": "NewsPage",
+        "fullScreen": true
+      }
+    },
+    "admin": {
+      "adminNews": {
+        "path": "/admin/news",
+        "componentId": "AdminNews"
+      },
+      "adminNewsPage": {
+        "path": "/admin/news/:newsId",
+        "componentId": "AdminNewsEditor"
+      }
+    }
+  }
+}

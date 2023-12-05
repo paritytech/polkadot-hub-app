@@ -1,0 +1,37 @@
+{
+  "id": "forms",
+  "name": "Forms",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": ["email-smtp", "matrix"],
+  "models": ["Form", "FormSubmission"],
+  "clientRouter": {
+    "public": {
+      "form": {
+        "path": "/form/:formId",
+        "componentId": "PublicForm",
+        "availablePortals": ["public_form_header"]
+      }
+    },
+    "user": {},
+    "admin": {
+      "adminForms": {
+        "path": "/admin/forms",
+        "componentId": "AdminForms"
+      },
+      "adminForm": {
+        "path": "/admin/forms/:formId",
+        "componentId": "AdminFormEditor"
+      },
+      "adminFormSubmissions": {
+        "path": "/admin/forms/:formId/submissions",
+        "componentId": "AdminFormSubmissions",
+        "availablePortals": ["admin_form_submissions_header"]
+      },
+      "adminFormSubmission": {
+        "path": "/admin/forms/:formId/submissions/:formSubmissionId",
+        "componentId": "AdminFormSubmissionEditor"
+      }
+    }
+  }
+}

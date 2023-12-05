@@ -1,0 +1,46 @@
+{
+  "id": "users",
+  "name": "Users",
+  "dependencies": [],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": ["bamboohr", "matrix", "mapbox"],
+  "models": ["User", "Session", "City", "Tag", "UserTag"],
+  "clientRouter": {
+    "public": {},
+    "user": {
+      "profile": {
+        "path": "/me",
+        "componentId": "Profile",
+        "availablePortals": ["profile_form_extra_fields"]
+      },
+      "profileTags": {
+        "path": "/me/tags",
+        "componentId": "TagSelection"
+      },
+      "publicProfile": {
+        "path": "/profile/:userId",
+        "componentId": "PublicProfile",
+        "availablePortals": ["profile_extra_fields"]
+      },
+      "welcome": {
+        "path": "/welcome",
+        "componentId": "Welcome",
+        "fullScreen": true
+      },
+      "map": {
+        "path": "/map",
+        "componentId": "UsersMapPage"
+      },
+      "settings": {
+        "path": "/settings",
+        "componentId": "MySettings"
+      }
+    },
+    "admin": {
+      "adminUsers": {
+        "path": "/admin/users",
+        "componentId": "AdminUsers"
+      }
+    }
+  }
+}

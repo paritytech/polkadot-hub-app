@@ -1,0 +1,20 @@
+{
+  "id": "announcements",
+  "name": "Announcements",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": ["Announcement"],
+  "clientRouter": {
+    "admin": {
+      "adminAnnouncementPage": {
+        "path": "/admin/announcements",
+        "componentId": "AdminAnnouncements"
+      },
+      "adminAnnouncementEditorPage": {
+        "path": "/admin/announcements/:announcementId",
+        "componentId": "AdminAnnouncementsEditor"
+      }
+    }
+  }
+}

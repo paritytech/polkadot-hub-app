@@ -1,0 +1,8 @@
+{
+  "id": "quick-navigation",
+  "name": "Quick Navigation",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": []
+}

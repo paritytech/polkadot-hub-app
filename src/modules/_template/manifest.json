@@ -1,0 +1,13 @@
+{
+  "id": "<MODULE_ID>",
+  "name": "<MODULE_NAME>",
+  "dependencies": ["<DEPENDENCY_MODULE_ID>"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": [],
+  "clientRouter": {
+    "public": {},
+    "user": {},
+    "admin": {}
+  }
+}

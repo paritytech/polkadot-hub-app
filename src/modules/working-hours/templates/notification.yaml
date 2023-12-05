@@ -1,0 +1,2 @@
+unfilledWorkingHours: |
+  Hi! You have unfilled working hours for the previous working day, {{lastWorkingDate}}. Please fill them out <a href="{{url}}">here</a>.

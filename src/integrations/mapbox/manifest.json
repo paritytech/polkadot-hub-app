@@ -1,0 +1,5 @@
+{
+  "id": "mapbox",
+  "name": "Mapbox",
+  "credentials": ["MAPBOX_API_KEY"]
+}

@@ -1,0 +1,5 @@
+{
+  "id": "bamboohr",
+  "name": "BambooHR",
+  "credentials": ["BAMBOOHR_API_TOKEN", "BAMBOOHR_SUBDOMAIN"]
+}

@@ -1,0 +1,8 @@
+formSubmission: The user {{ user.fullName }} {{ user.email }}  has submitted the <a href='{{ form.url }}'>{{ form.title }}</a> form. <br> <a href='{{ userFormSubmissionUrl }}'>View/edit submission</a> <br><a href='{{ formSubmissionsUrl }}'>All submissions</a>
+formSubmissionAnonymous: 📝 Anonymous user has submitted the <a href='{{ form.url }}'>{{ form.title }}</a> form. <br> <a href='{{ userFormSubmissionUrl }}'>View/edit submission</a> <br><a href='{{ formSubmissionsUrl }}'>All submissions</a>
+formSubmissionChange: |
+  ⚠️ <b>Data Change</b> <br/>
+  Form: {{ form.title }}<br/>
+  User: {{ user.fullName }} ({{ user.email }})<br/>
+  Changes: {{ changes }} <br/>
+  Submission: <a href='{{ userFormSubmissionUrl }}'>View/edit</a>

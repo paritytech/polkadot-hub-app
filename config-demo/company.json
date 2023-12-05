@@ -1,0 +1,215 @@
+{
+  "name": "Polkadot Hub Sample",
+  "offices": [
+    {
+      "id": "global",
+      "name": "Global",
+      "city": "Global",
+      "country": "Global",
+      "timezone": "Europe/London",
+      "roomsPlaceholderMessage": "Meeting room booking is not supported for this office.",
+      "allowGuestInvitation": false,
+      "allowDeskReservation": false,
+      "allowRoomReservation": false
+    },
+    {
+      "id": "berlin",
+      "name": "Berlin",
+      "city": "Berlin",
+      "country": "GE",
+      "icon": "🇩🇪",
+      "address": "Berlin street 10",
+      "timezone": "Europe/Berlin",
+      "allowGuestInvitation": true,
+      "allowDeskReservation": true,
+      "allowRoomReservation": true,
+      "visitsConfig": {
+        "workingDays": [0, 1, 2, 3, 4],
+        "bookableDays": 30,
+        "maxCapacity": 35,
+        "capacityThresholds": {
+          "low": 5,
+          "medium": 14,
+          "high": 27
+        }
+      },
+      "areas": [
+        {
+          "id": "area-1",
+          "name": "1st floor",
+          "capacity": 5,
+          "map": "/maps/berlin/area-1.png",
+          "type": "desks",
+          "bookable": true,
+          "desks": [
+            {
+              "id": "a",
+              "name": "A",
+              "type": "flexible",
+              "position": {
+                "x": 11,
+                "y": 49
+              }
+            },
+            {
+              "id": "b",
+              "name": "B",
+              "type": "flexible",
+              "position": {
+                "x": 11,
+                "y": 78
+              }
+            },
+            {
+              "id": "c",
+              "name": "C",
+              "type": "flexible",
+              "position": {
+                "x": 21,
+                "y": 49
+              }
+            },
+            {
+              "id": "d",
+              "name": "D",
+              "type": "flexible",
+              "position": {
+                "x": 21,
+                "y": 78
+              }
+            },
+            {
+              "id": "e",
+              "name": "E",
+              "type": "flexible",
+              "position": {
+                "x": 33,
+                "y": 49
+              }
+            },
+            {
+              "id": "f",
+              "name": "F",
+              "type": "flexible",
+              "position": {
+                "x": 33,
+                "y": 78
+              }
+            },
+            {
+              "id": "g",
+              "name": "G",
+              "type": "flexible",
+              "position": {
+                "x": 43,
+                "y": 49
+              }
+            },
+            {
+              "id": "h",
+              "name": "H",
+              "type": "flexible",
+              "position": {
+                "x": 43,
+                "y": 78
+              }
+            },
+            {
+              "id": "i",
+              "name": "I",
+              "type": "flexible",
+              "position": {
+                "x": 70.5,
+                "y": 17
+              }
+            },
+            {
+              "id": "j",
+              "name": "J",
+              "type": "flexible",
+              "position": {
+                "x": 80,
+                "y": 17
+              }
+            },
+            {
+              "id": "k",
+              "name": "K",
+              "type": "flexible",
+              "position": {
+                "x": 89,
+                "y": 17
+              }
+            },
+            {
+              "id": "l",
+              "name": "L",
+              "type": "flexible",
+              "position": {
+                "x": 70.5,
+                "y": 75
+              }
+            },
+            {
+              "id": "m",
+              "name": "M",
+              "type": "flexible",
+              "position": {
+                "x": 80,
+                "y": 75
+              }
+            },
+            {
+              "id": "n",
+              "name": "N",
+              "type": "flexible",
+              "position": {
+                "x": 89,
+                "y": 75
+              }
+            }
+          ]
+        },
+        {
+          "id": "none",
+          "name": "No floor",
+          "capacity": 100,
+          "map": "/maps/berlin/none.png",
+          "type": "desks",
+          "desks": [
+            {
+              "id": "drop-in",
+              "name": "Drop-in",
+              "type": "multi",
+              "allowMultipleBookings": true,
+              "position": {
+                "x": 50,
+                "y": 78
+              }
+            }
+          ]
+        }
+      ],
+      "rooms": [
+        {
+          "id": "room-1",
+          "name": "Mayflower",
+          "description": "1st floor",
+          "capacity": 4,
+          "equipment": "Whiteboard, stationary, electrical sockets within reachable distance to the table.",
+          "photo": "/meeting-rooms/berlin/room-1.jpg",
+          "workingHours": ["08:00", "22:00"],
+          "autoConfirm": true
+        }
+      ]
+    }
+  ],
+  "departments": [
+    "Engineering",
+    "Operations",
+    "Finance",
+    "Legal",
+    "Security",
+    "Marketing"
+  ]
+}

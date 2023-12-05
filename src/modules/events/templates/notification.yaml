@@ -1,0 +1,23 @@
+eventApplicationOpened: |
+  Hi 👋<br>
+  Thank you for your interest in the "{{ event.title }}" event!<br> {{ event.dates }}<br><br>
+  Your application is waiting for confirmation. I'll notify you when it's confirmed.
+eventApplicationConfirmed: |
+  Hi 👋<br>
+  Thank you for your interest in the "{{ event.title }}" event!<br> {{ event.dates }}<br><br>
+  Your application has been <b>CONFIRMED</b>! Check the event details <a href="{{ event.url }}">here</a>.
+eventApplicationCancelledUser: |
+  Hi 👋<br>
+  Thank you for your interest in the "{{ event.title }}" event!<br> {{ event.dates }}<br><br>
+  You have successfully <b>opted out</b> of the event.
+eventApplicationCancelledAdmin: |
+  Hi 👋<br>
+  Thank you for your interest in the "{{ event.title }}" event!<br> {{ event.dates }}<br><br>
+  Your application has been <b>REJECTED</b>. Feel free to contact admin for details.
+eventApplicationUpdateForAdmin: |
+  RSVP Change: <a href="{{ event.url }}">{{ event.title }} </a> <br><br>
+  {{ user.fullName }} changed their RSVP to {{ status }}
+eventChecklistReminder: |
+  Hey {{ user.fullName }},<br>
+  Please, don't forget to complete the "{{ event.title }}" checklist <a href="{{ event.url }}">here</a>.<br>
+  Remaining tasks: {{ remainingTasks }}

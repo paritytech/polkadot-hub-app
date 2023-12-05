@@ -1,0 +1,10 @@
+newReservation: |
+  You <b> requested a room reservation ({{ status }})</b> for {{ room }}, {{ date }}, Location: {{ office.name }}
+newReservationAdmin: |
+  {{ user.fullName }} ({{ user.email }}) <b> requested a room reservation ({{ status }})</b> for {{ room }}, {{ date }}, Location: {{ office.name }}
+reservationStatusChange: |
+  You <b>{{ status }} room reservation</b> for {{ room }}, {{ date }}, Location: {{ office.name }}
+reservationStatusChangeAdmin: |
+  {{ user.fullName }} ({{ user.email }})  <b>{{ status }} room reservation</b> for {{ room }}, {{ date }}, Location: {{ office.name }}
+reservationCancelledForUser: |
+  Your reservation <b>was cancelled</b>: {{ room }},  {{ date }}, Location: {{ office.name }}.

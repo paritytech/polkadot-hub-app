@@ -1,0 +1,26 @@
+visitStatusChangeByAdminForUser: |
+  Your office visit on {{ date }} to {{ office.name }} office was <b>{{ status }} </b> by admin.
+visitStatusChangeByAdminMessage: |
+  {{ adminUser.fullName }} ({{ adminUser.email}}) <b>{{ status }}</b> an office visit for
+  {{ visitUser.fullName }} ({{ visitUser.email }}) on {{ date }} to {{ office.name }} office.
+visitStatusChange: |
+  {{ user }} <b> {{ status }} an office visit</b> on {{ date }} to {{ office.name }} office.
+officeVisitBooking: |
+  Hi!<br><br>
+  You booked the following {{ location.name }} office visits: <br><br> 
+  <ul>
+    {{#visits}}
+      <li> {{ date }} <a href="{{ cancel }}">cancel</a></li>
+    {{/visits}}
+  </ul>
+officeVisitBookingAdmin: |
+  <b>{{ user.fullName }} ({{ user.email }})</b> requested an office visit/s. Location: {{ location.name }}. <br><br> 
+  <ul>
+    {{#visits}}
+      <li> {{ date }} <a href="{{ cancel }}">cancel</a></li>
+    {{/visits}}
+  </ul>
+visitReminderCron: |
+  Hi!<br><br> 
+  You have an office visit booked for today. If you change your mind, please cancel your visit so that someone else
+  can use your spot: {{ visitUrl }}

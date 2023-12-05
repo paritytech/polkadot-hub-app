@@ -1,0 +1,28 @@
+{
+  "id": "visits",
+  "name": "Office Visits",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": ["bamboohr", "matrix"],
+  "models": ["Visit", "VisitReminderJob"],
+  "clientRouter": {
+    "public": {},
+    "user": {
+      "visitRequest": {
+        "path": "/visits/request",
+        "componentId": "VisitRequestForm"
+      },
+      "visit": {
+        "path": "/visits/:visitId",
+        "componentId": "VisitDetail"
+      }
+    },
+    "admin": {
+      "adminVisits": {
+        "path": "/admin/visits",
+        "componentId": "AdminVisits",
+        "availablePortals": ["admin_visits_header"]
+      }
+    }
+  }
+}

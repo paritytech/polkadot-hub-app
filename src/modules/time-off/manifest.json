@@ -1,0 +1,8 @@
+{
+  "id": "time-off",
+  "name": "Time Off",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": ["bamboohr"],
+  "models": ["TimeOffRequest"]
+}

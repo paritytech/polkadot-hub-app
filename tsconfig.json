@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "lib": ["es2020", "DOM"],
+    "module": "commonjs",
+    "allowJs": true,
+    "removeComments": true,
+    "resolveJsonModule": true,
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "sourceMap": true,
+    "outDir": "dist_server",
+    "strict": true,
+    "baseUrl": "src",
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "moduleResolution": "Node",
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "#client/*": ["client/*"],
+      "#server/*": ["server/*"],
+      "#shared/*": ["shared/*"],
+      "#modules/*": ["modules/*"],
+      "#custom-modules/*": ["../config/modules/*"],
+    }
+  },
+  "files": [
+    "src/server/index.ts",
+    "src/server/types/index.ts",
+  ],
+  "include": [
+    "src/server",
+    "src/integrations",
+    "src/client",
+    "src/modules/**/*.ts",
+    "src/modules/**/*.json",
+    "src/utils",
+    "src/shared",
+    "config/modules",
+  ],
+  "exclude": [
+    "node_modules",
+  ]
+}

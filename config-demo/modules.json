@@ -1,0 +1,250 @@
+{
+  "modules": [
+    {
+      "id": "users",
+      "enabled": true,
+      "enabledIntegrations": [],
+      "portals": {
+        "profile_form_extra_fields": [
+          ["profile-questions", "ProfileQuestionsProgress"]
+        ],
+        "profile_extra_fields": [
+          ["profile-questions", "ProfileQuestionsWidget"]
+        ]
+      },
+      "metadata": {
+        "profileFields": {
+          "birthday": {
+            "label": "Birthday",
+            "required": false
+          },
+          "department": {
+            "label": "Department",
+            "placeholder": "Select a department",
+            "required": true
+          },
+          "team": {
+            "label": "Team",
+            "placeholder": "Team name",
+            "required": false
+          },
+          "jobTitle": {
+            "label": "What do you do?",
+            "placeholder": "Rust Engineer",
+            "required": false
+          },
+          "bio": {
+            "label": "Notes about you",
+            "placeholder": "Leave here any notes that may be helpful to others: how to work with you, scope of responsibility, extra contact information, or literally anything you want to share with people visiting your profile.",
+            "required": false
+          },
+          "contacts": {
+            "matrix": {
+              "label": "Matrix Handle",
+              "placeholder": "@username:example.com",
+              "required": true,
+              "prefix": "https://matrix.to/#/@"
+            },
+            "github": {
+              "label": "GitHub",
+              "placeholder": "username",
+              "required": false,
+              "prefix": "https://github.com/"
+            },
+            "telegram": {
+              "label": "Telegram",
+              "placeholder": "username",
+              "required": false,
+              "prefix": "https://t.me/"
+            },
+            "signal": {
+              "label": "Signal",
+              "placeholder": "username",
+              "required": false,
+              "prefix": "https://signal.me/#p/"
+            },
+            "twitter": {
+              "label": "Twitter",
+              "placeholder": "username",
+              "required": false,
+              "prefix": "https://twitter.com/"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "announcements",
+      "enabled": true
+    },
+    {
+      "id": "checklists",
+      "enabled": true
+    },
+    {
+      "id": "news",
+      "enabled": true
+    },
+    {
+      "id": "profile-questions",
+      "enabled": true,
+      "metadata": {
+        "questions": [
+          {
+            "category": "Work style",
+            "questions": [
+              "How would you describe your personality or working style?",
+              "What behaviour or personality trait do you most attribute your success to, and why?",
+              "What energises you at work?"
+            ]
+          },
+          {
+            "category": "Work Ethics",
+            "questions": [
+              "How can people earn an extra gold star with you?",
+              "What qualities do you particularly value in people who work with you?",
+              "What’s one of your biggest work pet peeves?"
+            ]
+          },
+          {
+            "category": "Your free time",
+            "questions": [
+              "Outside of work, what is most important to you?",
+              "What’s your ideal way to spend your weekends?",
+              "What book, movie, music, etc. changed your outlook on life?"
+            ]
+          },
+          {
+            "category": "Personal",
+            "questions": [
+              "What is misunderstood about you, that you would like to clarify?",
+              "If you were the only human left on Earth, what would you do?",
+              "What fictional place would you most like to live in?"
+            ]
+          },
+          {
+            "category": "Fun things about you",
+            "questions": [
+              "What’s your most used emoji?",
+              "If you could meet one person, living or dead, real or fictional, and have a conversation with them, who would you meet and what would you talk about?",
+              "What’s your favourite tradition (holiday or otherwise)?"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "search",
+      "enabled": true,
+      "enabledIntegrations": []
+    },
+    {
+      "id": "visits",
+      "enabled": true,
+      "enabledIntegrations": [],
+      "portals": {
+        "admin_visits_header": [["office-visits", "VisitsStats"]]
+      }
+    },
+    {
+      "id": "guest-invites",
+      "enabled": true,
+      "enabledIntegrations": ["email-smtp"],
+      "metadata": {
+        "rulesByOffice": {
+          "__default": [
+            {
+              "id": "rule-1",
+              "label": "I agree to report any change of the information provided here and submit this questionnaire again (until further notice)."
+            }
+          ],
+          "berlin": [
+            {
+              "id": "rule-1",
+              "label": "I agree to report any change of the information provided here and submit this questionnaire again (until further notice)."
+            },
+            {
+              "id": "rule-2",
+              "label": "I understand that the office is not disabled-accessible."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "room-reservation",
+      "enabled": true,
+      "enabledIntegrations": []
+    },
+    {
+      "id": "office-visits",
+      "enabled": true
+    },
+    {
+      "id": "forms",
+      "enabled": true,
+      "enabledIntegrations": [],
+      "portals": {
+        "public_form_header": [["events", "EventPublicFormDetector"]],
+        "admin_form_submissions_header": [
+          ["events", "AdminEventFormSubmissionsBadge"]
+        ]
+      }
+    },
+
+    {
+      "id": "events",
+      "enabled": true,
+      "enabledIntegrations": []
+    },
+    {
+      "enabled": true,
+      "id": "quick-navigation",
+      "metadata": {
+        "navigation": [
+          {
+            "section": "main",
+            "main": true,
+            "links": [
+              {
+                "url": "mailto:support@polkadothub.com",
+                "name": "Ask for help",
+                "icon": "Help",
+                "sameTab": true,
+                "external": false
+              },
+              {
+                "url": "https://polkadot.network/",
+                "name": "Polkadot",
+                "icon": "Book",
+                "external": false
+              },
+              {
+                "url": "https://staking.polkadot.network/",
+                "name": "Polkadot Staking",
+                "icon": "Book",
+                "external": false
+              },
+              {
+                "url": "https://helloitsbirdo.github.io/#/",
+                "name": "Polkadot Builders Handbook",
+                "icon": "Book",
+                "external": false
+              }
+            ]
+          },
+          {
+            "section": "Please share your feedback",
+            "links": [
+              {
+                "url": "mailto:support@polkadothub.com",
+                "name": "Ideas and Feedback",
+                "external": false
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

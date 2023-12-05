@@ -1,0 +1,38 @@
+version: "3.7"
+services:
+  app:
+    image: ghcr.io/piggydoughnut/hqapp:latest
+    volumes:
+      - ./config:/app/config/
+    env_file:
+      - .env
+    command: yarn production:run
+    container_name: app
+    restart: always
+    depends_on: 
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"      
+  postgres:
+    image: postgres:14
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    container_name: postgres
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: test
+    ports:
+      - "5432:5432"        

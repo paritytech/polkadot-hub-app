@@ -1,0 +1,16 @@
+{
+  "id": "search",
+  "name": "Search",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": ["matrix"],
+  "models": [],
+  "clientRouter": {
+    "user": {
+      "searchPage": {
+        "path": "/search",
+        "componentId": "SearchResults"
+      }
+    }
+  }
+}

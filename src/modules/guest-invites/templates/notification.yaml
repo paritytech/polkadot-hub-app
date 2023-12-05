@@ -1,0 +1,26 @@
+openedGuestInviteAdmin: |
+  {{ guest.fullName }} ({{ guest.email }}) confirmed their guest invitation  from {{ user.fullName }} to visit {{ office.name }} office.<br/>
+  Visit dates: 
+  {{#visitDates}}
+    <code>{{ date }}</code>
+  {{/visitDates}}
+newGuestInviteAdmin: |
+  {{ user.fullName }} invited {{ guest.fullName }} ({{ guest.email }}) to visit {{ office.name }} office.
+invitationConfirmedByAdmin: |
+  {{ admin.fullName }} has confirmed a guest invite for {{ guest.fullName }} ({{ guest.email }}) to visit {{ office.name }} office.<br>
+  Dates: 
+  {{#visitDates}}
+    <code>{{ date }}</code>
+  {{/visitDates}} <br/>
+  Area: <code>{{ areaName }}</code><br>
+  Desk: <code>{{ deskName }}</code>
+invitationCancelledByUser: |
+  You have <b>{{ status }} guest invitation </b> for {{ guest.fullName }} on 
+  {{#visitDates}}
+    <code>{{ date }}</code>
+  {{/visitDates}} <br/>
+invitationCancelledbyUserForAdmin: |
+  Guest invitation for {{ guest.fullName }} on 
+  {{#visitDates}}
+    <code>{{ date }}</code>
+  {{/visitDates}} has been {{ status }} by {{ user.fullName }} ({{ user.email }})
