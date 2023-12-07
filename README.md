@@ -1,11 +1,11 @@
 <div align="center">
   <img alt="Logo" src="https://hq.parity.io/favicon.svg" width="130px" />
 
-# Parity HQ App
+# Polkadot Hub App
 
 </div>
 
-Parity HQ App is a self-hosted web app for managing offices, meeting rooms, events, and people profiles. It's an opinionated hackspace-like approach for hybrid teams distributed across many continents and working on multiple projects. The app is written in React, Node.js and Postgres.
+Polkadot Hub App is a self-hosted web app for managing offices, meeting rooms, events, and people profiles. It's an opinionated hackspace-like approach for hybrid teams distributed across many continents and working on multiple projects. The app is written in React, Node.js and Postgres.
 
 Main features:
 
@@ -109,4 +109,4 @@ If you want to report a bug or suggest an improvement, welcome to our [Issues](h
 
 ## License
 
-Parity HQ App is [Apache-2.0 licensed](./LICENSE).
+Polkadot Hub App is [Apache-2.0 licensed](./LICENSE).
