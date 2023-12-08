@@ -3,6 +3,7 @@ import { useMutation, useQuery } from 'react-query'
 import { api } from '#client/utils/api'
 import {
   OfficeRoom,
+  OfficeRoomCompact,
   RoomDisplayData,
   RoomReservation,
   RoomReservationRequest,
@@ -10,8 +11,8 @@ import {
   RoomReservationUpdateRequest,
 } from '#shared/types'
 
-export const usePlaceholderMessages = (officeId: string | undefined) => {
-  const path = '/user-api/room-reservation/placeholder-messages'
+export const usePlaceholderMessage = (officeId: string | undefined) => {
+  const path = '/user-api/room-reservation/placeholder'
   return useQuery<string, AxiosError>(
     [path, { office: officeId }],
     async ({ queryKey }) =>
@@ -27,7 +28,8 @@ export const useRooms = (
   return useQuery<OfficeRoom[], AxiosError>(
     [path, { office: officeId, allRooms: allRooms || undefined }],
     async ({ queryKey }) =>
-      (await api.get<OfficeRoom[]>(path, { params: queryKey[1] })).data
+      (await api.get<OfficeRoom[]>(path, { params: queryKey[1] })).data,
+    { enabled: !!officeId }
   )
 }
 
@@ -205,5 +207,13 @@ export const useUpdateRoomReservationByUser = (cb: () => void) => {
     ({ id, status }) =>
       api.put<any>(`/user-api/room-reservation/${id}`, { status }),
     { onSuccess: cb }
+  )
+}
+
+export const useAdminRooms = () => {
+  const path = '/admin-api/room-reservation/room'
+  return useQuery<OfficeRoomCompact[], AxiosError>(
+    path,
+    async () => (await api.get<OfficeRoomCompact[]>(path)).data
   )
 }

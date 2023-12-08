@@ -1,6 +1,7 @@
 export interface User {
   id: string
   role: string
+  roles: string[]
   fullName: string
   birthday: string | null
   email: string
@@ -9,7 +10,6 @@ export interface User {
   department: string | null
   team: string | null
   jobTitle: string | null
-  division: string | null
   country: string | null
   city: string | null
   contacts: Record<string, string>
@@ -92,7 +92,7 @@ export type UserMe = User & {
 
 export type UserCompact = Pick<
   User,
-  'id' | 'fullName' | 'email' | 'avatar' | 'isInitialised' | 'role' | 'division'
+  'id' | 'fullName' | 'email' | 'avatar' | 'isInitialised' | 'role' | 'roles'
 >
 
 export type PublicUserProfile = Pick<
@@ -112,6 +112,7 @@ export type PublicUserProfile = Pick<
   | 'geodata'
   | 'defaultLocation'
   | 'role'
+  | 'roles'
 > & {
   countryName: string | null
   tags: Tag[]

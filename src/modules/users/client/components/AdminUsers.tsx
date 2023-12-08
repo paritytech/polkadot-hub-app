@@ -54,9 +54,6 @@ export const AdminUsers: React.FC = () => {
 function matchRole(user: User, roles: string[]): boolean {
   return roles.length ? roles.includes(user.role) : true
 }
-function matchDivision(user: User, divisions: string[]): boolean {
-  return divisions.length ? divisions.includes(user.division || '~none~') : true
-}
 function matchDepartment(user: User, departments: string[]): boolean {
   return departments.length
     ? departments.includes(user.department || '~none~')
@@ -80,7 +77,6 @@ export const UserTable: React.FC = () => {
   const [roleFilter, setRoleFilter] = React.useState<string[]>(
     config.roles.filter(propNotEq('lowPriority', true)).map(prop('id'))
   )
-  const [divisionFilter, setDivisionFilter] = React.useState<string[]>([])
   const [departmentFilter, setDepartmentFilter] = React.useState<string[]>([])
   const [searchQuery, setSearchQuery] = React.useState<string>('')
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
@@ -111,18 +107,11 @@ export const UserTable: React.FC = () => {
     return users.filter((x) => {
       return !(
         !matchRole(x, roleFilter) ||
-        !matchDivision(x, divisionFilter) ||
         !matchDepartment(x, departmentFilter) ||
         !matchSearch(x, debouncedSearchQuery)
       )
     })
-  }, [
-    users,
-    roleFilter,
-    divisionFilter,
-    departmentFilter,
-    debouncedSearchQuery,
-  ])
+  }, [users, roleFilter, departmentFilter, debouncedSearchQuery])
 
   const columns = React.useMemo(
     () => [
@@ -173,11 +162,6 @@ export const UserTable: React.FC = () => {
             {x.email}
           </Link>
         ),
-      },
-      {
-        Header: 'Division',
-        accessor: (u: User) =>
-          u.division || <span className="text-gray-300">UNKNOWN</span>,
       },
       {
         Header: 'Department',
@@ -277,19 +261,6 @@ export const UserTable: React.FC = () => {
       <H1>Users</H1>
 
       <div className="flex flex-col gap-y-4 mb-6">
-        {!!config.divisions && !!config.divisions.length && (
-          <LabelWrapper label="Division">
-            <Filters
-              options={[
-                { id: null, name: 'Any' },
-                ...config.divisions.map((x) => ({ id: x, name: x })),
-              ]}
-              value={divisionFilter}
-              onChange={setDivisionFilter}
-              multiple
-            />
-          </LabelWrapper>
-        )}
         {!!config.departments && !!config.departments.length && (
           <LabelWrapper label="Department">
             <Filters

@@ -54,9 +54,6 @@ export const getUtcHourForTimezone = (
   return result
 }
 
-export const escapeRegExpSensitiveCharacters = (str: string): string =>
-  str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-
 export const cloneRegExp = (input: RegExp, injectFlags: string = '') => {
   const pattern = input.source
   let flags = ''

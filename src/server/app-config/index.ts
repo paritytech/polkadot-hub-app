@@ -231,7 +231,7 @@ export class AppConfig {
   getUserPermissions(
     email: string | null,
     authAddresses: string[],
-    role: string
+    roles: string[]
   ): PermissionsSet {
     if (email && this.superusers.has(email)) {
       return new PermissionsSet(this.allPermissions)
@@ -243,7 +243,9 @@ export class AppConfig {
         }
       }
     }
-    return new PermissionsSet(this.permissionsByRole[role] || [])
+    return new PermissionsSet(
+      roles.map((x) => this.permissionsByRole[x] || []).flat()
+    )
   }
 
   getModuleMetadata(moduleId: string): unknown | null {

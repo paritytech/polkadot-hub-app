@@ -21,17 +21,21 @@ import { useUsersCompact } from '#modules/users/client/queries'
 import { useGuestInvitesAdmin, useUpdateGuestInvite } from '../queries'
 import { GuestInviteStatusTag } from './GuestInviteStatusTag'
 
-export const AdminGuestInvites = () => (
-  <PermissionsValidator
-    required={[
-      Permissions['guest-invites'].__Admin,
-      Permissions['guest-invites'].AdminList,
-    ]}
-    onRejectGoHome
-  >
-    <_AdminGuestInvites />
-  </PermissionsValidator>
-)
+export const AdminGuestInvites = () => {
+  const officeId = useStore(stores.officeId)
+  return (
+    <PermissionsValidator
+      officeId={officeId}
+      required={[
+        Permissions['guest-invites'].__Admin,
+        Permissions['guest-invites'].AdminList,
+      ]}
+      onRejectGoHome
+    >
+      <_AdminGuestInvites />
+    </PermissionsValidator>
+  )
+}
 
 export const _AdminGuestInvites: React.FC = () => {
   useDocumentTitle('Guest Invites')

@@ -24,11 +24,18 @@ type VisitRequestStep =
   | 'wait-for-confirmation'
   | 'needs_confirmation'
 
-export const VisitRequestForm = () => (
-  <PermissionsValidator required={[Permissions.visits.Create]} onRejectGoHome>
-    <_VisitRequestForm />
-  </PermissionsValidator>
-)
+export const VisitRequestForm = () => {
+  const officeId = useStore(stores.officeId)
+  return (
+    <PermissionsValidator
+      officeId={officeId}
+      required={[Permissions.visits.Create]}
+      onRejectGoHome
+    >
+      <_VisitRequestForm />
+    </PermissionsValidator>
+  )
+}
 
 export const _VisitRequestForm: React.FC = () => {
   useDocumentTitle('Office visit request')

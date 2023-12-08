@@ -1,6 +1,6 @@
 import axios from 'axios'
 import config from '#server/config'
-import { escapeRegExpSensitiveCharacters } from '#server/utils'
+import { escapeRegExpSensitiveCharacters } from '#shared/utils/fp'
 import { User } from '#modules/users/server/models/user'
 import { SafeResponse } from '#server/types'
 import { Integration } from '../integration'

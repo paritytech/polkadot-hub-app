@@ -4,7 +4,7 @@ const timeSchema = z.string().regex(/^([0-1][0-9]|2[0-3]):[0-5][0-9]$/)
 
 export const schema = z
   .object({
-    configByDivision: z.record(
+    configByRole: z.record(
       z
         .object({
           workingDays: z.array(z.number().min(0).max(6)).min(1),

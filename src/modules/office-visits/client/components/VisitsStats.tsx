@@ -10,11 +10,17 @@ import { VisitsDailyStats } from '#shared/types'
 import { cn, toggleInArray } from '#client/utils'
 import { useVisitsStatsAdmin } from '../queries'
 
-export const VisitsStats = () => (
-  <PermissionsValidator required={[Permissions['office-visits'].AdminList]}>
-    <_VisitsStats />
-  </PermissionsValidator>
-)
+export const VisitsStats = () => {
+  const officeId = useStore(stores.officeId)
+  return (
+    <PermissionsValidator
+      officeId={officeId}
+      required={[Permissions['office-visits'].AdminList]}
+    >
+      <_VisitsStats />
+    </PermissionsValidator>
+  )
+}
 
 const _VisitsStats: React.FC = () => {
   const officeId = useStore(stores.officeId)

@@ -8,31 +8,23 @@ export const cronJob: CronJob = {
   name: 'fetch-default-hours-reminder',
   cron: '0 21 * * 0-4', // daily Sun-Thu at 9PM
   fn: async (ctx: CronJobContext) => {
-    if (!ctx.integrations.Matrix) {
-      ctx.log.error(
-        'Cannot send working hours reminders: disabled Matrix integration.'
-      )
-      return
-    }
     if (!ctx.integrations.BambooHR) {
-      ctx.log.error(
-        'Cannot send working hours reminders: disabled Matrix integration.'
-      )
+      ctx.log.error('Cannot run the job: disabled BambooHR integration.')
       return
     }
 
     const moduleMetadata = ctx.appConfig.getModuleMetadata(
       'working-hours'
     ) as Metadata
-    const configByDivision = moduleMetadata?.configByDivision as Record<
+    const configByRole = moduleMetadata?.configByRole as Record<
       string,
       WorkingHoursConfig
     >
-    const divisions = Object.keys(configByDivision)
+    const allowedRoles = Object.keys(configByRole)
 
     const users = await ctx.models.User.findAllActive({
       where: {
-        division: { [Op.in]: divisions },
+        roles: { [Op.overlap]: allowedRoles },
         isInitialised: true,
       },
     })

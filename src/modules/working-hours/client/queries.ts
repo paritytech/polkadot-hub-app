@@ -194,21 +194,21 @@ export const useAdminUserConfigs = (
     | {
         userId: string
       }
-    | { division: string }
+    | { role: string }
 ) => {
   const path = '/admin-api/working-hours/user-configs'
-  const query: { userId?: string; division?: string } = {}
+  const query: { userId?: string; role?: string } = {}
   if ('userId' in opts) {
     query.userId = opts.userId
   }
-  if ('division' in opts) {
-    query.division = opts.division
+  if ('role' in opts) {
+    query.role = opts.role
   }
   return useQuery<WorkingHoursUserConfig[], AxiosError>(
     [path, query],
     async ({ queryKey }) =>
       (await api.get<WorkingHoursUserConfig[]>(path, { params: queryKey[1] }))
         .data,
-    { enabled: !!query.userId || !!query.division }
+    { enabled: !!query.userId || !!query.role }
   )
 }

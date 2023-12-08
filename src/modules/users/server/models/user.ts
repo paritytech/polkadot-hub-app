@@ -19,6 +19,7 @@ import {
 } from '../../types'
 import { Tag } from './tag'
 import { appConfig } from '#server/app-config'
+import * as fp from '#shared/utils/fp'
 import dayjs from 'dayjs'
 
 type UserCreateFields = Pick<UserModel, 'fullName' | 'email' | 'role'> &
@@ -30,6 +31,7 @@ export class User
 {
   declare id: CreationOptional<string>
   declare role: UserModel['role']
+  declare roles: UserModel['roles']
   declare fullName: UserModel['fullName']
   declare birthday: UserModel['birthday']
   declare email: UserModel['email']
@@ -38,7 +40,6 @@ export class User
   declare department: UserModel['department']
   declare team: UserModel['team']
   declare jobTitle: UserModel['jobTitle']
-  declare division: UserModel['division']
   declare country: UserModel['country']
   declare city: UserModel['city']
   declare contacts: UserModel['contacts']
@@ -71,9 +72,21 @@ export class User
         'email',
         'isInitialised',
         'role',
-        'division',
+        'roles',
       ],
     })
+  }
+
+  useCompactView(): UserCompact {
+    return {
+      id: this.id,
+      fullName: this.fullName,
+      avatar: this.avatar,
+      email: this.email,
+      isInitialised: this.isInitialised,
+      role: this.role,
+      roles: this.roles,
+    }
   }
 
   useMeView(): UserMe {
@@ -119,6 +132,7 @@ export class User
       defaultLocation: hideGeoData ? null : this.defaultLocation,
       tags,
       role: this.role,
+      roles: this.roles,
     }
   }
 
@@ -180,6 +194,7 @@ export class User
     const shortId = this.id.split('-').reverse()[0]
     return this.set({
       role: appConfig.lowPriorityRole,
+      roles: [],
       fullName: shortId,
       birthday: null,
       email: `${shortId}@delet.ed`,
@@ -212,6 +227,11 @@ User.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    roles: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: false,
+      defaultValue: [],
+    },
     fullName: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -233,10 +253,6 @@ User.init(
       allowNull: true,
     },
     jobTitle: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    division: {
       type: DataTypes.STRING,
       allowNull: true,
     },

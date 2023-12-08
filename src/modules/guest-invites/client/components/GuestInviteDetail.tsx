@@ -21,7 +21,7 @@ import { GuestInviteStatus } from '#shared/types'
 import { DATE_FORMAT_DAY_NAME_FULL } from '#client/constants'
 import { useVisitsAreas } from '#modules/visits/client/queries'
 import { OfficeFloorMap } from '#client/components/OfficeFloorMap'
-import { useUserAdmin } from '#modules/users/client/queries'
+import { useUserCompact } from '#modules/users/client/queries'
 
 export const GuestInviteDetail = () => (
   <PermissionsValidator
@@ -63,7 +63,7 @@ export const _GuestInviteDetail = () => {
     () => guestInivite?.creatorUserId === me?.id,
     [guestInivite, me]
   )
-  const { data: user = null } = useUserAdmin(
+  const { data: user = null } = useUserCompact(
     guestInivite?.creatorUserId || '',
     {
       enabled: !!guestInivite && guestInivite.creatorUserId !== me?.id,

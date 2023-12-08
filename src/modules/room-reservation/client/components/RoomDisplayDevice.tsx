@@ -1,20 +1,33 @@
 import React from 'react'
 import { useStore } from '@nanostores/react'
+import config from '#client/config'
 import * as stores from '#client/stores'
+import * as fp from '#shared/utils/fp'
 import { Button, ButtonsWrapper, Select } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import Permissions from '#shared/permissions'
-import { useUpdateRoomDisplayDevice, useRooms } from '../queries'
+import { useUpdateRoomDisplayDevice, useAdminRooms } from '../queries'
 
-export const RoomDisplayDevice = () => (
-  <PermissionsValidator
-    required={[Permissions['room-reservation'].AdminManage]}
-    onRejectGoHome
-  >
-    <_RoomDisplayDevice/>
-  </PermissionsValidator>
-)
+export const RoomDisplayDevice = () => {
+  const officeId = useStore(stores.officeId)
+  return (
+    <PermissionsValidator
+      officeId={officeId}
+      required={[Permissions['room-reservation'].AdminManage]}
+      onRejectRender={
+        <div>
+          You don't have permission to set up the display in the "{officeId}"
+          office.
+          <br />
+          Please select an office you can work with.
+        </div>
+      }
+    >
+      <_RoomDisplayDevice />
+    </PermissionsValidator>
+  )
+}
 
 const _RoomDisplayDevice: React.FC = () => {
   const page = useStore(stores.router)
@@ -24,7 +37,17 @@ const _RoomDisplayDevice: React.FC = () => {
     stores.goTo('admin')
     showNotification('The device was confirmed successfully', 'success')
   })
-  const { data: rooms = [] } = useRooms(undefined)
+  const { data: rooms = [] } = useAdminRooms()
+  const options = React.useMemo(() => {
+    const officeById = config.offices.reduce(fp.by('id'), {})
+    return rooms.map((x) => {
+      const office = officeById[x.officeId]
+      return {
+        value: x.id,
+        label: `${x.name}, ${office.name}`,
+      }
+    })
+  }, [rooms])
   const [roomId, setRoomId] = React.useState<string | undefined>(undefined)
   React.useEffect(() => {
     if (rooms.length) {
@@ -53,10 +76,7 @@ const _RoomDisplayDevice: React.FC = () => {
         className="mt-4 w-full"
         value={roomId}
         onChange={setRoomId}
-        options={rooms.map((x) => ({
-          value: x.id,
-          label: x.name,
-        }))}
+        options={options}
       />
       <ButtonsWrapper
         className="mt-6"

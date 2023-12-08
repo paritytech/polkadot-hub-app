@@ -178,10 +178,10 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      req.check(Permissions.AdminList)
       if (!req.office) {
         return reply.throw.badParams('Missing office ID')
       }
+      req.check(Permissions.AdminList, req.office.id)
       const { from, to, format } = req.query
       if (!from || !to) {
         return reply.throw.badParams('Missing "from" or "to" parameter')

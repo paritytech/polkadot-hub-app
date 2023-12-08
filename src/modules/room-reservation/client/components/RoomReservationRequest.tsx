@@ -6,7 +6,6 @@ import {
   ComponentWrapper,
   H1,
   Icons,
-  Input,
   P,
   TabSlider,
   showNotification,
@@ -20,6 +19,8 @@ import {
 } from '#shared/types'
 import { cn } from '#client/utils'
 import { renderMarkdown } from '#client/utils/markdown'
+import { PermissionsValidator } from '#client/components/PermissionsValidator'
+import Permissions from '#shared/permissions'
 import { RoomListing } from './RoomListing'
 import { TimeSlotsListing } from './TimeSlotsListing'
 import { MeetingRoomBookingModal } from './MeetingRoomBookingModal'
@@ -29,13 +30,26 @@ import {
   useAvailableTimeRanges,
   useAvailableTimeSlotsForRoom,
   useCreateRoomReservation,
-  usePlaceholderMessages,
+  usePlaceholderMessage,
   useRooms,
 } from '../queries'
 
 dayjs.extend(dayjsDuration)
 
-export const RoomReservationRequest: React.FC = () => {
+export const RoomReservationRequest = () => {
+  const officeId = useStore(stores.officeId)
+  return (
+    <PermissionsValidator
+      officeId={officeId}
+      required={[Permissions['room-reservation'].Create]}
+      onRejectGoHome
+    >
+      <_RoomReservationRequest />
+    </PermissionsValidator>
+  )
+}
+
+const _RoomReservationRequest: React.FC = () => {
   const officeId = useStore(stores.officeId)
   const [showModal, setShowModal] = useState(false)
   const [timeDuration, setTimeDuration] = useState(
@@ -50,7 +64,7 @@ export const RoomReservationRequest: React.FC = () => {
 
   const [mode, setMode] = useState(RoomBookingModes.AnyRoom)
   const [timeSlots, setTimeSlots] = useState<Array<string>>([])
-  const { data: placeholderMessage } = usePlaceholderMessages(officeId)
+  const { data: placeholderMessage } = usePlaceholderMessage(officeId)
   const { data: slots } = useAvailableTimeRanges(
     officeId,
     timeDuration.asMinutes(),

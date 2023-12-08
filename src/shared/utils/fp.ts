@@ -161,3 +161,7 @@ export function camelcasify(text: string): string {
     .map((x: string) => capitalize(x))
     .join('')
 }
+
+export function escapeRegExpSensitiveCharacters(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}

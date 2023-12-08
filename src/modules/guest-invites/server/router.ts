@@ -134,17 +134,15 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (!req.params.inviteId) {
         return reply.throw.badParams('Missing invitation id')
       }
-      const where: Filterable<GuestInvite>['where'] = {
-        id: req.params.inviteId,
-      }
-      if (!req.can(Permissions.AdminList)) {
-        where.creatorUserId = req.user.id
-      }
-      const invite = await fastify.db.GuestInvite.findOne({ where })
+      const invite = await fastify.db.GuestInvite.findByPk(req.params.inviteId)
       if (!invite) {
         return reply.throw.notFound()
       }
-
+      if (invite.creatorUserId !== req.user.id) {
+        req.check(Permissions.AdminList, invite.office)
+      } else {
+        req.check(Permissions.Create, invite.office)
+      }
       return invite
     }
   )
@@ -152,11 +150,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   fastify.post(
     '/invite',
     async (req: FastifyRequest<{ Body: GuestInviteRequest }>, reply) => {
-      req.check(Permissions.Create)
-
       if (!req.office) {
         return reply.throw.badParams('Invalid office ID')
       }
+      req.check(Permissions.Create, req.office.id)
 
       const email = req.body.email.trim().toLowerCase()
 
@@ -230,7 +227,6 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
       const status = req.body.status
       const invite = await fastify.db.GuestInvite.findOne({
         where: {
@@ -241,6 +237,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (!invite) {
         return reply.throw.notFound()
       }
+      req.check(Permissions.Create, invite.office)
 
       if (
         invite.status !== 'confirmed' &&
@@ -318,10 +315,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
 const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
   fastify.get('/invite', async (req, reply) => {
-    req.check(Permissions.AdminList)
     if (!req.office) {
       return reply.throw.badParams('Invalid office ID')
     }
+    req.check(Permissions.AdminList, req.office.id)
     const invites = await fastify.db.GuestInvite.findAll({
       where: { office: req.office.id },
       order: [['createdAt', 'DESC']],
@@ -332,11 +329,14 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
   fastify.get(
     '/invite/:inviteId',
     async (req: FastifyRequest<{ Params: { inviteId: string } }>, reply) => {
-      req.check(Permissions.AdminList)
       if (!req.params.inviteId) {
         return reply.throw.badParams('Missing invite ID')
       }
       const invite = await fastify.db.GuestInvite.findByPk(req.params.inviteId)
+      if (!invite) {
+        return reply.throw.notFound()
+      }
+      req.check(Permissions.AdminList, invite.office)
       return invite
     }
   )
@@ -350,11 +350,11 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      req.check(Permissions.AdminManage)
       const invite = await fastify.db.GuestInvite.findByPk(req.params.inviteId)
       if (!invite) {
         return reply.throw.notFound()
       }
+      req.check(Permissions.AdminManage, invite.office)
       const { status, areaId, deskId } = req.body
 
       if (invite.code === 'manual') {

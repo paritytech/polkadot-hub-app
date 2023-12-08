@@ -7,7 +7,3 @@ export enum EntityVisibility {
   Visible = 'visible',
   UrlPublic = 'url_public',
 }
-
-export enum DefaultPermissionPostfix {
-  Admin = '__admin',
-}

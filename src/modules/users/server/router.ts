@@ -2,12 +2,16 @@ import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Filterable, Op } from 'sequelize'
 import { appConfig } from '#server/app-config'
 import config from '#server/config'
-import { COUNTRIES, COUNTRY_COORDINATES, DATE_FORMAT } from '#server/constants'
-import { AuthAccount, DefaultPermissionPostfix } from '#shared/types'
+import {
+  COUNTRIES,
+  COUNTRY_COORDINATES,
+  DATE_FORMAT,
+  ADMIN_ACCESS_PERMISSION_RE,
+} from '#server/constants'
+import { AuthAccount } from '#shared/types'
 import { Permissions } from '../permissions'
 import {
   AuthProvider,
-  ProfileField,
   GeoData,
   ImportedTag,
   ImportedTagGroup,
@@ -38,9 +42,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
   fastify.get('/me', async (req, reply) => {
     return {
-      isAdmin: req.permissions.some((x) =>
-        x.endsWith(DefaultPermissionPostfix.Admin)
-      ),
+      isAdmin: req.permissions.some((x) => ADMIN_ACCESS_PERMISSION_RE.test(x)),
       user: req.user.useMeView(), // FIXME: store countryName in the database (geodata)
       permissions: Array.from(req.permissions),
     }
@@ -177,7 +179,8 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
   // NOTE: temporary route for the onboarding demo
   fastify.get('/me/reset', async (req, reply) => {
-    req.check(Permissions.UseOnboarding, Permissions.AdminManage)
+    req.check(Permissions.UseOnboarding)
+    req.check(Permissions.AdminManage)
     await req.user
       .set({
         department: null,
@@ -232,7 +235,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 
   fastify.get(
-    '/user/:userId',
+    '/profile/:userId',
     async (req: FastifyRequest<{ Params: { userId: string } }>, reply) => {
       req.check(Permissions.ListProfiles)
       const user = await fastify.db.User.findByPkActive(req.params.userId, {
@@ -248,6 +251,18 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       return user.usePublicProfileView(user.tags, {
         forceHideGeoData: !req.can(Permissions.UseMap),
       })
+    }
+  )
+
+  fastify.get(
+    '/user/:userId',
+    async (req: FastifyRequest<{ Params: { userId: string } }>, reply) => {
+      req.check(Permissions.ListProfiles)
+      const user = await fastify.db.User.findByPkActive(req.params.userId)
+      if (!user) {
+        return reply.throw.notFound()
+      }
+      return user.useCompactView()
     }
   )
 
@@ -356,7 +371,8 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 
   fastify.get('/me/tags', async (req, reply) => {
-    req.check(Permissions.ManageProfile, Permissions.ListProfiles)
+    req.check(Permissions.ManageProfile)
+    req.check(Permissions.ListProfiles)
     // FIXME: missed types for sequelize lazy loading methods (many-to-many relation)
     // @ts-ignore
     const tags = (await req.user.getTags()) as Tag[]
@@ -578,13 +594,6 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         scheduledToDelete: null,
       })
       return reply.ok()
-    }
-  )
-
-  fastify.get(
-    '/users/:userId',
-    async (req: FastifyRequest<{ Params: { userId: string } }>, reply) => {
-      return fastify.db.User.findByPkActive(req.params.userId)
     }
   )
 

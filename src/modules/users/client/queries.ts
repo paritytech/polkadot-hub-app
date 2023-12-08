@@ -79,18 +79,6 @@ export const useMapStats = () => {
   )
 }
 
-export const useUserAdmin = (
-  userId: string,
-  { enabled } = { enabled: true }
-) => {
-  const path = `/admin-api/users/users/${userId}`
-  return useQuery<User, AxiosError>(
-    path,
-    async () => (await api.get<User>(path)).data,
-    { enabled }
-  )
-}
-
 export const useUpdateUserAdmin = (cb: () => void) =>
   useMutation<void, AxiosError, Pick<User, 'role' | 'id'>>(
     ({ id, ...data }) => api.put(`/admin-api/users/user/${id}`, data),
@@ -122,12 +110,25 @@ export const useSubmitOnboarding = (cb: () => void) =>
     { onSuccess: cb }
   )
 
+// ...........................................................................
 export const usePublicProfile = (userId: string | null) => {
-  const path = `/user-api/users/user/${userId}`
+  const path = `/user-api/users/profile/${userId}`
   return useQuery<PublicUserProfile, AxiosError>(
     path,
     async () => (await api.get<PublicUserProfile>(path)).data,
     { enabled: !!userId }
+  )
+}
+
+export const useUserCompact = (
+  userId: string | null,
+  { enabled } = { enabled: true }
+) => {
+  const path = `/user-api/users/user/${userId}`
+  return useQuery<UserCompact, AxiosError>(
+    path,
+    async () => (await api.get<UserCompact>(path)).data,
+    { enabled }
   )
 }
 

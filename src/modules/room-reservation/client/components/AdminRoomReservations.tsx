@@ -21,17 +21,21 @@ import { RoomReservationStatusTag } from './RoomReservationStatusTag'
 
 dayjs.extend(dayjsTimezone)
 
-export const AdminRoomReservations = () => (
-  <PermissionsValidator
-    required={[
-      Permissions['room-reservation'].__Admin,
-      Permissions['room-reservation'].AdminList,
-    ]}
-    onRejectGoHome
-  >
-    <_AdminRoomReservations />
-  </PermissionsValidator>
-)
+export const AdminRoomReservations = () => {
+  const officeId = useStore(stores.officeId)
+  return (
+    <PermissionsValidator
+      officeId={officeId}
+      required={[
+        Permissions['room-reservation'].__Admin,
+        Permissions['room-reservation'].AdminList,
+      ]}
+      onRejectGoHome
+    >
+      <_AdminRoomReservations />
+    </PermissionsValidator>
+  )
+}
 
 const _AdminRoomReservations: React.FC = () => {
   useDocumentTitle('Meeting Rooms')
@@ -117,7 +121,7 @@ const _AdminRoomReservations: React.FC = () => {
             }`
           },
         },
-        permissions.has(Permissions['room-reservation'].AdminManage)
+        permissions.has(Permissions['room-reservation'].AdminManage, officeId)
           ? {
               Header: 'Actions',
               accessor: (x: RoomReservation) => {

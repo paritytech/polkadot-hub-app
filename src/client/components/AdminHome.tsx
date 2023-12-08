@@ -2,28 +2,28 @@ import * as React from 'react'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import config from '#client/config'
-import { prop, propEq } from '#shared/utils/fp'
+import {
+  ADMIN_ACCESS_PERMISSION_RE,
+  ADMIN_ACCESS_PERMISSION_POSTFIX,
+} from '#client/constants'
 import { Button, ComponentWrapper } from '#client/components/ui'
 import Permissions from '#shared/permissions'
-import { DefaultPermissionPostfix } from '#shared/types'
 import { PermissionsSet } from '#shared/utils'
 
 type ModuleWithAdminComponents = {
   id: string
   name: string
-  paths: string[]
+  routes: string[]
 }
 const modulesWithAdminComponents: ModuleWithAdminComponents[] =
   config.modules.reduce((acc, m) => {
     if (!m.router.admin) return acc
-    const adminRoutePaths = Object.keys(m.router.admin)
-      .map((x) => m.router.admin![x])
-      .map(prop('path'))
-    if (adminRoutePaths.length) {
+    const routes = Object.keys(m.router.admin)
+    if (routes.length) {
       const moduleInfo: ModuleWithAdminComponents = {
         id: m.id,
         name: m.name,
-        paths: adminRoutePaths,
+        routes,
       }
       return [...acc, moduleInfo]
     }
@@ -33,7 +33,7 @@ const modulesWithAdminComponents: ModuleWithAdminComponents[] =
 type Props = { children: React.ReactNode }
 
 const doesUserHaveAdminPermission = (granted: PermissionsSet) => {
-  return granted.some((x) => x.endsWith(`.${DefaultPermissionPostfix.Admin}`))
+  return granted.some((x) => ADMIN_ACCESS_PERMISSION_RE.test(x))
 }
 
 export const AdminHome: React.FC<Props> = (props) => {
@@ -50,42 +50,51 @@ export const AdminHome: React.FC<Props> = (props) => {
 const _AdminHome: React.FC<Props> = ({ children }) => {
   const permissions = useStore(stores.permissions)
   const page = useStore(stores.router)
-  const moduleVisibilityFilter = React.useCallback(
-    (m: ModuleWithAdminComponents): boolean => {
+  const officeId = useStore(stores.officeId)
+
+  const filteredModules = React.useMemo(() => {
+    return modulesWithAdminComponents.filter((m) => {
       const modulePermissions: string[] = Object.values(
         Permissions[m.id as keyof typeof Permissions] || {}
       )
-      const adminPermission = `${m.id}.${DefaultPermissionPostfix.Admin}`
+      const adminPermission = `${m.id}.${ADMIN_ACCESS_PERMISSION_POSTFIX}`
+      const adminPermissionPerOffice = `${adminPermission}:${officeId}`
       return (
-        permissions.has(adminPermission) &&
-        modulePermissions.includes(adminPermission)
+        modulePermissions.includes(adminPermission) &&
+        (permissions.has(adminPermissionPerOffice) ||
+          permissions.has(adminPermission))
       )
-    },
-    [permissions]
-  )
+    })
+  }, [permissions, officeId])
 
   return (
     <ComponentWrapper wide>
-      <div className="-mx-8 -mt-4 sm:mt-0 px-2 sm:px-8 mb-6 pb-2 sm:pb-4 border-b border-gray-200">
-        {modulesWithAdminComponents.filter(moduleVisibilityFilter).map((x) => {
-          return (
-            <Button
-              key={x.id}
-              kind={
-                page?.route && x.paths.includes(page.route)
-                  ? 'primary'
-                  : 'secondary'
-              }
-              href={`/admin/${x.id}`}
-              className="mb-2 sm:mb-4 mr-2 sm:mr-4 rounded-[24px] relative focus:ring-0"
-            >
-              {x.name}
-              {/* {!!counter && <CounterBadge count={counter} />} */}
-            </Button>
-          )
-        })}
-      </div>
-      {children}
+      {filteredModules.length ? (
+        <>
+          <div className="-mx-8 -mt-4 sm:mt-0 px-2 sm:px-8 mb-6 pb-2 sm:pb-4 border-b border-gray-200">
+            {filteredModules.map((x) => {
+              return (
+                <Button
+                  key={x.id}
+                  kind={
+                    page && x.routes.includes(page.route)
+                      ? 'primary'
+                      : 'secondary'
+                  }
+                  href={`/admin/${x.id}`}
+                  className="mb-2 sm:mb-4 mr-2 rounded-[24px] relative focus:ring-0"
+                >
+                  {x.name}
+                  {/* {!!counter && <CounterBadge count={counter} />} */}
+                </Button>
+              )
+            })}
+          </div>
+          {children}
+        </>
+      ) : (
+        <div>Please select an office that you can work with.</div>
+      )}
     </ComponentWrapper>
   )
 }

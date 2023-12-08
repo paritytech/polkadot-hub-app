@@ -52,7 +52,6 @@ export const officeAreaDesk = z
       y: z.number().min(0).max(100),
     }),
     allowMultipleBookings: z.boolean().default(false).optional(),
-    user: z.string().email().optional(),
   })
   .and(
     z.union([
@@ -156,7 +155,6 @@ export const companyConfig = z.object({
   name: z.string().nonempty(),
   offices: z.array(office).min(1),
   departments: z.array(z.string()).min(1).optional(),
-  divisions: z.array(z.string()).min(1).optional(),
 })
 
 export const appRole = z.object({

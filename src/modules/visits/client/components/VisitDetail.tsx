@@ -16,7 +16,7 @@ import { propEq } from '#shared/utils/fp'
 import { useStore } from '@nanostores/react'
 import dayjs from 'dayjs'
 import React from 'react'
-import { useUserAdmin } from '#modules/users/client/queries'
+import { useUserCompact } from '#modules/users/client/queries'
 import {
   useUpdateVisit,
   useUpdateVisitAdmin,
@@ -38,7 +38,7 @@ export const _VisitDetail = () => {
   const page = useStore(stores.router)
   const visitId = page?.route === 'visit' ? page.params.visitId : ''
   const { data: visit = null, refetch: refetchVisit } = useVisit(visitId)
-  const { data: user = null } = useUserAdmin(visit?.userId || '', {
+  const { data: user = null } = useUserCompact(visit?.userId || '', {
     enabled: !!visit && visit.userId !== me?.id,
   })
   const { data: areas = [] } = useVisitsAreas(visit?.officeId || '', {

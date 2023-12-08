@@ -16,14 +16,18 @@ import { useDocumentTitle } from '#client/utils/hooks'
 import Permissions from '#shared/permissions'
 import { useCreateGuestInvite } from '../queries'
 
-export const GuestInviteRequestForm = () => (
-  <PermissionsValidator
-    required={[Permissions['guest-invites'].Create]}
-    onRejectGoHome
-  >
-    <_GuestInviteRequestForm />
-  </PermissionsValidator>
-)
+export const GuestInviteRequestForm = () => {
+  const officeId = useStore(stores.officeId)
+  return (
+    <PermissionsValidator
+      officeId={officeId}
+      required={[Permissions['guest-invites'].Create]}
+      onRejectGoHome
+    >
+      <_GuestInviteRequestForm />
+    </PermissionsValidator>
+  )
+}
 
 export const _GuestInviteRequestForm: React.FC = () => {
   useDocumentTitle('Guest invite')

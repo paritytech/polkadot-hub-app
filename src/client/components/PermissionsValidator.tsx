@@ -4,21 +4,27 @@ import React from 'react'
 
 type Props = {
   required: string[]
+  officeId?: string
   onReject?: () => void
+  onRejectRender?: React.ReactElement
   onRejectGoHome?: boolean
   children: React.ReactNode
 }
 
 export const PermissionsValidator: React.FC<Props> = ({
   required = [],
+  officeId,
   children,
   onReject,
   onRejectGoHome = false,
+  onRejectRender = null,
 }) => {
   const permissions = useStore(stores.permissions)
-  const [isValid, setIsValid] = React.useState(permissions.hasAll(required))
+  const [isValid, setIsValid] = React.useState(
+    permissions.hasAll(required, officeId)
+  )
   React.useEffect(() => {
-    if (!permissions.hasAll(required)) {
+    if (!permissions.hasAll(required, officeId)) {
       if (onRejectGoHome) {
         setTimeout(() => stores.goTo('home'), 0)
       } else if (onReject) {
@@ -28,6 +34,12 @@ export const PermissionsValidator: React.FC<Props> = ({
     } else {
       setIsValid(true)
     }
-  }, [required])
-  return isValid ? <>{children}</> : null
+  }, [required, officeId])
+  if (isValid) {
+    return <>{children}</>
+  }
+  if (onRejectRender) {
+    return onRejectRender
+  }
+  return null
 }
