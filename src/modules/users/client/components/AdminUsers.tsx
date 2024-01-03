@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import dayjs from 'dayjs'
-import config from '#client/config'
+import config, { ClientUserRole } from '#client/config'
 import {
   useUsersAdmin,
   useGroupedTags,
@@ -23,11 +23,16 @@ import {
   Filters,
   LabelWrapper,
   Input,
+  Modal,
+  RoundButton,
+  Icons,
+  FButton,
+  ButtonsWrapper,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import { pick, prop, propEq, propNotEq } from '#shared/utils/fp'
-import { User, Tag, ImportedTagGroup } from '#shared/types'
+import { User, ImportedTagGroup, Tag } from '#shared/types'
 import { FRIENDLY_DATE_FORMAT, USER_ROLE_BY_ID } from '#client/constants'
 import { useDebounce, useDocumentTitle } from '#client/utils/hooks'
 import { useStore } from '@nanostores/react'
@@ -74,6 +79,9 @@ function matchSearch(user: User, query: string): boolean {
 export const UserTable: React.FC = () => {
   const permissions = useStore(stores.permissions)
   const [editedUserId, setEditedUserId] = React.useState<string | null>(null)
+  const [departmentFilterIsShown, setDepartmentFilterIsShown] =
+    React.useState(false)
+  const [roleFilterIsShown, setRoleFilterIsShown] = React.useState(false)
   const [roleFilter, setRoleFilter] = React.useState<string[]>(
     config.roles.filter(propNotEq('lowPriority', true)).map(prop('id'))
   )
@@ -103,6 +111,13 @@ export const UserTable: React.FC = () => {
     refetch()
   })
 
+  const onChangeUserRoles = React.useCallback(
+    (userId: string) => (roles: string[]) => {
+      updateUser({ id: userId, roles })
+    },
+    []
+  )
+
   const filteredUsers = React.useMemo(() => {
     return users.filter((x) => {
       return !(
@@ -120,12 +135,16 @@ export const UserTable: React.FC = () => {
         accessor: (x: User) => <UserLabel user={x} hideRole />,
       },
       {
-        Header: 'Role',
+        Header: 'Roles',
         accessor: (u: User) => (
-          <div>
-            <div className="flex">
+          <>
+            <div className="flex items-start">
               <div className="flex-1">
-                <UserRoleLabel role={u.role} />
+                <div className="-mb-1 -mr-1 flex flex-wrap">
+                  {u.roles.map((x) => (
+                    <UserRoleLabel key={x} role={x} className="mr-1 mb-1" />
+                  ))}
+                </div>
               </div>
               {permissions.has(Permissions.users.AdminAssignRoles) && (
                 <Button
@@ -135,24 +154,18 @@ export const UserTable: React.FC = () => {
                     setEditedUserId(editedUserId === u.id ? null : u.id)
                   }
                 >
-                  {editedUserId === u.id ? 'Cancel' : 'Edit'}
+                  Edit
                 </Button>
               )}
             </div>
             {editedUserId === u.id && (
-              <div className="mt-4 _-mb-2 _flex _flex-wrap">
-                <Select
-                  className="py-1 px-3"
-                  onChange={onChangeUserRole(u.id)}
-                  value={u.role}
-                  options={config.roles.map((x) => ({
-                    label: x.name,
-                    value: x.id,
-                  }))}
-                />
-              </div>
+              <UserRolesEditorModal
+                user={u}
+                onClose={() => setEditedUserId(null)}
+                onChange={onChangeUserRoles(u.id)}
+              />
             )}
-          </div>
+          </>
         ),
       },
       {
@@ -230,25 +243,6 @@ export const UserTable: React.FC = () => {
     [editedUserId]
   )
 
-  const onChangeUserRole = React.useCallback(
-    (userId: string /*, newRole: string*/) => (role: string) => {
-      const user = users.find(propEq('id', userId))
-      if (!user) return
-      const currentRole = USER_ROLE_BY_ID[user.role]
-      const targetRole = USER_ROLE_BY_ID[role]
-      if (
-        window.confirm(
-          `🛑 Are you sure to change ${user.fullName}'s role from "${
-            currentRole?.name || user.role
-          }" to "${targetRole.name}"?`
-        )
-      ) {
-        updateUser({ id: user.id, role })
-      }
-    },
-    [users]
-  )
-
   return (
     <div>
       {showDeleteModal && userForDeletion && (
@@ -263,27 +257,42 @@ export const UserTable: React.FC = () => {
       <div className="flex flex-col gap-y-4 mb-6">
         {!!config.departments && !!config.departments.length && (
           <LabelWrapper label="Department">
-            <Filters
-              options={[
-                { id: null, name: 'Any' },
-                ...config.departments.map((x) => ({ id: x, name: x })),
-              ]}
-              value={departmentFilter}
-              onChange={setDepartmentFilter}
-              multiple
-            />
+            {departmentFilterIsShown ? (
+              <Filters
+                options={[
+                  { id: null, name: 'Any' },
+                  ...config.departments.map((x) => ({ id: x, name: x })),
+                ]}
+                value={departmentFilter}
+                onChange={setDepartmentFilter}
+                multiple
+              />
+            ) : (
+              <Button
+                size="small"
+                onClick={() => setDepartmentFilterIsShown(true)}
+              >
+                Show filter
+              </Button>
+            )}
           </LabelWrapper>
         )}
         <LabelWrapper label="Role">
-          <Filters
-            options={[
-              { id: null, name: 'Any' },
-              ...config.roles.map((x) => ({ id: x.id, name: x.name })),
-            ]}
-            value={roleFilter}
-            onChange={setRoleFilter}
-            multiple
-          />
+          {roleFilterIsShown ? (
+            <Filters
+              options={[
+                { id: null, name: 'Any' },
+                ...config.roles.map((x) => ({ id: x.id, name: x.name })),
+              ]}
+              value={roleFilter}
+              onChange={setRoleFilter}
+              multiple
+            />
+          ) : (
+            <Button size="small" onClick={() => setRoleFilterIsShown(true)}>
+              Show filter
+            </Button>
+          )}
         </LabelWrapper>
         <LabelWrapper label="Search">
           <Input
@@ -444,5 +453,136 @@ const TagTable: React.FC = () => {
         </div>
       )}
     </div>
+  )
+}
+
+const UserRolesEditorModal: React.FC<{
+  user: User
+  onClose: () => void
+  onChange: (roles: string[]) => void
+}> = ({ user, ...props }) => {
+  const [changed, setChanged] = React.useState(false)
+  const [userRoleIds, setUserRoleIds] = React.useState<string[]>(user.roles)
+
+  const userRoles = React.useMemo(() => {
+    return userRoleIds.reduce<ClientUserRole[]>((acc, x) => {
+      const role = USER_ROLE_BY_ID[x]
+      if (!role) return acc
+      return acc.concat(role)
+    }, [])
+  }, [userRoleIds])
+
+  const unsupportedUserRoles = React.useMemo(() => {
+    return userRoleIds.reduce<ClientUserRole[]>((acc, x) => {
+      if (!USER_ROLE_BY_ID[x]) {
+        const unsupportedRole: ClientUserRole = {
+          id: x,
+          name: x,
+          accessByDefault: false,
+          lowPriority: false,
+        }
+        return acc.concat(unsupportedRole)
+      }
+      return acc
+    }, [])
+  }, [userRoleIds])
+
+  const availableRoles = React.useMemo(() => {
+    return config.roles.filter((x) => !userRoleIds.includes(x.id))
+  }, [userRoleIds])
+
+  const onAdd = React.useCallback(
+    (roleId: string) => () => {
+      setUserRoleIds((roles) => roles.concat(roleId))
+      setChanged(true)
+    },
+    []
+  )
+  const onRemove = React.useCallback(
+    (roleId: string) => () => {
+      setUserRoleIds((roles) => roles.filter((x) => x !== roleId))
+      setChanged(true)
+    },
+    []
+  )
+
+  const onCloseSafe = React.useCallback(() => {
+    if (changed) {
+      if (window.confirm('You have unsaved changes. Close anyway?')) {
+        props.onClose()
+      }
+      return
+    }
+    props.onClose()
+  }, [props.onClose, changed])
+
+  return (
+    <Modal title="Role editor" size="normal" onClose={onCloseSafe}>
+      <div className="mb-6">
+        <UserLabel user={user} hideRole />
+      </div>
+      {!!userRoles.length && (
+        <div>
+          <div className="text-text-tertiary">User roles</div>
+          <div className="flex flex-wrap -mr-1 mb-3">
+            {userRoles.map((x) => (
+              <TagSpan
+                key={x.id}
+                size="normal"
+                color="purple"
+                className="flex gap-x-1 mb-1 mr-1"
+              >
+                {x.name}
+                <button onClick={onRemove(x.id)}>
+                  <Icons.Cross fillClassName="fill-purple-200" />
+                </button>
+              </TagSpan>
+            ))}
+            {unsupportedUserRoles.map((x) => (
+              <TagSpan
+                key={x.id}
+                size="normal"
+                color="purple"
+                className="flex gap-x-1 mb-1 mr-1"
+              >
+                {x.name} <span className="text-text-disabled">UNSUPPORTED</span>
+                <button onClick={onRemove(x.id)}>
+                  <Icons.Cross fillClassName="fill-purple-200" />
+                </button>
+              </TagSpan>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="text-text-tertiary">Available roles</div>
+      <div className="flex flex-wrap -mr-1 mb-5">
+        {availableRoles.map((x) => (
+          <TagSpan
+            key={x.id}
+            size="normal"
+            color="gray"
+            className="mb-1 mr-1 cursor-pointer hover:opacity-70"
+            onClick={onAdd(x.id)}
+          >
+            {x.name}
+          </TagSpan>
+        ))}
+      </div>
+
+      <ButtonsWrapper
+        right={[
+          <FButton kind="secondary" onClick={props.onClose}>
+            Cancel
+          </FButton>,
+          <FButton
+            kind="primary"
+            onClick={() => props.onChange(userRoleIds)}
+            disabled={!changed}
+          >
+            Save
+          </FButton>,
+        ]}
+      />
+    </Modal>
   )
 }

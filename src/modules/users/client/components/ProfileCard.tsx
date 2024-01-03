@@ -53,8 +53,6 @@ export const Card = ({
   fullView?: boolean
   isMine?: boolean
 }) => {
-  const permissions = useStore(stores.permissions)
-
   const location = React.useMemo(() => {
     if (user && !user.geodata?.doNotShareLocation) {
       const city = user.city || ''
@@ -65,9 +63,12 @@ export const Card = ({
     return null
   }, [user])
 
-  const userRole = React.useMemo(() => {
-    const role = USER_ROLE_BY_ID[user.role]
-    return role?.name || user.role
+  const userRoles = React.useMemo<string[]>(() => {
+    return user.roles.reduce<string[]>((acc, x) => {
+      const role = USER_ROLE_BY_ID[x]
+      if (!role) return acc
+      return acc.concat(role.name)
+    }, [])
   }, [user])
 
   return (
@@ -95,10 +96,12 @@ export const Card = ({
                 ))}
             </div>
           </PermissionsValidator>
-          <div className="mt-3 mb-2">
-            <Tag size="small" color="yellow">
-              {userRole}
-            </Tag>
+          <div className="mt-3">
+            {userRoles.map((x) => (
+              <Tag key={x} size="small" color="gray" className="mr-1 mb-2">
+                {x}
+              </Tag>
+            ))}
           </div>
         </div>
         <PermissionsValidator required={[Permissions.users.ListProfiles]}>

@@ -26,7 +26,10 @@ export type ClientOfficeConfig = Pick<
   | 'allowRoomReservation'
 >
 
-type ClientUserRole = Pick<AppRole, 'id' | 'name' | 'accessByDefault'> & {
+export type ClientUserRole = Pick<
+  AppRole,
+  'id' | 'name' | 'accessByDefault'
+> & {
   lowPriority: boolean
 }
 

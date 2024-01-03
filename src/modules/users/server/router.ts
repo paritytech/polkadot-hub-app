@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Filterable, Op } from 'sequelize'
 import { appConfig } from '#server/app-config'
@@ -9,6 +10,7 @@ import {
   ADMIN_ACCESS_PERMISSION_RE,
 } from '#server/constants'
 import { AuthAccount } from '#shared/types'
+import * as fp from '#shared/utils/fp'
 import { Permissions } from '../permissions'
 import {
   AuthProvider,
@@ -27,7 +29,7 @@ import {
   getUserProviderQuery,
   removeAuthId,
 } from './helpers'
-import dayjs from 'dayjs'
+
 import { Metadata } from '../metadata-schema'
 
 const ROLES_ALLOWED_TO_BE_ON_MAP = appConfig.getRolesByPermission(
@@ -602,37 +604,44 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
     async (
       req: FastifyRequest<{
         Params: { userId: string }
-        Body: Pick<User, 'role'>
+        Body: Pick<User, 'roles'>
       }>,
       reply
     ) => {
       req.check(Permissions.AdminAssignRoles)
-      if (
-        !appConfig.config.permissions.roles.some((x) => x.id === req.body.role)
-      ) {
-        return reply.throw.badParams('Invalid role')
+
+      const newRoles = req.body.roles
+      const availableRoles = appConfig.config.permissions.roles.map(
+        fp.prop('id')
+      )
+      if (newRoles.some((x) => !availableRoles.includes(x))) {
+        return reply.throw.badParams('Request contains an unsupported role')
       }
+
       const user = await fastify.db.User.findByPkActive(req.params.userId)
       if (!user) {
         return reply.throw.notFound()
       }
-      const previousRole = user.role
-      await user.set({ role: req.body.role }).save()
+      const previousRoles = [...user.roles]
+      await user.set({ roles: newRoles }).save()
+
       if (fastify.integrations.Matrix) {
         const rolesById = appConfig.config.permissions.roles.reduce(
-          (acc, x) => ({ ...acc, [x.id]: x }),
-          {} as Record<string, any>
+          fp.by('id'),
+          {}
         )
-        const previousRoleName = rolesById[previousRole]?.name || previousRole
-        const targetRoleName = rolesById[req.body.role]?.name || req.body.role
+        const previousRoleNames = previousRoles.map(
+          (x) => rolesById[x]?.name || x
+        )
+        const targetRoleNames = newRoles.map((x) => rolesById[x]?.name || x)
         const message = appConfig.templates.notification(
           'users',
           'roleChanged',
           {
             admin: req.user.usePublicProfileView(),
             user: user.usePublicProfileView(),
-            previousRoleName,
-            targetRoleName,
+            previousRoleNames,
+            targetRoleNames,
           }
         )
         if (message) {

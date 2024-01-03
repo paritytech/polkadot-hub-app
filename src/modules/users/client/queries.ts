@@ -80,7 +80,7 @@ export const useMapStats = () => {
 }
 
 export const useUpdateUserAdmin = (cb: () => void) =>
-  useMutation<void, AxiosError, Pick<User, 'role' | 'id'>>(
+  useMutation<void, AxiosError, Pick<User, 'id' | 'roles'>>(
     ({ id, ...data }) => api.put(`/admin-api/users/user/${id}`, data),
     { onSuccess: cb }
   )

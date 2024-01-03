@@ -1,2 +1,12 @@
 roleChanged: |
-  {{ admin.fullName }} ({{ admin.email }}) assigned {{ user.fullName }}'s ({{ user.email }}) role: "{{ previousRoleName }}" -> "{{ targetRoleName }}"
+  {{ admin.fullName }} ({{ admin.email }}) updated {{ user.fullName }}'s ({{ user.email }}) roles set:
+  <br>
+  Previous:
+  {{#previousRoleNames}}
+    <code>{{.}}</code>
+  {{/previousRoleNames}}
+  <br>
+  New:
+  {{#targetRoleNames}}
+    <code>{{.}}</code>
+  {{/targetRoleNames}}
