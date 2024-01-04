@@ -610,13 +610,18 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
     ) => {
       req.check(Permissions.AdminAssignRoles)
 
-      const newRoles = req.body.roles
+      let newRoles = req.body.roles
       const availableRoles = appConfig.config.permissions.roles.map(
         fp.prop('id')
       )
       if (newRoles.some((x) => !availableRoles.includes(x))) {
         return reply.throw.badParams('Request contains an unsupported role')
       }
+
+      // sort roles array before saving
+      newRoles = appConfig.config.permissions.roles
+        .filter(fp.propIn('id', newRoles))
+        .map(fp.prop('id'))
 
       const user = await fastify.db.User.findByPkActive(req.params.userId)
       if (!user) {

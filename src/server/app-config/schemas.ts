@@ -52,8 +52,11 @@ export const officeAreaDesk = z
       y: z.number().min(0).max(100),
     }),
     allowMultipleBookings: z.boolean().default(false).optional(),
+    fullAreaBooking: z.boolean().default(false),
+    permittedRoles: z.array(z.string()).default([]),
   })
   .and(
+    // TODO: delete `type` & `user` fields
     z.union([
       z.object({
         type: z.literal('personal'),

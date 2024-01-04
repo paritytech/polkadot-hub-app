@@ -34,6 +34,7 @@ import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import { pick, prop, propEq, propNotEq } from '#shared/utils/fp'
 import { User, ImportedTagGroup, Tag } from '#shared/types'
 import { FRIENDLY_DATE_FORMAT, USER_ROLE_BY_ID } from '#client/constants'
+import { toggleInArray } from '#client/utils'
 import { useDebounce, useDocumentTitle } from '#client/utils/hooks'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
@@ -464,13 +465,14 @@ const UserRolesEditorModal: React.FC<{
   const [changed, setChanged] = React.useState(false)
   const [userRoleIds, setUserRoleIds] = React.useState<string[]>(user.roles)
 
-  const userRoles = React.useMemo(() => {
-    return userRoleIds.reduce<ClientUserRole[]>((acc, x) => {
-      const role = USER_ROLE_BY_ID[x]
-      if (!role) return acc
-      return acc.concat(role)
-    }, [])
-  }, [userRoleIds])
+  const onToggleRole = React.useCallback(
+    (roleId: string) => (ev: React.MouseEvent) => {
+      ev.preventDefault()
+      setUserRoleIds((ids) => toggleInArray(ids, roleId))
+      setChanged(true)
+    },
+    []
+  )
 
   const unsupportedUserRoles = React.useMemo(() => {
     return userRoleIds.reduce<ClientUserRole[]>((acc, x) => {
@@ -487,25 +489,6 @@ const UserRolesEditorModal: React.FC<{
     }, [])
   }, [userRoleIds])
 
-  const availableRoles = React.useMemo(() => {
-    return config.roles.filter((x) => !userRoleIds.includes(x.id))
-  }, [userRoleIds])
-
-  const onAdd = React.useCallback(
-    (roleId: string) => () => {
-      setUserRoleIds((roles) => roles.concat(roleId))
-      setChanged(true)
-    },
-    []
-  )
-  const onRemove = React.useCallback(
-    (roleId: string) => () => {
-      setUserRoleIds((roles) => roles.filter((x) => x !== roleId))
-      setChanged(true)
-    },
-    []
-  )
-
   const onCloseSafe = React.useCallback(() => {
     if (changed) {
       if (window.confirm('You have unsaved changes. Close anyway?')) {
@@ -521,48 +504,27 @@ const UserRolesEditorModal: React.FC<{
       <div className="mb-6">
         <UserLabel user={user} hideRole />
       </div>
-      {!!userRoles.length && (
-        <div>
-          <div className="text-text-tertiary">User roles</div>
-          <div className="flex flex-wrap -mr-1 mb-3">
-            {userRoles.map((x) => (
-              <TagSpan
-                key={x.id}
-                size="normal"
-                color="purple"
-                className="flex gap-x-1 mb-1 mr-1"
-              >
-                {x.name}
-                <button onClick={onRemove(x.id)}>
-                  <Icons.Cross fillClassName="fill-purple-200" />
-                </button>
-              </TagSpan>
-            ))}
-            {unsupportedUserRoles.map((x) => (
-              <TagSpan
-                key={x.id}
-                size="normal"
-                color="purple"
-                className="flex gap-x-1 mb-1 mr-1"
-              >
-                {x.name} <span className="text-text-disabled">UNSUPPORTED</span>
-                <button onClick={onRemove(x.id)}>
-                  <Icons.Cross fillClassName="fill-purple-200" />
-                </button>
-              </TagSpan>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="text-text-tertiary">Available roles</div>
-      <div className="flex flex-wrap -mr-1 mb-5">
-        {availableRoles.map((x) => (
+
+      <div className="flex flex-wrap -mr-1 mb-3">
+        {unsupportedUserRoles.map((x) => (
           <TagSpan
             key={x.id}
             size="normal"
-            color="gray"
-            className="mb-1 mr-1 cursor-pointer hover:opacity-70"
-            onClick={onAdd(x.id)}
+            color={userRoleIds.includes(x.id) ? 'purple' : 'gray'}
+            className="mb-2 mr-1 cursor-pointer hover:opacity-80"
+            onClick={onToggleRole(x.id)}
+          >
+            {x.name}{' '}
+            <span className="text-text-disabled italic">UNSUPPORTED</span>
+          </TagSpan>
+        ))}
+        {config.roles.map((x) => (
+          <TagSpan
+            key={x.id}
+            size="normal"
+            color={userRoleIds.includes(x.id) ? 'purple' : 'gray'}
+            className="mb-2 mr-1 cursor-pointer hover:opacity-80"
+            onClick={onToggleRole(x.id)}
           >
             {x.name}
           </TagSpan>

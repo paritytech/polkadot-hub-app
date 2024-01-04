@@ -11,6 +11,7 @@ import {
 import config from '#server/config'
 import { OfficeArea, Office } from '#server/app-config/types'
 import { appEvents } from '#server/utils/app-events'
+import * as fp from '#shared/utils/fp'
 import {
   getConflictedVisits,
   getFullBookableAreas,
@@ -332,7 +333,7 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
             )
           }
 
-          // "full_area" areaId + deskId pairs
+          // "fullAreaBooking" areaId + deskId pairs
           const bookableAreaDeskPairs = getFullBookableAreas(office.areas!)
 
           // check whether the requested desks are in fully booked areas
@@ -483,7 +484,7 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
         fullBookableAreas
       )
 
-      const desks = req.office
+      const allDesks = req.office
         .areas!.filter((a) => a.available)
         .map((a) =>
           a.desks.map((d) => ({
@@ -492,13 +493,39 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
             type: d.type,
             user: d.user,
             multiple: d.allowMultipleBookings,
+            permittedRoles: d.permittedRoles,
           }))
         )
         .flat()
+
+      const deskRoles = Array.from(
+        new Set(
+          allDesks
+            .filter((x) => x.permittedRoles.length)
+            .map((x) => x.permittedRoles)
+            .flat()
+        )
+      )
+      const usersWithDeskRoles = await fastify.db.User.findAll({
+        where: { roles: { [Op.overlap]: deskRoles } },
+      })
+      const deskRolesPresented = deskRoles.filter((x) =>
+        usersWithDeskRoles.some((u) => u.roles.includes(x))
+      )
+
+      const desks = allDesks
         .filter((x) => {
           // desk is in the fully reserved area
           if (reservedAreaIds.includes(x.areaId)) {
             return false
+          }
+          // desk is only available for specified list of roles
+          if (x.permittedRoles.length) {
+            if (x.permittedRoles.some((x) => deskRolesPresented.includes(x))) {
+              if (!x.permittedRoles.some((x) => req.user.roles.includes(x))) {
+                return false
+              }
+            }
           }
           // Desk can be booked multiple times
           if (x.multiple) {
@@ -524,6 +551,7 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
           )
         })
         .map((x) => ({ areaId: x.areaId, deskId: x.deskId }))
+
       return desks
     }
   )

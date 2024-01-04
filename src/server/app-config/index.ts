@@ -180,6 +180,26 @@ export class AppConfig {
     }
     this.integrations = integrations
 
+    // validate desks' permittedRoles lists
+    const allRoles = this.config.permissions.roles.map(fp.prop('id'))
+    this.config.company.offices.forEach((o) => {
+      o.areas?.forEach((a) => {
+        a.desks.forEach((d) => {
+          if (d.permittedRoles.length) {
+            const unsupportedRole = d.permittedRoles.find(
+              (x) => !allRoles.includes(x)
+            )
+            if (unsupportedRole) {
+              throw new AppError(
+                `There is an unsupported role assigned to the "${o.id} ${a.id} ${d.id}" desk. Please change it to one of the roles listed in the "./config/permissions.json" file.`,
+                unsupportedRole
+              )
+            }
+          }
+        })
+      })
+    })
+
     // store permissions
     this.permissionsByRole = this.config.permissions.roles.reduce((acc, x) => {
       return { ...acc, [x.id]: x.permissions }
