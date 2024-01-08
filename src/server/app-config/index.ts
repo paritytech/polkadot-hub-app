@@ -180,7 +180,7 @@ export class AppConfig {
     }
     this.integrations = integrations
 
-    // validate desks' permittedRoles lists
+    // validate the `permittedRoles` lists for each desk
     const allRoles = this.config.permissions.roles.map(fp.prop('id'))
     this.config.company.offices.forEach((o) => {
       o.areas?.forEach((a) => {

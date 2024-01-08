@@ -165,3 +165,7 @@ export function camelcasify(text: string): string {
 export function escapeRegExpSensitiveCharacters(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
+
+export function hasIntersection<T>(arr1: T[], arr2: T[]): boolean {
+  return arr1.some((x) => arr2.includes(x))
+}

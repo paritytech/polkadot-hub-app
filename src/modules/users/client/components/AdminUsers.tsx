@@ -31,7 +31,13 @@ import {
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
-import { pick, prop, propEq, propNotEq } from '#shared/utils/fp'
+import {
+  pick,
+  prop,
+  propEq,
+  propNotEq,
+  hasIntersection,
+} from '#shared/utils/fp'
 import { User, ImportedTagGroup, Tag } from '#shared/types'
 import { FRIENDLY_DATE_FORMAT, USER_ROLE_BY_ID } from '#client/constants'
 import { toggleInArray } from '#client/utils'
@@ -58,7 +64,7 @@ export const AdminUsers: React.FC = () => {
 }
 
 function matchRole(user: User, roles: string[]): boolean {
-  return roles.length ? roles.includes(user.role) : true
+  return roles.length ? hasIntersection(user.roles, roles) : true
 }
 function matchDepartment(user: User, departments: string[]): boolean {
   return departments.length

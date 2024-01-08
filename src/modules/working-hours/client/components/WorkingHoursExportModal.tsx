@@ -6,7 +6,7 @@ import { DATE_FORMAT } from '#client/constants'
 
 export const WorkingHoursExportModal: React.FC<{
   onClose: () => void
-  roles: string[]
+  roles: Array<{ id: string; name: string }>
   defaultPeriod: [Dayjs, Dayjs]
 }> = ({ onClose, roles, defaultPeriod }) => {
   const [period, setPeriod] = React.useState<{ from: Dayjs; to: Dayjs }>({
@@ -39,7 +39,7 @@ export const WorkingHoursExportModal: React.FC<{
 
   React.useEffect(() => {
     if (roles.length) {
-      setRole(roles[0])
+      setRole(roles[0].id)
     }
   }, [roles])
 
@@ -66,7 +66,7 @@ export const WorkingHoursExportModal: React.FC<{
         <div>
           <div className="text-text-tertiary mb-1">Role</div>
           <Select
-            options={roles.map((x) => ({ value: x, label: x }))}
+            options={roles.map((x) => ({ value: x.id, label: x.name }))}
             value={role}
             onChange={setRole}
           />

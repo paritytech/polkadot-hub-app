@@ -110,7 +110,6 @@ export const useSubmitOnboarding = (cb: () => void) =>
     { onSuccess: cb }
   )
 
-// ...........................................................................
 export const usePublicProfile = (userId: string | null) => {
   const path = `/user-api/users/profile/${userId}`
   return useQuery<PublicUserProfile, AxiosError>(

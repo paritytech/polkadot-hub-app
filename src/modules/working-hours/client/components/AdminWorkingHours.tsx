@@ -1,5 +1,6 @@
 import * as React from 'react'
 import dayjs, { Dayjs } from 'dayjs'
+import config from '#client/config'
 import {
   Button,
   H1,
@@ -10,7 +11,7 @@ import {
   Tag,
   UserLabel,
 } from '#client/components/ui'
-import { by, groupBy, propEq, sortBy } from '#shared/utils/fp'
+import { by, groupBy, pick, propEq, propIn, sortBy } from '#shared/utils/fp'
 import { formatDateRange } from '#client/utils'
 import { DATE_FORMAT } from '#client/constants'
 import { useUsersCompact } from '#modules/users/client/queries'
@@ -85,7 +86,12 @@ export const AdminWorkingHours: React.FC = () => {
     [userConfigs]
   )
 
-  const roles = React.useMemo(() => Object.keys(configByRole), [configByRole])
+  const roles = React.useMemo(() => {
+    const allowedRoles = Object.keys(configByRole)
+    return config.roles
+      .filter((x) => allowedRoles.includes(x.id))
+      .map(pick(['id', 'name']))
+  }, [configByRole])
 
   const moduleConfig = React.useMemo(
     () => (role ? configByRole[role] : null),
@@ -122,8 +128,8 @@ export const AdminWorkingHours: React.FC = () => {
   const userWorkingHours = React.useMemo<UserWorkingHours[]>(() => {
     return users
       .filter((user) => {
-        const userRole = roles.find((x) => user.roles.includes(x))
-        return userRole === role
+        const userRole = roles.find(propIn('id', user.roles))
+        return userRole?.id === role
       })
       .map((user) => {
         const workingHours = calculateTotalWorkingHours(
@@ -258,7 +264,7 @@ export const AdminWorkingHours: React.FC = () => {
 
   React.useEffect(() => {
     if (roles.length) {
-      setRole(roles[0])
+      setRole(roles[0].id)
     }
   }, [roles])
 
@@ -354,7 +360,7 @@ export const AdminWorkingHours: React.FC = () => {
           {/* role picker */}
           <Select
             className="py-[5px]"
-            options={roles.map((x) => ({ value: x, label: x }))}
+            options={roles.map((x) => ({ value: x.id, label: x.name }))}
             value={role}
             onChange={(value) => {
               setOffset(0)
