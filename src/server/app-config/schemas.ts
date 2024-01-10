@@ -1,14 +1,16 @@
-import { z } from 'zod'
+import { any, z } from 'zod'
 
-export const componentRef = z
-  .tuple([z.string(), z.string()])
-  .or(
+const componentRef: z.ZodTypeAny = z.lazy(() =>
+  z.union([
+    z.tuple([z.string(), z.string()]),
     z.tuple([
       z.string(),
       z.string(),
       z.object({ offices: z.array(z.string()).optional() }),
-    ])
-  )
+    ]),
+    z.array(componentRef),
+  ])
+)
 
 export const layout = z.object({
   mobile: z.object({
@@ -17,11 +19,10 @@ export const layout = z.object({
     events: z.array(componentRef),
     news: z.array(componentRef),
   }),
-  desktop: z.tuple([
-    z.array(componentRef),
-    z.array(componentRef),
-    z.array(componentRef),
-  ]),
+  desktop: z.object({
+    sidebar: z.array(componentRef),
+    main: z.array(z.array(componentRef)),
+  }),
 })
 
 export const applicationConfig = z.object({

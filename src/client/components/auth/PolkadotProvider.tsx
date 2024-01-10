@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  BackButton,
   FButton,
   Icons,
   Input,
@@ -204,47 +205,52 @@ export const PolkadotProvider: React.FC = () => {
         )
       case AuthSteps.ChooseAccount:
         return (
-          <StepWrapper
-            title="Choose your account"
-            subtitle={`Works with Polkadot Js and Talisman`}
-          >
+          <div className="grid grid-cols-[1fr_2fr_1fr]">
             <div>
-              <Select
-                placeholder="select account"
-                containerClassName="w-full mt-8 mb-4"
-                value={selectedAddress}
-                onChange={(v) => {
-                  setSelectedAddress(v)
-                  setError('')
-                }}
-                options={[{ label: 'select account', value: '' }].concat(
-                  accounts.map((account) => ({
-                    label: `${account.meta.name} (${account.meta.source})`,
-                    value: account.address,
-                  }))
-                )}
-              ></Select>
-              <div className="flex align-middle justify-center gap-2 mb-14">
-                <Icons.WarningIcon />
-                <P
-                  textType="additional"
-                  className="text-text-secondary mt-0 max-w-[400px] text-left"
-                >
-                  We strongly recommend to use a separate empty account as
-                  identity instead of your wallet with real funds.
-                </P>
-              </div>
+              <BackButton className="self-start" />
             </div>
-            <FButton
-              className="w-full"
-              kind="primary"
-              size="small"
-              onClick={() => handleLogin()}
+            <StepWrapper
+              title="Choose your account"
+              subtitle={`Works with Polkadot Js and Talisman`}
             >
-              Continue
-            </FButton>
-            {error && <div className="text-accents-red">{error}</div>}
-          </StepWrapper>
+              <div>
+                <Select
+                  placeholder="select account"
+                  containerClassName="w-full mt-4 mb-2"
+                  value={selectedAddress}
+                  onChange={(v) => {
+                    setSelectedAddress(v)
+                    setError('')
+                  }}
+                  options={[{ label: 'select account', value: '' }].concat(
+                    accounts.map((account) => ({
+                      label: `${account.meta.name} (${account.meta.source})`,
+                      value: account.address,
+                    }))
+                  )}
+                ></Select>
+                <div className="flex align-middle justify-center gap-2 mb-14">
+                  <Icons.WarningIcon />
+                  <P
+                    textType="additional"
+                    className="text-text-secondary mt-0 max-w-[400px] text-left"
+                  >
+                    We strongly recommend to use a separate empty account as
+                    identity instead of your wallet with real funds.
+                  </P>
+                </div>
+              </div>
+              <FButton
+                className="w-full"
+                kind="primary"
+                size="small"
+                onClick={() => handleLogin()}
+              >
+                Continue
+              </FButton>
+              {error && <div className="text-accents-red">{error}</div>}
+            </StepWrapper>
+          </div>
         )
       case AuthSteps.Warning:
         return (
