@@ -8,36 +8,22 @@ import objectPlugin from 'dayjs/plugin/toObject'
 import utc from 'dayjs/plugin/utc'
 import weekdayPlugin from 'dayjs/plugin/weekday'
 import { DatePicker } from '#client/components/DatePicker'
-import { OfficeFloorMap } from '#client/components/OfficeFloorMap'
 import {
   Button,
   ButtonsWrapper,
   FButton,
   H2,
   P,
-  Select,
-  Tag,
   WidgetWrapper,
 } from '#client/components/ui'
 import * as stores from '#client/stores'
 import { DATE_FORMAT } from '#client/constants'
 import { OfficeArea, VisitRequest } from '#shared/types'
 import { cn, generateId, toggleInArray } from '#client/utils'
-import {
-  pick,
-  prop,
-  propEq,
-  propNotEq,
-  propNotIn,
-  uniq,
-} from '#shared/utils/fp'
+import { pick, prop, propEq, propNotEq, uniq } from '#shared/utils/fp'
 import Permissions from '#shared/permissions'
-import {
-  useAvailableDesks,
-  useVisitConfig,
-  useVisits,
-  useVisitsAreas,
-} from '../queries'
+import { useVisitConfig, useVisits, useVisitsAreas } from '../queries'
+import { DeskPicker } from './DeskPicker'
 
 dayjs.extend(weekdayPlugin)
 dayjs.extend(objectPlugin)
@@ -71,26 +57,6 @@ export const DateDeskPicker: React.FC<Props> = ({ officeId, onSubmit }) => {
     retry: false,
   })
   const { data: areas = [] } = useVisitsAreas(officeId)
-  const [areaId, setAreaId] = React.useState<string | null>(null)
-  React.useEffect(() => {
-    if (areas.length) {
-      setAreaId(areas[0].id)
-    }
-  }, [areas])
-  const area = React.useMemo(() => areas.find((x) => areaId === x.id), [areaId])
-  const onAreaChange = React.useCallback(
-    (areaId: string) => setAreaId(areaId),
-    []
-  )
-
-  const { data: availableDesks = [], isLoading: isAvailableDesksLoading } =
-    useAvailableDesks(officeId, selectedDates)
-
-  const availableAreaDeskIds = React.useMemo(() => {
-    return availableDesks
-      .filter((x) => x.areaId === area?.id)
-      .map((x) => x.deskId)
-  }, [availableDesks, area])
 
   const reservedDates = React.useMemo(() => {
     if (permissions.has(Permissions.visits.AdminManage)) {
@@ -102,33 +68,26 @@ export const DateDeskPicker: React.FC<Props> = ({ officeId, onSubmit }) => {
   const [selectedDeskId, setSelectedDeskId] = React.useState<string | null>(
     null
   )
-  const onToggleDesk = React.useCallback((deskId: string) => {
-    setSelectedDeskId((value) => (value === deskId ? null : deskId))
+  const onToggleDesk = React.useCallback((desk: string) => {
+    setSelectedDeskId((value) => (value === desk ? null : desk))
   }, [])
+
+  const [areaId, setAreaId] = React.useState<string | null>(null)
 
   const [pendingResult, setPendingResult] = React.useState<Result | null>(null)
   React.useEffect(() => {
-    if (area && selectedDates.length && selectedDeskId) {
+    if (areaId && selectedDates.length && selectedDeskId) {
       setPendingResult({
         id: generateResultId(),
         dates: selectedDates,
-        areaId: area.id,
+        areaId,
         deskId: selectedDeskId,
       })
     } else {
       setPendingResult(null)
     }
-  }, [area, selectedDates, selectedDeskId])
+  }, [areaId, selectedDates, selectedDeskId])
 
-  // TODO: test it
-  React.useEffect(() => {
-    if (
-      selectedDeskId &&
-      (!availableAreaDeskIds.includes(selectedDeskId) || !selectedDates.length)
-    ) {
-      setSelectedDeskId(null)
-    }
-  }, [availableAreaDeskIds, selectedDeskId, selectedDates])
   const [confirmedResults, setConfirmedResults] = React.useState<Result[]>([])
 
   const onConfirmResult = React.useCallback(() => {
@@ -139,6 +98,7 @@ export const DateDeskPicker: React.FC<Props> = ({ officeId, onSubmit }) => {
       setSelectedDeskId(null)
     }
   }, [pendingResult])
+
   const preReservedDates = React.useMemo(
     () =>
       confirmedResults
@@ -167,17 +127,6 @@ export const DateDeskPicker: React.FC<Props> = ({ officeId, onSubmit }) => {
     }
     onSubmit(result)
   }, [confirmedResults, pendingResult])
-
-  const [unavailableDeskNames, unavailableArea] = React.useMemo<
-    [string[], boolean]
-  >(() => {
-    if (!area || !selectedDates.length || isAvailableDesksLoading)
-      return [[], false]
-    const areaNames = area.desks
-      .filter(propNotIn('id', availableAreaDeskIds))
-      .map(prop('name'))
-    return [areaNames, area.desks.length === areaNames.length]
-  }, [area, availableAreaDeskIds, selectedDates, isAvailableDesksLoading])
 
   if (!config) {
     return null
@@ -226,75 +175,14 @@ export const DateDeskPicker: React.FC<Props> = ({ officeId, onSubmit }) => {
             <P className="mb-3 text-text-secondary" textType="additional">
               Please select a desk by clicking on a button on the floor map.
             </P>
-            {unavailableDeskNames.length ? (
-              <>
-                <p className="mb-5">
-                  {unavailableArea ? (
-                    <span>
-                      ☝️ Area{' '}
-                      <Tag color="gray" size="small">
-                        {area?.name}
-                      </Tag>{' '}
-                      is fully unavailable for reservation.
-                    </span>
-                  ) : (
-                    <span>
-                      ☝️ Desk{unavailableDeskNames.length !== 1 && 's'}{' '}
-                      {unavailableDeskNames.map((x, i) => (
-                        <span key={x}>
-                          {!!i && ', '}
-                          <Tag color="gray" size="small">
-                            {x}
-                          </Tag>
-                        </span>
-                      ))}{' '}
-                      {unavailableDeskNames.length !== 1 ? 'are' : 'is'} not
-                      available for booking.
-                    </span>
-                  )}
-                </p>
-                {/* <hr className="my-4" /> */}
-              </>
-            ) : null}
-            {areas.length > 1 ? (
-              <Select
-                label="Area"
-                options={areas.map((x) => ({
-                  label: x.name,
-                  value: x.id,
-                }))}
-                value={area?.id}
-                onChange={onAreaChange}
-                placeholder={'Select area'}
-                className="w-full"
-                containerClassName="mb-2"
-              />
-            ) : null}
-            {area?.desks.length && (
-              <Select
-                label="Desk"
-                options={(area?.desks || []).map((x) => ({
-                  label: x.name,
-                  value: x.id,
-                  disabled: !availableAreaDeskIds.includes(x.id),
-                }))}
-                value={selectedDeskId || undefined}
-                onChange={onToggleDesk}
-                placeholder={'Select desk'}
-                className="w-full"
-              />
-            )}
-
-            {!!area && (
-              <div className="mt-4">
-                <OfficeFloorMap
-                  area={area}
-                  availableDeskIds={availableAreaDeskIds}
-                  selectedDeskId={selectedDeskId}
-                  onToggleDesk={onToggleDesk}
-                />
-              </div>
-            )}
+            <DeskPicker
+              selectedDates={selectedDates}
+              officeId={officeId}
+              onSelectDesk={onToggleDesk}
+              selectedDeskId={selectedDeskId}
+              onSelectArea={setAreaId}
+              selectedAreaId={areaId}
+            />
           </WidgetWrapper>
         </div>
 
@@ -321,7 +209,7 @@ type ResultsProps = {
   confirmedResults: Result[]
   onConfirmResult: () => void
   onRemoveResult: (id: string | null) => void
-  onSubmit: () => void
+  onSubmit?: () => void
 }
 const Results: React.FC<ResultsProps> = ({
   areas,
@@ -343,7 +231,7 @@ const Results: React.FC<ResultsProps> = ({
   const onClickSubmit = React.useCallback(
     (ev: React.MouseEvent<HTMLButtonElement>) => {
       ev.preventDefault()
-      onSubmit()
+      onSubmit && onSubmit()
     },
     [onSubmit]
   )
@@ -354,7 +242,7 @@ const Results: React.FC<ResultsProps> = ({
       {confirmedResults.map((result, i) => (
         <ResultItem
           key={result.id}
-          areas={areas}
+          area={areas.find(propEq('id', result.areaId))}
           result={result}
           status="confirmed"
           onRemove={onRemoveResult}
@@ -362,7 +250,7 @@ const Results: React.FC<ResultsProps> = ({
       ))}
       {!!pendingResult && (
         <ResultItem
-          areas={areas}
+          area={areas.find(propEq('id', pendingResult.areaId))}
           result={pendingResult}
           status="pending"
           onRemove={onRemoveResult}
@@ -388,20 +276,19 @@ const Results: React.FC<ResultsProps> = ({
 }
 
 type ResultItemProps = {
-  areas: OfficeArea[]
+  area: OfficeArea | undefined
   result: Result
   status: 'pending' | 'confirmed'
   onRemove: (id: string | null) => void
   className?: string
 }
 const ResultItem: React.FC<ResultItemProps> = ({
-  areas,
+  area,
   result,
   status,
   onRemove,
   className,
 }) => {
-  const area = areas.find(propEq('id', result.areaId))
   const areaName = area?.name
   const deskName = area?.desks.find(propEq('id', result.deskId))?.name
   const onRemoveItem = React.useCallback(

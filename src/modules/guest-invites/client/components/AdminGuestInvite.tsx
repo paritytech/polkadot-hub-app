@@ -17,6 +17,7 @@ import {
   Select,
   ButtonsWrapper,
   Button,
+  LabelWrapper,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { OfficeFloorMap } from '#client/components/OfficeFloorMap'
@@ -97,38 +98,38 @@ export const AdminGuestInvite: React.FC = () => {
           <div className="block lg:flex">
             <div className="mb-4 lg:w-[400px] lg:mr-4 lg:mb-0">
               <H2>Guest invitation details</H2>
-              <div className="mb-1">
-                <b>Full name:</b> {invite.fullName}
-              </div>
-              <div className="mb-1">
-                <b>Email:</b>{' '}
-                <Link href={`mailto:${invite.email}`}>{invite.email}</Link>
-              </div>
-              <div className="mb-1">
-                <b>Office:</b> {office?.icon || ''}
-                {office?.name}
-              </div>
-              <div className="mb-1">
-                <b>Dates:</b>{' '}
-                {invite.dates.map((x, i) => (
-                  <span key={x}>
-                    <Tag color="gray">
-                      {dayjs(x, DATE_FORMAT).format('D MMMM, YYYY')}
-                    </Tag>
-                    {i !== invite.dates.length - 1 && ', '}
+              <div className="flex flex-col gap-2">
+                <LabelWrapper label="Full name">{invite.fullName}</LabelWrapper>
+                <LabelWrapper label="Email">
+                  <Link href={`mailto:${invite.email}`}>{invite.email}</Link>
+                </LabelWrapper>
+                <LabelWrapper label="Office">
+                  {office?.icon || ''}
+                  {office?.name}
+                </LabelWrapper>
+                <LabelWrapper label="Dates">
+                  <div className="flex flex-col gap-4">
+                    {invite.dates.map((x, i) => (
+                      <span key={x}>
+                        <Tag color="gray">
+                          {dayjs(x, DATE_FORMAT).format('D MMMM, YYYY')}
+                        </Tag>
+                        {i !== invite.dates.length - 1 && ', '}
+                      </span>
+                    ))}
+                  </div>
+                </LabelWrapper>
+
+                <LabelWrapper label="Invited by">
+                  <span>
+                    <Avatar
+                      src={user?.avatar}
+                      size="small"
+                      className="mr-2 hidden md:inline-flex"
+                    />
+                    {user?.fullName}
                   </span>
-                ))}
-              </div>
-              <div className="mb-1">
-                <b>Invited by:</b>{' '}
-                <span>
-                  <Avatar
-                    src={user?.avatar}
-                    size="small"
-                    className="mr-2 hidden md:inline-flex"
-                  />
-                  {user?.fullName}
-                </span>
+                </LabelWrapper>
               </div>
             </div>
 

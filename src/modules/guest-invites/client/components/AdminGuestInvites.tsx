@@ -6,7 +6,15 @@ import { GuestInvite } from '#shared/types'
 import { by, prop, uniq } from '#shared/utils/fp'
 import { useDocumentTitle } from '#client/utils/hooks'
 import { DATE_FORMAT } from '#client/constants'
-import { Button, Link, Table, Tag, H1, UserLabel } from '#client/components/ui'
+import {
+  Button,
+  Link,
+  Table,
+  Tag,
+  H1,
+  UserLabel,
+  showNotification,
+} from '#client/components/ui'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import Permissions from '#shared/permissions'
 import { useUsersCompact } from '#modules/users/client/queries'
@@ -43,11 +51,26 @@ export const _AdminGuestInvites: React.FC = () => {
 
   const { mutate: updateGuestInvite } = useUpdateGuestInvite(() => {
     refetchGuestInvites()
+    showNotification(`Successfully cancelled.`, 'success')
   })
   const rejectGuestInvite = React.useCallback(
     (id: string) => (ev: React.MouseEvent<HTMLButtonElement>) => {
       ev.preventDefault()
       updateGuestInvite({ id, data: { status: 'rejected' } })
+    },
+    [updateGuestInvite]
+  )
+
+  const cancelGuestInvite = React.useCallback(
+    (invite: GuestInvite) => (ev: React.MouseEvent<HTMLButtonElement>) => {
+      ev.preventDefault()
+      const confirmMessage = `Are you sure you want to cancel guest invitation?`
+      if (invite && window.confirm(confirmMessage)) {
+        updateGuestInvite({
+          id: invite.id,
+          data: { ...invite, status: 'cancelled' },
+        })
+      }
     },
     [updateGuestInvite]
   )
@@ -103,6 +126,26 @@ export const _AdminGuestInvites: React.FC = () => {
         Header: 'Actions',
         accessor: (invite: GuestInvite) => (
           <span>
+            {invite.code === 'manual' && (
+              <div className="flex gap-2">
+                <Button
+                  kind="secondary"
+                  size="small"
+                  href={`/admin/guest-invites/editor/${invite.id}`}
+                >
+                  Edit
+                </Button>
+                {invite.status !== 'cancelled' && (
+                  <Button
+                    kind="secondary"
+                    size="small"
+                    onClick={cancelGuestInvite(invite)}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            )}
             {invite.status === 'opened' && (
               <Button
                 kind="primary"
@@ -133,7 +176,10 @@ export const _AdminGuestInvites: React.FC = () => {
 
   return (
     <div>
-      <H1>Guest invites</H1>
+      <div className="flex justify-between items-center mb-4">
+        <H1>Guest invites</H1>
+        <Button href="/admin/guest-invites/editor/new">Add manual entry</Button>
+      </div>
       {invites?.length ? (
         <div className="-mx-8">
           <Table columns={columns} data={invites} />

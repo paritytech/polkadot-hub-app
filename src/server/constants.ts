@@ -1,3 +1,5 @@
+export const ROBOT_USER_ID = '00000000-0000-0000-0000-000000000000'
+
 export const SESSION_TOKEN_COOKIE_NAME = 'hqappjwt'
 
 export const DATE_FORMAT = 'YYYY-MM-DD'
