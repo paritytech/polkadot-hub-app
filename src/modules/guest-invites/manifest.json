@@ -30,6 +30,10 @@
       "adminGuestInvite": {
         "path": "/admin/guest-invites/:inviteId",
         "componentId": "AdminGuestInvite"
+      },
+      "adminGuestInviteEditor": {
+        "path": "/admin/guest-invites/editor/:inviteId",
+        "componentId": "AdminGuestInviteEditor"
       }
     }
   }

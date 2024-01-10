@@ -106,3 +106,23 @@ export const useGuestInvite = (inviteId: string | null) => {
     { enabled: !!inviteId }
   )
 }
+
+export const useCreateGuestInviteAdmin = (officeId: string, cb: () => void) =>
+  useMutation<AxiosResponse, AxiosError, GuestInvite>(
+    (data: GuestInvite) =>
+      api.post(
+        `/admin-api/guest-invites/invite?office=${encodeURIComponent(
+          officeId
+        )}`,
+        data
+      ),
+    { onSuccess: cb }
+  )
+
+export const useUpdateGuestInviteAdmin = (cb: () => void) =>
+  useMutation<AxiosResponse, AxiosError, { id: string; data: GuestInvite }>(
+    ({ id, data }) => api.put(`/admin-api/guest-invites/invite/${id}`, data),
+    {
+      onSuccess: cb,
+    }
+  )

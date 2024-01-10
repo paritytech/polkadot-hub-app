@@ -4,8 +4,13 @@ import dayjs from 'dayjs'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { appConfig } from '#server/app-config'
 import config from '#server/config'
-import { DATE_FORMAT } from '#server/constants'
-import { formatVisitDates } from './helpers'
+import { DATE_FORMAT, ROBOT_USER_ID } from '#server/constants'
+import {
+  createVisitsForManualInvite,
+  formatVisitDates,
+  generateVisits,
+  updateVisitsForManualInvite,
+} from './helpers'
 import {
   GuestInviteGuestRequest,
   GuestInviteRequest,
@@ -352,6 +357,40 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         return reply.throw.notFound()
       }
       const { status, areaId, deskId } = req.body
+
+      if (invite.code === 'manual') {
+        const data = req.body as GuestInvite
+        try {
+          await fastify.sequelize.transaction(async (t) => {
+            const dates = data.dates.sort((a, b) => dayjs(a).diff(dayjs(b)))
+            await updateVisitsForManualInvite(
+              fastify,
+              t,
+              invite,
+              data.areaId,
+              data.deskId,
+              dates
+            )
+            await invite
+              .set({
+                fullName: data.fullName,
+                email: data.email,
+                dates: dates,
+                deskId: data.deskId,
+                areaId: data.areaId,
+                status: data.status,
+              })
+              .save({ transaction: t })
+          })
+        } catch (err) {
+          req.log.error(`Failed manual guest invite update`)
+          req.log.error(err)
+          return reply.throw.internalError("The guest invite can't be updated")
+        }
+
+        return reply.ok()
+      }
+
       if (invite.status === 'pending' && status === 'rejected') {
         // Remove an invite
         await invite.destroy()
@@ -397,21 +436,13 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
             }
 
             // Create visit
-            const visits = []
-            for (const date of invite.dates) {
-              visits.push({
-                userId: user.id,
-                date: dayjs(date, DATE_FORMAT).toDate(),
-                officeId: invite.office,
-                areaId,
-                deskId,
-                metadata: {
-                  guestInvite: true, // TODO: delete?
-                  guestInviteId: invite.id,
-                },
-                status: 'confirmed',
-              })
-            }
+            const visits = generateVisits(
+              areaId,
+              deskId,
+              invite.dates,
+              invite,
+              user.id
+            )
             // @ts-ignore FIXME:
             await fastify.db.Visit.bulkCreate(visits, { transaction: t })
 
@@ -478,6 +509,53 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         return reply.ok()
       }
       return reply.throw.rejected("The update can't be applied")
+    }
+  )
+  fastify.post(
+    '/invite',
+    async (req: FastifyRequest<{ Body: GuestInvite }>, reply) => {
+      req.check(Permissions.Create)
+
+      if (!req.office) {
+        return reply.throw.badParams('Invalid office ID')
+      }
+
+      const email = req.body.email.trim().toLowerCase()
+      const dates = req.body.dates.map((d) => dayjs(d).format(DATE_FORMAT))
+      // Create invite
+
+      const data = req.body as GuestInvite
+      try {
+        await fastify.sequelize.transaction(async (t) => {
+          const invite = await fastify.db.GuestInvite.create({
+            code: 'manual',
+            email,
+            fullName: data.fullName,
+            creatorUserId: req.user.id,
+            status: 'confirmed',
+            office: req.office?.id ?? '',
+            areaId: data.areaId,
+            deskId: data.deskId,
+            dates: dates,
+          })
+          // Create visit
+          if (data.areaId && data.deskId) {
+            const visits = generateVisits(
+              data.areaId,
+              data.deskId,
+              dates,
+              invite,
+              ROBOT_USER_ID
+            )
+            // @ts-ignore FIXME:
+            await fastify.db.Visit.bulkCreate(visits, { transaction: t })
+          }
+        })
+      } catch (err) {
+        req.log.error(`Failed guest invite creation`)
+        req.log.error(err)
+        return reply.throw.internalError("The guest invite can't be created")
+      }
     }
   )
 }
