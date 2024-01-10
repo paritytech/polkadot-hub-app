@@ -15,7 +15,6 @@ import { api } from '#client/utils/api'
 import { getComponentInstance } from '#client/utils/portal'
 import { PermissionsSet } from '#shared/utils'
 import { PolkadotProvider } from '#client/components/auth/PolkadotProvider'
-import { Welcome } from '#modules/users/client/components'
 
 const routeGroups: Record<
   'admin' | 'public' | 'extra' | 'extraLayout',
