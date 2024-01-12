@@ -27,7 +27,7 @@ export const Map: React.FC<Props> = ({
   events = [],
   className,
 }) => {
-  const mapContainer = React.useRef(null)
+  const mapContainer = React.useRef<HTMLDivElement>(null)
   const map = React.useRef<mapboxgl.Map | null>(null)
   const [isMapboxInitialized, setIsMapboxInitialized] = useState(false)
   const [error, setError] = useState(false)
@@ -72,7 +72,12 @@ export const Map: React.FC<Props> = ({
       if (!mapContainer.current) {
         return
       }
-      map.current = getMap(window.mapboxgl, mapContainer, mapPoint, zoom)
+      map.current = getMap(
+        window.mapboxgl,
+        mapContainer.current,
+        mapPoint,
+        zoom
+      )
 
       events.push({
         name: 'error',
@@ -109,7 +114,7 @@ export const Map: React.FC<Props> = ({
         clearInterval(intervalId)
         window.mapboxgl.accessToken = config.mapBoxApiKey
       }
-    }, 10)
+    }, 400)
 
     return () => clearInterval(intervalId)
   }, [])

@@ -20,14 +20,14 @@ export const dropMarker = (
 
 export const getMap = (
   mapboxgl: any,
-  container: MutableRefObject<string>,
+  container: HTMLElement,
   center: mapboxgl.LngLatLike | undefined,
   zoom: number,
   style: string = blackAndWhiteStyle
 ) => {
   let mapCenter = !center ? new mapboxgl.LngLat(Berlin[0], Berlin[1]) : center
   const configMap: mapboxgl.MapboxOptions = {
-    container: container.current,
+    container: container,
     style,
     center: mapCenter,
     zoom,
