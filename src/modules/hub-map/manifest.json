@@ -1,0 +1,13 @@
+{
+  "id": "hub-map",
+  "name": "HubMap",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": [],
+  "clientRouter": {
+    "public": {},
+    "user": {},
+    "admin": {}
+  }
+}

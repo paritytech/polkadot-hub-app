@@ -215,12 +215,16 @@ export const MoreButton: React.FC<MoreButtonProps> = ({
   )
 }
 
-export const BackButton: React.FC<{ className?: string }> = ({ className }) => (
+export const BackButton: React.FC<{
+  className?: string
+  onClick?: () => void
+  text?: string
+}> = ({ className, onClick, text = 'Back' }) => (
   <FButton
     kind="link"
-    onClick={() => window.history.back()}
+    onClick={() => (!!onClick ? onClick() : window.history.back())}
     className={cn('mb-4 ml-[-8px] text-text-tertiary', className)}
   >
-    Back
+    {text}
   </FButton>
 )

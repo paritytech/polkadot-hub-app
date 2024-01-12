@@ -1,3 +1,5 @@
+import { User } from '#shared/types'
+
 export enum VisitType {
   Visit = 'visit',
   RoomReservation = 'room-reservation',
@@ -9,6 +11,19 @@ export const OfficeVisitsHeaders = {
   [VisitType.Guest]: 'Guest Visit',
   [VisitType.RoomReservation]: 'Meeting Room Bookings',
 } as const
+
+export type DailyEventType = {
+  id: string
+  value: string
+  type: string
+  date: string
+  dateTime: string
+  description: string
+  areaId?: string
+  deskId?: string
+  user?: User
+  status: string
+}
 
 export type GenericVisit = {
   id: string

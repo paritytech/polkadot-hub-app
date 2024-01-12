@@ -1,10 +1,15 @@
 import dayjs from 'dayjs'
 import { DATE_FORMAT } from '#server/constants'
+import { RoomReservation } from '#modules/room-reservation/server/models'
+import { DailyEventType, User, Visit, VisitType } from '#shared/types'
+import { appConfig } from '#server/app-config'
+import { FastifyInstance } from 'fastify'
+import { Op } from 'sequelize'
 
 export const BUSINESS_DAYS_LIMIT: number = 40
 
 // FIXME: temporary fix
-export const getDate = (d: string, timezone: string) =>
+export const getDate = (d: string, timezone?: string) =>
   dayjs(d).format(DATE_FORMAT)
 
 // export const getDate = (d: string, timezone: string) =>
@@ -33,4 +38,87 @@ export const getBusinessDaysFromDate = (
   }
 
   return dates
+}
+
+export const formatRoomReservationsResult = (
+  reservation: RoomReservation,
+  officeId: string
+): any => {
+  const office = appConfig.offices.find((o) => o.id === officeId)
+  const officeRoom = (office?.rooms || []).find(
+    (r) => r.id === reservation.roomId
+  )
+  return {
+    id: reservation.id,
+    dateTime: `${getTime(reservation.startDate)} - ${getTime(
+      reservation.endDate
+    )}`,
+    date: dayjs(reservation.startDate).format('YYYY-MM-DD'),
+    value: 'Room ' + officeRoom?.name ?? '',
+    description: officeRoom?.description ?? '',
+    type: VisitType.RoomReservation,
+    status: reservation.status,
+  }
+}
+
+export const formatVisit = (v: Visit, user?: User | null): any => {
+  return {
+    id: v.id,
+    value: `Desk ${v.deskName}`,
+    type: VisitType.Visit,
+    deskId: v.deskId,
+    description: v.areaName,
+    areaId: v.areaId,
+    date: v.date,
+    status: v.status,
+    userId: v.userId,
+    user: user
+      ? {
+          id: user?.id,
+          avatar: user?.avatar,
+        }
+      : null,
+  }
+}
+
+export const getVisits = async (
+  fastify: FastifyInstance,
+  officeId: string,
+  userId: string,
+  date: string
+) => {
+  return fastify.db.Visit.findAll({
+    where: {
+      officeId,
+      status: {
+        [Op.in]: ['confirmed', 'pending'],
+      },
+      userId,
+      date: {
+        [Op.gte]: dayjs(date).toDate(),
+      },
+    },
+    order: ['date'],
+  })
+}
+
+export const getRoomReservations = async (
+  fastify: FastifyInstance,
+  officeId: string,
+  creatorUserId: string,
+  date: string
+) => {
+  return fastify.db.RoomReservation.findAll({
+    where: {
+      office: officeId,
+      creatorUserId,
+      status: {
+        [Op.in]: ['confirmed', 'pending'],
+      },
+      startDate: {
+        [Op.gte]: dayjs(date).toDate(),
+      },
+    },
+    order: ['startDate'],
+  })
 }

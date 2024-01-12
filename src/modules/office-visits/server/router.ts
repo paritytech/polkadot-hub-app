@@ -3,24 +3,115 @@ import dayjs, { Dayjs } from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Op } from 'sequelize'
-import { appConfig } from '#server/app-config'
 import { DATE_FORMAT } from '#server/constants'
 import {
   BUSINESS_DAYS_LIMIT,
+  formatRoomReservationsResult,
+  formatVisit,
   getBusinessDaysFromDate,
   getDate,
+  getRoomReservations,
+  getVisits,
 } from './helpers'
-import { Visit, GenericVisit, VisitType, VisitsDailyStats } from '#shared/types'
-import * as fp from '#shared/utils'
 import { Permissions } from '../permissions'
 import { Metadata } from '../metadata-schema'
+import {
+  Visit,
+  GenericVisit,
+  VisitType,
+  VisitsDailyStats,
+  DailyEventType,
+} from '#shared/types'
+import * as fp from '#shared/utils'
+import { User } from '#modules/users/server/models'
 
 dayjs.extend(localizedFormat)
 
-// @todo fix types
 const publicRouter: FastifyPluginCallback = async function (fastify, opts) {}
 
+const addToUpcomingByDate = (
+  upcomingByDate: Record<string, any>,
+  value: GenericVisit,
+  date: string,
+  type: string
+) => {
+  const dateKey = getDate(date)
+  upcomingByDate[dateKey] = upcomingByDate[dateKey] || {}
+  upcomingByDate[dateKey][type] = upcomingByDate[dateKey][type] || []
+  upcomingByDate[dateKey][type].push(value)
+}
+
 const userRouter: FastifyPluginCallback = async function (fastify, opts) {
+  fastify.get(
+    '/upcoming',
+    async (
+      req: FastifyRequest<{
+        Querystring: { date: string; limit: number; officeId: string }
+      }>,
+      reply
+    ) => {
+      const { date, officeId } = req.query
+      if (!officeId) {
+        return reply.throw.badParams('Missing office ID')
+      }
+
+      let visits = await getVisits(fastify, officeId, req.user.id, date)
+      let roomReservations = await getRoomReservations(
+        fastify,
+        officeId,
+        req.user.id,
+        date
+      )
+
+      const upcomingItems: Array<DailyEventType> = []
+      const upcomingByDate: Record<string, any> = {}
+
+      const dailyEventsReservations = roomReservations.map(
+        (reservation, idx) => {
+          const item = formatRoomReservationsResult(reservation, officeId)
+          // add the first item in array to show at the top of the map in a list
+          if (!idx) {
+            upcomingItems.push(item)
+          }
+          addToUpcomingByDate(
+            upcomingByDate,
+            item,
+            dayjs(reservation.startDate).toString(),
+            VisitType.RoomReservation
+          )
+          return item
+        }
+      )
+
+      let dailyEventsVisits = []
+      for (const [idx, v] of visits.entries()) {
+        const item = formatVisit(v)
+        if (!idx) {
+          upcomingItems.push(item)
+        }
+        const user = await User.findByPk(v.userId)
+        addToUpcomingByDate(
+          upcomingByDate,
+          formatVisit(v, user),
+          v.date,
+          VisitType.Visit
+        )
+        dailyEventsVisits.push(item)
+      }
+
+      return {
+        upcoming: upcomingItems.sort((a: DailyEventType, b: DailyEventType) =>
+          dayjs(a.date).isAfter(dayjs(b.date)) ? 1 : -1
+        ),
+        byType: {
+          [VisitType.Visit]: dailyEventsVisits,
+          [VisitType.RoomReservation]: dailyEventsReservations,
+        },
+        byDate: upcomingByDate,
+      }
+    }
+  )
+
   fastify.get(
     '/',
     async (
@@ -33,26 +124,13 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (!officeId) {
         return reply.throw.badParams('Missing office ID')
       }
-      const office = appConfig.getOfficeById(officeId)
-
       const nextBusinessDays = getBusinessDaysFromDate(
         date,
         BUSINESS_DAYS_LIMIT
       )
       // @todo REwrite this using native SQL query using JOIN on dates
-      // or rewrite by mergin all the tables into one
+      // or rewrite by merging all the tables into one
       let result: Record<string, any> = {}
-
-      const addToResult = (value: GenericVisit, date: string, type: string) => {
-        if (!result[getDate(date, office.timezone)]) {
-          result[getDate(date, office.timezone)] = {}
-        }
-        if (!result[getDate(date, office.timezone)][type]) {
-          result[getDate(date, office.timezone)][type] = [value]
-        } else {
-          result[getDate(date, office.timezone)][type].push(value)
-        }
-      }
 
       const visits = await fastify.db.Visit.findAll({
         where: {
@@ -105,25 +183,14 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         },
       })
 
-      const getTime = (date: string | Date) =>
-        dayjs(date).tz(office.timezone).format('LT')
-
       // adding all the dates together
       visits.forEach((v) =>
-        addToResult(
-          {
-            id: v.id,
-            value: `Desk ${v.deskName}`,
-            description: v.areaName,
-            type: VisitType.Visit,
-          },
-          v.date,
-          VisitType.Visit
-        )
+        addToUpcomingByDate(result, formatVisit(v), v.date, VisitType.Visit)
       )
       guests.forEach((guest) => {
         guest.dates.forEach((date) =>
-          addToResult(
+          addToUpcomingByDate(
+            result,
             {
               value: guest.fullName,
               id: guest.id,
@@ -135,20 +202,9 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         )
       })
       roomReservations.forEach((reservation) => {
-        const office = appConfig.offices.find((o) => o.id === officeId)
-        const officeRoom = (office?.rooms || []).find(
-          (r) => r.id === reservation.roomId
-        )
-        return addToResult(
-          {
-            id: reservation.id,
-            dateTime: `${getTime(reservation.startDate)} - ${getTime(
-              reservation.endDate
-            )}`,
-            value: officeRoom?.name ?? '',
-            description: officeRoom?.description,
-            type: VisitType.RoomReservation,
-          },
+        return addToUpcomingByDate(
+          result,
+          formatRoomReservationsResult(reservation, officeId),
           dayjs(reservation.startDate).toString(),
           VisitType.RoomReservation
         )
