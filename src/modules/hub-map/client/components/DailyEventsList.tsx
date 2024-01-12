@@ -56,26 +56,41 @@ export const DailyEventsList: React.FC<{
   )
 
   React.useEffect(() => {
-    if (!upcomingEvents.length && !!upcoming?.upcoming) {
+    if (!upcomingEvents?.length && !!upcoming?.upcoming) {
       setUpcomingEvents(upcoming.upcoming)
     }
   }, [upcoming])
 
   React.useEffect(() => {
-    if (!!upcoming?.byDate) {
-      setOfficeVisits(upcoming.byDate[date.format('YYYY-MM-DD')])
-    }
+    setOfficeVisits(upcoming?.byDate[date.format('YYYY-MM-DD')])
   }, [upcoming?.byDate, date])
+
+  React.useEffect(() => {
+    if (selected) {
+      // if you removed the last item of this type
+      if (upcoming?.byType[selected?.type].length === 0) {
+        resetView()
+      } else {
+        setUpcomingEvents(upcoming?.byType[selected?.type])
+      }
+    }
+  }, [upcoming?.byType, date])
 
   const resetOfficeVisits = React.useCallback(() => {
     setOfficeVisits(upcoming.byDate[dayjs().format('YYYY-MM-DD')] ?? [])
   }, [upcoming?.byDate])
 
+  const resetView = () => {
+    setSelected(null)
+    setUpcomingEvents(upcoming.upcoming)
+    onChooseCard(null, selected.areaId, dayjs())
+    resetOfficeVisits()
+  }
+
   const processOnClick = (dailyEvent: DailyEventType) => {
     if (!dailyEvent) {
       return
     }
-    console.log('daily ', dailyEvent)
     setUpcomingEvents(upcoming.byType[dailyEvent.type])
     setSelected(dailyEvent)
     setDate(dayjs(dailyEvent.date))
@@ -115,10 +130,10 @@ export const DailyEventsList: React.FC<{
         status: 'cancelled',
       }
       updateFns[type](data)
+      refetchVisits()
     }
   }
 
-  // console.log('selected ', selected)
   return (
     <div>
       {!!selected ? (
@@ -126,12 +141,7 @@ export const DailyEventsList: React.FC<{
           <BackButton
             text="Back to List"
             className="mt-[-8px]"
-            onClick={() => {
-              setSelected(null)
-              setUpcomingEvents(upcoming.upcoming)
-              onChooseCard(null, selected.areaId, dayjs())
-              resetOfficeVisits()
-            }}
+            onClick={() => resetView()}
           />
         </div>
       ) : (

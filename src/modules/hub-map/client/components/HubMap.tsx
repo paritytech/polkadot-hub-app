@@ -45,7 +45,6 @@ export const HubMap = () => {
     []
   )
 
-  console.log(officeVisits)
   return (
     <WidgetWrapper className="transition-all delay-100" title={`Hub Map`}>
       <div className="grid grid-flow-row gap-4">
