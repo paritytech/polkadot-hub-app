@@ -5,12 +5,13 @@ on:
     branches:
       - master
 env:
-  IMAGE_NAME: paritytech/polkador-hub-app
+  IMAGE_NAME: paritytech/polkadot-hub-app
 
 jobs:
   build_and_push:
     name: Build Docker image and push it to Docker Hub
     runs-on: ubuntu-latest
+    environment: master_and_tags
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
