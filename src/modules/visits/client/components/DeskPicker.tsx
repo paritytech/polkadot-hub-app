@@ -21,8 +21,6 @@ export const DeskPicker: React.FC<Props> = ({
   selectedAreaId,
   onSelectArea,
 }) => {
-  const [deskId, setDeskId] = React.useState<string | null>(selectedDeskId)
-
   ///////// Area /////////
   const { data: areas = [] } = useVisitsAreas(officeId)
   const [areaId, setAreaId] = React.useState<string | null>(null)
@@ -30,16 +28,11 @@ export const DeskPicker: React.FC<Props> = ({
   const onAreaChange = React.useCallback(
     (areaId: string) => {
       setAreaId(areaId)
-      setDeskId(null)
       onSelectDesk(null)
       onSelectArea && onSelectArea(areaId)
     },
     [areas]
   )
-
-  React.useEffect(() => {
-    setDeskId(selectedDeskId)
-  }, [selectedDeskId])
 
   React.useEffect(() => {
     if (selectedAreaId) {
@@ -48,7 +41,7 @@ export const DeskPicker: React.FC<Props> = ({
   }, [selectedAreaId])
 
   React.useEffect(() => {
-    if (areas.length) {
+    if (areas.length && !selectedAreaId) {
       setAreaId(areas[0].id)
       onSelectArea && onSelectArea(areas[0].id)
     }
@@ -59,19 +52,14 @@ export const DeskPicker: React.FC<Props> = ({
     useAvailableDesks(officeId, selectedDates)
 
   const availableAreaDeskIds = React.useMemo(() => {
-    return availableDesks
+    const available = availableDesks
       .filter((x) => x.areaId === area?.id)
       .map((x) => x.deskId)
-  }, [availableDesks, area])
-
-  React.useEffect(() => {
-    if (
-      deskId &&
-      (!availableAreaDeskIds.includes(deskId) || !selectedDates.length)
-    ) {
-      setDeskId(null)
+    if (selectedDeskId) {
+      available.push(selectedDeskId)
     }
-  }, [availableAreaDeskIds, deskId, selectedDates])
+    return available
+  }, [availableDesks, area])
 
   ///////// UnAvailable area /////////
   const [unavailableDeskNames, unavailableArea] = React.useMemo<
@@ -87,7 +75,6 @@ export const DeskPicker: React.FC<Props> = ({
 
   const onToggleDesk = React.useCallback(
     (deskId: string) => {
-      setDeskId((value) => (value === deskId ? null : deskId))
       onSelectDesk(deskId)
     },
     [area]
@@ -122,7 +109,6 @@ export const DeskPicker: React.FC<Props> = ({
               </span>
             )}
           </p>
-          {/* <hr className="my-4" /> */}
         </>
       ) : null}
       {areas.length > 1 ? (
@@ -147,7 +133,7 @@ export const DeskPicker: React.FC<Props> = ({
             value: x.id,
             disabled: !availableAreaDeskIds.includes(x.id),
           }))}
-          value={deskId || undefined}
+          value={selectedDeskId}
           onChange={onToggleDesk}
           placeholder={'Select desk'}
           className="w-full"
@@ -159,7 +145,7 @@ export const DeskPicker: React.FC<Props> = ({
           <OfficeFloorMap
             area={area}
             availableDeskIds={availableAreaDeskIds}
-            selectedDeskId={deskId}
+            selectedDeskId={selectedDeskId}
             onToggleDesk={onToggleDesk}
           />
         </div>

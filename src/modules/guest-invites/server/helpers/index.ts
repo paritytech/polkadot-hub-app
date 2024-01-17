@@ -25,44 +25,27 @@ export const updateVisitsForManualInvite = async (
   deskId: string | null,
   dates: Array<string>
 ) => {
-  // Need to cancel any office visits dates which were removed
-  const datesAreTheSame: boolean = compareDates(invite.dates, dates)
-
-  let datesToSchedule: Array<string> = []
-
-  if (!datesAreTheSame) {
-    datesToSchedule = dates.filter((date) => !invite.dates.includes(date))
-    const datesToCancel: Array<string> = invite.dates.filter(
-      (date) => !dates.includes(date)
-    )
-
-    // cancelling all the office visit dates that were removed from the guest invite
-    if (!!datesToCancel.length) {
-      for (const visitDate of datesToCancel) {
-        const v = await fastify.db.Visit.findOne({
-          where: {
-            date: visitDate,
-            deskId,
-            areaId,
-            userId: ROBOT_USER_ID,
-            officeId: invite.office,
-          },
-          transaction,
-        })
+  // cancelling all the office visit dates for this guest invite
+  if (!!invite.dates.length) {
+    for (const visitDate of invite.dates) {
+      const v = await fastify.db.Visit.findOne({
+        where: {
+          date: visitDate,
+          deskId: invite.deskId,
+          areaId: invite.areaId,
+          userId: ROBOT_USER_ID,
+          officeId: invite.office,
+        },
+        transaction,
+      })
+      if (v) {
         await v.destroy({ transaction: transaction })
       }
     }
   }
 
-  // scheduling all the new visit dates that were added to the guest invite
-  if (!!datesToSchedule.length) {
-    const visits = generateVisits(
-      areaId,
-      deskId,
-      datesToSchedule,
-      invite,
-      ROBOT_USER_ID
-    )
+  if (!!dates.length) {
+    const visits = generateVisits(areaId, deskId, dates, invite, ROBOT_USER_ID)
     // @ts-ignore FIXME:
     await fastify.db.Visit.bulkCreate(visits, { transaction })
   }
