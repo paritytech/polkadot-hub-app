@@ -369,7 +369,8 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
               invite,
               data.areaId,
               data.deskId,
-              dates
+              dates,
+              status
             )
             await invite
               .set({

@@ -126,7 +126,7 @@ export const _AdminGuestInvites: React.FC = () => {
         Header: 'Actions',
         accessor: (invite: GuestInvite) => (
           <span>
-            {invite.code === 'manual' && (
+            {invite.code === 'manual' && invite.status !== 'cancelled' && (
               <div className="flex gap-2">
                 <Button
                   kind="secondary"
@@ -135,15 +135,13 @@ export const _AdminGuestInvites: React.FC = () => {
                 >
                   Edit
                 </Button>
-                {invite.status !== 'cancelled' && (
-                  <Button
-                    kind="secondary"
-                    size="small"
-                    onClick={cancelGuestInvite(invite)}
-                  >
-                    Cancel
-                  </Button>
-                )}
+                <Button
+                  kind="secondary"
+                  size="small"
+                  onClick={cancelGuestInvite(invite)}
+                >
+                  Cancel
+                </Button>
               </div>
             )}
             {invite.status === 'opened' && (

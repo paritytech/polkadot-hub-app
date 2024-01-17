@@ -23,9 +23,12 @@ export const updateVisitsForManualInvite = async (
   invite: GuestInvite,
   areaId: string | null,
   deskId: string | null,
-  dates: Array<string>
+  dates: Array<string>,
+  status: string
 ) => {
   // cancelling all the office visit dates for this guest invite
+  const visitsToSchedule = status === 'cancelled' ? [] : dates
+
   if (!!invite.dates.length) {
     for (const visitDate of invite.dates) {
       const v = await fastify.db.Visit.findOne({
@@ -45,7 +48,13 @@ export const updateVisitsForManualInvite = async (
   }
 
   if (!!dates.length) {
-    const visits = generateVisits(areaId, deskId, dates, invite, ROBOT_USER_ID)
+    const visits = generateVisits(
+      areaId,
+      deskId,
+      visitsToSchedule,
+      invite,
+      ROBOT_USER_ID
+    )
     // @ts-ignore FIXME:
     await fastify.db.Visit.bulkCreate(visits, { transaction })
   }
