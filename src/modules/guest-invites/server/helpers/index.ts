@@ -53,7 +53,8 @@ export const updateVisitsForManualInvite = async (
       deskId,
       visitsToSchedule,
       invite,
-      ROBOT_USER_ID
+      ROBOT_USER_ID,
+      invite.fullName
     )
     // @ts-ignore FIXME:
     await fastify.db.Visit.bulkCreate(visits, { transaction })
@@ -65,7 +66,8 @@ export const generateVisits = (
   deskId: string,
   datesToSchedule: Array<string>,
   invite: GuestInvite,
-  userId: string
+  userId: string,
+  guestName: string
 ) => {
   // Create visit
   const visits = []
@@ -79,6 +81,7 @@ export const generateVisits = (
       metadata: {
         guestInvite: true, // TODO: delete?
         guestInviteId: invite.id,
+        guestFullName: guestName,
       },
       status: 'confirmed',
     })

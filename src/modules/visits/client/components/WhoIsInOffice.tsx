@@ -2,7 +2,6 @@ import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import {
   Avatar,
   FButton,
-  Icons,
   P,
   RoundButton,
   WidgetWrapper,
@@ -17,6 +16,8 @@ import dayjs from 'dayjs'
 import * as React from 'react'
 import * as stores from '#client/stores'
 import { useOfficeVisitors, useToggleStealthMode } from '../queries'
+import { OfficeVisitor } from '#shared/types'
+import { ROBOT_USER_ID } from '#server/constants'
 
 export const WhoIsInOffice: React.FC = () => (
   <PermissionsValidator required={[Permissions.visits.ListVisitors]}>
@@ -25,6 +26,22 @@ export const WhoIsInOffice: React.FC = () => (
 )
 
 const MAX_VISITORS_TO_SHOW = 24
+
+const UserView = ({ user }: { user: OfficeVisitor }) => (
+  <div className="flex mb-4">
+    <Avatar
+      size="medium"
+      src={user.avatar}
+      userId={user.userId}
+      className="mr-2"
+    />
+    <div className="text-sm leading-tight">
+      <div>{user.fullName}</div>
+      <div className="text-gray-400">{user.areaName}</div>
+    </div>
+  </div>
+)
+
 export const _WhoIsInOffice = () => {
   const me = useStore(stores.me)
   const officeId = useStore(stores.officeId)
@@ -102,20 +119,21 @@ export const _WhoIsInOffice = () => {
 
       {!!filteredVisitors?.length && (
         <div className="sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 mt-8">
-          {filteredVisitors.map((x) => (
-            <a
-              href={`/profile/${x.userId}`}
-              target="_blank"
-              key={x.fullName}
-              className="flex mb-4"
-            >
-              <Avatar size="medium" src={x.avatar} className="mr-2" />
-              <div className="text-sm leading-tight">
-                <div>{x.fullName}</div>
-                <div className="text-gray-400">{x.areaName}</div>
-              </div>
-            </a>
-          ))}
+          {filteredVisitors.map((x) => {
+            if (x.userId === ROBOT_USER_ID) {
+              return <UserView user={x} />
+            }
+            return (
+              <a
+                href={`/profile/${x.userId}`}
+                target="_blank"
+                key={x.fullName}
+                className="flex mb-4"
+              >
+                <UserView user={x} />
+              </a>
+            )
+          })}
         </div>
       )}
 

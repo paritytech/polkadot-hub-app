@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react'
 import dayjs from 'dayjs'
 import * as React from 'react'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
-import { Button, H1, Table, UserLabel } from '#client/components/ui'
+import { Button, H1, P, Table, UserLabel } from '#client/components/ui'
 import { DATE_FORMAT } from '#client/constants'
 import Permissions from '#shared/permissions'
 import * as stores from '#client/stores'
@@ -79,7 +79,15 @@ export const _AdminVisits: React.FC<RootComponentProps> = ({ portals }) => {
         Header: 'Person',
         accessor: (x: Visit) => {
           const user = usersById[x.userId]
-          return <UserLabel user={user} />
+          return (
+            <div className="flex gap-2">
+              {' '}
+              <UserLabel user={user} />
+              {x.metadata?.guestInvite && (
+                <p className="text-sm">(guest: {x.metadata?.guestFullName})</p>
+              )}
+            </div>
+          )
         },
       },
       {

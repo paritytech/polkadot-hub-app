@@ -6,7 +6,6 @@ import { appConfig } from '#server/app-config'
 import config from '#server/config'
 import { DATE_FORMAT, ROBOT_USER_ID } from '#server/constants'
 import {
-  createVisitsForManualInvite,
   formatVisitDates,
   generateVisits,
   updateVisitsForManualInvite,
@@ -442,7 +441,8 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
               deskId,
               invite.dates,
               invite,
-              user.id
+              user.id,
+              user.fullName || invite.fullName
             )
             // @ts-ignore FIXME:
             await fastify.db.Visit.bulkCreate(visits, { transaction: t })
@@ -546,7 +546,8 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
               data.deskId,
               dates,
               invite,
-              ROBOT_USER_ID
+              ROBOT_USER_ID,
+              data.fullName
             )
             // @ts-ignore FIXME:
             await fastify.db.Visit.bulkCreate(visits, { transaction: t })

@@ -6,6 +6,7 @@ import {
   DATE_FORMAT,
   DATE_FORMAT_DAY_NAME,
   FRIENDLY_DATE_FORMAT,
+  ROBOT_USER_ID,
 } from '#server/constants'
 import config from '#server/config'
 import { OfficeArea, Office } from '#server/app-config/types'
@@ -548,10 +549,11 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
 
       return users.map((u) => {
         const visit = visits.find((x) => x.userId === u.id)
+        const isRobot = u.id === ROBOT_USER_ID
         const result: OfficeVisitor = {
           userId: u.id,
-          avatar: u.avatar || '',
-          fullName: u?.fullName || 'UNKNOWN',
+          avatar: !isRobot ? u.avatar || '' : '',
+          fullName: visit?.metadata.guestFullName || u?.fullName,
           areaName: visit?.areaName || 'UNKNOWN',
         }
         return result
