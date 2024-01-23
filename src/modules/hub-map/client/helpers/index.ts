@@ -8,32 +8,21 @@ import {
 } from '#shared/types'
 import { Dayjs } from 'dayjs'
 
-export const addParams = (
-  arr: Array<OfficeAreaDesk> | Array<OfficeRoom>,
-  params: { kind: string; areaId: string }
-) => {
-  if (!arr.length) {
-    return []
-  }
-  return arr.map((item) => ({
-    ...item,
-    ...params,
-  }))
-}
-
 export const getPoints = (area: OfficeArea) => {
-  const points = [
-    ...addParams(area?.desks, {
+  const points: Array<OfficeAreaDesk | OfficeRoom> = [
+    ...area?.desks.map((desk) => ({
+      ...desk,
       areaId: area.id,
       kind: VisitType.Visit,
-    }),
+    })),
   ]
   if (!!area?.meetingRooms?.length) {
     points.push(
-      ...addParams(area?.meetingRooms, {
+      ...area?.meetingRooms.map((room) => ({
+        ...room,
         areaId: area.id,
         kind: VisitType.RoomReservation,
-      })
+      }))
     )
   }
   return points

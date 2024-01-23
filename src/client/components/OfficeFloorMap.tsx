@@ -75,10 +75,10 @@ const PointComponent: Record<
       )}
       onClick={onClick(item.id, VisitType.RoomReservation)}
     >
-      <p className="font-bold">{item.name}</p>
-      <P textType="additional" className={cn('text-green-600 my-0')}>
-        available
+      <P textType="additional" className={cn('my-0')}>
+        Meeting Room
       </P>
+      <p className="font-bold">{item.name}</p>
     </Button>
   ),
   [VisitType.Guest]: (

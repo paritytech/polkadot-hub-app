@@ -26,8 +26,6 @@ import {
 import { VisitStatusTag } from './VisitStatusTag'
 import Permissions from '#shared/permissions'
 import { DATE_FORMAT_DAY_NAME_FULL } from '#client/constants'
-// @todo shared place for this
-import { addParams } from '#modules/hub-map/client/helpers'
 
 export const VisitDetail = () => (
   <PermissionsValidator required={[Permissions.visits.Create]} onRejectGoHome>
@@ -126,10 +124,13 @@ export const _VisitDetail = () => {
                 <div className="">
                   <OfficeFloorMap
                     area={area}
-                    mappablePoints={addParams(area.desks, {
-                      kind: VisitType.Visit,
-                      areaId: area.id,
-                    })}
+                    mappablePoints={[
+                      ...area?.desks.map((desk) => ({
+                        ...desk,
+                        areaId: area.id,
+                        kind: VisitType.Visit,
+                      })),
+                    ]}
                     clickablePoints={[]}
                     selectedPointId={visit.deskId}
                     onToggle={() => null}
