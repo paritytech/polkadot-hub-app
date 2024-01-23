@@ -7,10 +7,12 @@ export const DaySlider = ({
   reverse = false,
   slideDate,
   onChange,
+  className,
 }: {
   reverse?: boolean
   slideDate?: string
   onChange: (v: Dayjs) => void
+  className?: string
 }) => {
   const [dayOffset, setDayOffset] = React.useState<number>(0)
   const date = React.useMemo(
@@ -49,10 +51,18 @@ export const DaySlider = ({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-4',
-        reverse && 'flex-row-reverse'
+        'w-full sm:w-auto flex items-center justify-between gap-4',
+        reverse && 'flex-row-reverse',
+        className
       )}
     >
+      <div className="block sm:hidden ">
+        <RoundButton
+          size="normal"
+          onClick={onChangeDayOffset(1)}
+          icon={'ArrowForward'}
+        />
+      </div>
       <div>
         <P className="flex-1 mb-0">
           {!!dateLabel && <span>{dateLabel}, </span>}
@@ -63,9 +73,17 @@ export const DaySlider = ({
         </P>
       </div>
 
-      <div className="flex gap-2">
+      <div className="hidden sm:flex gap-2">
         <RoundButton onClick={onChangeDayOffset(-1)} icon={'ArrowBack'} />
         <RoundButton onClick={onChangeDayOffset(1)} icon={'ArrowForward'} />
+      </div>
+
+      <div className="block sm:hidden ">
+        <RoundButton
+          size="normal"
+          onClick={onChangeDayOffset(-1)}
+          icon={'ArrowBack'}
+        />
       </div>
     </div>
   )

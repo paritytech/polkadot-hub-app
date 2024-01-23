@@ -84,20 +84,23 @@ export const formatVisit = (v: Visit, user?: User | null): any => {
 export const getVisits = async (
   fastify: FastifyInstance,
   officeId: string,
-  userId: string,
-  date: string
+  date: string,
+  userId: string
 ) => {
-  return fastify.db.Visit.findAll({
-    where: {
-      officeId,
-      status: {
-        [Op.in]: ['confirmed', 'pending'],
-      },
-      userId,
-      date: {
-        [Op.gte]: dayjs(date).toDate(),
-      },
+  const q = {
+    officeId,
+    status: {
+      [Op.in]: ['confirmed', 'pending'],
     },
+    date: {
+      [Op.gte]: dayjs(date).toDate(),
+    },
+  }
+  if (userId) {
+    q['userId'] = userId
+  }
+  return fastify.db.Visit.findAll({
+    where: q,
     order: ['date'],
   })
 }

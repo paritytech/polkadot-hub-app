@@ -1,4 +1,10 @@
-import React, { MutableRefObject, useEffect, useMemo, useState } from 'react'
+import React, {
+  MutableRefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import config from '#client/config'
 
 export function useDebounce(value: any, delay: number = 1e3) {
@@ -136,4 +142,119 @@ export function useIntersectionObserver(
     }
   }, [threshold, root, rootMargin])
   return [ref, entry!]
+}
+
+const MAX_ZOOM = 2.5
+
+export function usePanZoom(
+  containerRef: React.RefObject<HTMLInputElement>,
+  imageRef: React.RefObject<HTMLInputElement>,
+  initialPosition: { x: number; y: number } = { x: 0, y: 0 },
+  initialScale: number = 1
+): {
+  position: { x: number; y: number }
+  scale: number
+  handleTouchStart: (e: TouchEvent) => void
+  handleTouchMove: (e: TouchEvent) => void
+  handleTouchEnd: (e: TouchEvent) => void
+  handleWheel: (e: WheelEvent) => void
+} {
+  const [isPanning, setIsPanning] = useState(false)
+  const [touchStart, setTouchStart] = useState({ x: 0, y: 0 })
+  const [position, setPosition] = useState(initialPosition)
+  const [scale, setScale] = useState(initialScale)
+  const [containerDimension, setContainerDimensions] = useState({
+    height: 0,
+    width: 0,
+  })
+  const [imageDimensions, setImageDimensions] = useState({
+    height: 0,
+    width: 0,
+  })
+
+  useEffect(() => {
+    if (containerRef.current && imageRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect()
+      setContainerDimensions({
+        height: containerRect.height,
+        width: containerRect.width,
+      })
+      setImageDimensions({
+        height: imageRef.current.height * scale,
+        width: imageRef.current.width * scale,
+      })
+    }
+  }, [containerRef, imageRef, scale])
+
+  const handleTouchStart = useCallback((event: TouchEvent) => {
+    if (event.touches.length === 1) {
+      const touch = event.touches[0]
+      setTouchStart({
+        x: touch.clientX,
+        y: touch.clientY,
+      })
+      setIsPanning(true)
+    }
+  }, [])
+
+  const updatePositionWithinBounds = (newX: number, newY: number) => {
+    const boundary = 100
+    const xBoundary =
+      containerDimension.width -
+      boundary * (containerDimension.width / containerDimension.height)
+    const yBoundary =
+      containerDimension.height -
+      boundary * (containerDimension.height / containerDimension.width)
+    // a little crotch for now :)
+    const indx = scale > 1.5 ? 200 : 50
+    const yBoundaryTop = -imageDimensions.height + indx * scale
+    return {
+      x: newX > 0 ? Math.min(newX, xBoundary) : Math.max(newX, -xBoundary),
+      y: newY > 0 ? Math.min(newY, yBoundary) : Math.max(newY, yBoundaryTop),
+    }
+  }
+
+  const handleTouchMove = useCallback(
+    (event: TouchEvent) => {
+      if (isPanning && event.touches.length === 1) {
+        const touch = event.touches[0]
+        const deltaX = touch.clientX - touchStart.x
+        const deltaY = touch.clientY - touchStart.y
+
+        setPosition((prevPosition) => {
+          const newX = prevPosition.x + deltaX
+          const newY = prevPosition.y + deltaY
+          return updatePositionWithinBounds(newX, newY)
+        })
+
+        setTouchStart({
+          x: touch.clientX,
+          y: touch.clientY,
+        })
+      }
+    },
+    [isPanning, touchStart]
+  )
+
+  const handleTouchEnd = useCallback(() => {
+    setIsPanning(false)
+  }, [])
+
+  const handleWheel = useCallback((event: WheelEvent) => {
+    event.preventDefault()
+    const scaleAdjustment = event.deltaY > 0 ? 0.9 : 1.1
+    setScale((prevScale) => {
+      const newScale = prevScale * scaleAdjustment
+      return Math.max(1, newScale < MAX_ZOOM ? newScale : MAX_ZOOM)
+    })
+  }, [])
+
+  return {
+    position,
+    scale,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    handleWheel,
+  }
 }

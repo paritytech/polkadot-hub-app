@@ -4,6 +4,8 @@ import { DailyEventType, VisitType } from '#shared/types'
 import dayjs from 'dayjs'
 import { FButton, P } from '#client/components/ui'
 
+// temporary colors, havent picked the best colours yet
+// @todo update to final colours, move colours to tailwindconfig
 export const BGColors: Record<string, string> = {
   [VisitType.RoomReservation]: 'bg-[#F0FAF4]',
   [VisitType.Visit]: 'bg-cta-hover-purpleNoOpacity',
@@ -16,25 +18,11 @@ export const BGColorSelect: Record<string, string> = {
   [VisitType.Guest]: 'border-cta-hover-ceruleanNoOpacity',
 }
 
-// export const BGColorSelect: Record<string, string> = {
-//   [VisitType.RoomReservation]: 'bg-[#E5F7EC]',
-//   [VisitType.Visit]: 'bg-[#F0EBFD]',
-//   [VisitType.Guest]: 'bg-cta-hover-ceruleanNoOpacity',
-// }
-
 export const BGColorsHover: Record<string, string> = {
   [VisitType.RoomReservation]: `hover:border-[#AFEEC8]`,
   [VisitType.Visit]: `hover:border-[#C4B8E5]`,
   [VisitType.Guest]: `hover:border-cta-ceruleanNoOpacity`,
 }
-
-// export const BGColorsHover: Record<string, string> = {
-//   [VisitType.RoomReservation]: `hover:${
-//     BGColorSelect[VisitType.RoomReservation]
-//   }`,
-//   [VisitType.Visit]: `hover:${BGColorSelect[VisitType.Visit]}`,
-//   [VisitType.Guest]: `hover:${BGColorSelect[VisitType.Guest]}`,
-// }
 
 export const OfficeVisitsHeaders = {
   [VisitType.Visit]: 'Desks',
@@ -66,13 +54,11 @@ export const DailyEvent = ({
   dailyEvent,
   selected,
   onClick,
-  eventId,
   onEntityCancel,
 }: {
   dailyEvent: DailyEventType
   selected: string | null
-  onClick: (item: any) => void
-  eventId: number
+  onClick: (item: DailyEventType) => void
   onEntityCancel: (
     id: string,
     type: string,
@@ -87,7 +73,7 @@ export const DailyEvent = ({
         onClick={() => onClick(dailyEvent)}
         className={cn(
           'transition-all',
-          'w-[224px] min-w-[224px] h-[192px] min-h-[192px] flex flex-col justify-between rounded-sm py-4 px-6 cursor-pointer',
+          'w-[224px] h-[192px]  flex flex-col justify-between rounded-sm py-4 px-6 cursor-pointer',
           BGColors[dailyEvent.type],
           'border border-transparent',
           iAmSelected && BGColorSelect[dailyEvent.type],
@@ -116,7 +102,7 @@ export const DailyEvent = ({
             </p>
           </div>
         </div>
-        {selected && (
+        {!!selected && (
           <FButton
             kind="secondary"
             size="small"

@@ -46,7 +46,12 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     '/upcoming',
     async (
       req: FastifyRequest<{
-        Querystring: { date: string; limit: number; officeId: string }
+        Querystring: {
+          date: string
+          limit: number
+          officeId: string
+          userId: string
+        }
       }>,
       reply
     ) => {
@@ -55,7 +60,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         return reply.throw.badParams('Missing office ID')
       }
 
-      let visits = await getVisits(fastify, officeId, req.user.id, date)
+      let visits = await getVisits(fastify, officeId, date, req.query.userId)
       let roomReservations = await getRoomReservations(
         fastify,
         officeId,

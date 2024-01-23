@@ -20,10 +20,14 @@ export const useOfficeVisits = (officeId: string, date: string) => {
   )
 }
 
-export const useOfficeVisitsUpcoming = (officeId: string, date: string) => {
+export const useOfficeVisitsUpcoming = (
+  officeId: string,
+  date: string,
+  userId?: string
+) => {
   const path = '/user-api/office-visits/upcoming'
   return useQuery<any, AxiosError>(
-    [path, { officeId, date: dayjs(date).format(DATE_FORMAT) }],
+    [path, { officeId, date: dayjs(date).format(DATE_FORMAT), userId }],
     async ({ queryKey }) =>
       (await api.get<any>(path, { params: queryKey[1] })).data,
     { enabled: !!officeId }

@@ -1,6 +1,6 @@
 import { BackButton, showNotification } from '#client/components/ui'
 import { useOffice } from '#client/utils/hooks'
-import { useUpdateVisit, useVisitsAreas } from '#modules/visits/client/queries'
+import { useUpdateVisit } from '#modules/visits/client/queries'
 import { useStore } from '@nanostores/react'
 import dayjs, { Dayjs } from 'dayjs'
 import React from 'react'
@@ -9,7 +9,6 @@ import { useUpdateRoomReservationByUser } from '#modules/room-reservation/client
 import { useUpdateGuestInviteByUser } from '#modules/guest-invites/client/queries'
 import {
   DailyEventType,
-  GenericVisit,
   GuestInviteStatus,
   RoomReservationStatus,
   VisitStatus,
@@ -25,20 +24,21 @@ export const DailyEventsList: React.FC<{
     areaId: string | null,
     date: Dayjs
   ) => void
-  setOfficeVisits: (v: Array<GenericVisit>) => void
-  setDate: (d: any) => void
-  date: any
-}> = ({ onChooseCard, setOfficeVisits, setDate, date }) => {
+  setDate: (d: Dayjs) => void
+  date: Dayjs
+  className?: string
+}> = ({ onChooseCard, setDate, date, className }) => {
   const officeId = useStore(stores.officeId)
   const office = useOffice(officeId)
   const [upcomingEvents, setUpcomingEvents] = React.useState([])
-  const [selected, setSelected] = React.useState<any | null>(null)
+  const [selected, setSelected] = React.useState<DailyEventType | null>(null)
 
   const cancellationCallback = () => {
     showNotification(`Successfully cancelled.`, 'success')
     refetchVisits()
   }
 
+  const me = useStore(stores.me)
   const { mutate: updateVisit } = useUpdateVisit(cancellationCallback)
   const { mutate: updateRoomReservation } =
     useUpdateRoomReservationByUser(cancellationCallback)
@@ -50,48 +50,37 @@ export const DailyEventsList: React.FC<{
     status: VisitStatus | RoomReservationStatus | GuestInviteStatus
   }
 
-  const { data: upcoming, refetch: refetchVisits } = useOfficeVisitsUpcoming(
-    officeId,
-    dayjs().toString()
-  )
+  const { data: myUpcomingVisits, refetch: refetchVisits } =
+    useOfficeVisitsUpcoming(officeId, dayjs().toString(), me?.id)
 
   React.useEffect(() => {
-    if (!upcomingEvents?.length && !!upcoming?.upcoming) {
-      setUpcomingEvents(upcoming.upcoming)
+    if (!upcomingEvents?.length && !!myUpcomingVisits?.upcoming) {
+      setUpcomingEvents(myUpcomingVisits.upcoming)
     }
-  }, [upcoming])
-
-  React.useEffect(() => {
-    setOfficeVisits(upcoming?.byDate[date.format('YYYY-MM-DD')])
-  }, [upcoming?.byDate, date])
+  }, [myUpcomingVisits])
 
   React.useEffect(() => {
     if (selected) {
       // if you removed the last item of this type
-      if (upcoming?.byType[selected?.type].length === 0) {
+      if (myUpcomingVisits?.byType[selected?.type].length === 0) {
         resetView()
       } else {
-        setUpcomingEvents(upcoming?.byType[selected?.type])
+        setUpcomingEvents(myUpcomingVisits?.byType[selected?.type])
       }
     }
-  }, [upcoming?.byType, date])
-
-  const resetOfficeVisits = React.useCallback(() => {
-    setOfficeVisits(upcoming.byDate[dayjs().format('YYYY-MM-DD')] ?? [])
-  }, [upcoming?.byDate])
+  }, [myUpcomingVisits?.byType, date])
 
   const resetView = () => {
     setSelected(null)
-    setUpcomingEvents(upcoming.upcoming)
-    onChooseCard(null, selected.areaId, dayjs())
-    resetOfficeVisits()
+    setUpcomingEvents(myUpcomingVisits.upcoming)
+    onChooseCard(null, selected?.areaId ?? '', dayjs())
   }
 
   const processOnClick = (dailyEvent: DailyEventType) => {
     if (!dailyEvent) {
       return
     }
-    setUpcomingEvents(upcoming.byType[dailyEvent.type])
+    setUpcomingEvents(myUpcomingVisits.byType[dailyEvent.type])
     setSelected(dailyEvent)
     setDate(dayjs(dailyEvent.date))
     onChooseCard(
@@ -99,10 +88,6 @@ export const DailyEventsList: React.FC<{
       dailyEvent.areaId ?? '',
       dayjs(dailyEvent.date)
     )
-
-    if (!!upcoming.byDate) {
-      setOfficeVisits(upcoming.byDate[dailyEvent.date])
-    }
   }
 
   const updateFns: Record<string, (data: any) => void> = {
@@ -135,7 +120,7 @@ export const DailyEventsList: React.FC<{
   }
 
   return (
-    <div>
+    <div className={className}>
       {!!selected ? (
         <div className="">
           <BackButton
@@ -155,10 +140,9 @@ export const DailyEventsList: React.FC<{
           upcomingEvents.map((v: DailyEventType, index) => (
             <DailyEvent
               key={v?.id}
-              eventId={index}
               dailyEvent={v}
               onClick={processOnClick}
-              selected={selected}
+              selected={selected?.id ?? null}
               onEntityCancel={onEntityCancel}
             />
           ))}
