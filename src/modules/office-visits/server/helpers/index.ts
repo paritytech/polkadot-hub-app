@@ -42,11 +42,14 @@ export const getBusinessDaysFromDate = (
 
 export const formatRoomReservationsResult = (
   reservation: RoomReservation,
-  officeId: string
+  officeId: string,
+  areaId: string
 ): any => {
+  // @todo put this somewhere central
   const office = appConfig.offices.find((o) => o.id === officeId)
-  const officeRoom = (office?.rooms || []).find(
-    (r) => r.id === reservation.roomId
+  const area = office?.areas?.find((a) => a.id === areaId)
+  const officeRoom = area?.meetingRooms?.find(
+    (m) => m.id === reservation.roomId
   )
   return {
     id: reservation.id,
@@ -54,7 +57,7 @@ export const formatRoomReservationsResult = (
       reservation.endDate
     )}`,
     objectId: reservation.roomId,
-    areaId: officeRoom?.areaId,
+    areaId,
     date: dayjs(reservation.startDate).format('YYYY-MM-DD'),
     value: 'Room ' + officeRoom?.name ?? '',
     description: officeRoom?.description ?? '',

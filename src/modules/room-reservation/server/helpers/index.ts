@@ -1,5 +1,6 @@
+import { appConfig } from '#server/app-config'
 import { DATE_FORMAT_DAY_NAME } from '#server/constants'
-import { RoomReservation } from '#shared/types'
+import { Office, RoomReservation } from '#shared/types'
 import dayjs, { Dayjs } from 'dayjs'
 
 export const intervalStep = 30

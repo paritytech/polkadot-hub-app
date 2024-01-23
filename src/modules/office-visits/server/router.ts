@@ -24,6 +24,7 @@ import {
 } from '#shared/types'
 import * as fp from '#shared/utils'
 import { User } from '#modules/users/server/models'
+import { appConfig } from '#server/app-config'
 
 dayjs.extend(localizedFormat)
 
@@ -59,6 +60,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (!officeId) {
         return reply.throw.badParams('Missing office ID')
       }
+      const office = appConfig.getOfficeById(officeId)
 
       let visits = await getVisits(fastify, officeId, date, req.query.userId)
       let roomReservations = await getRoomReservations(
@@ -73,7 +75,14 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
       const dailyEventsReservations = roomReservations.map(
         (reservation, idx) => {
-          const item = formatRoomReservationsResult(reservation, officeId)
+          const area = office?.areas?.find((area) =>
+            area.meetingRooms?.find((room) => room.id === reservation.roomId)
+          )
+          const item = formatRoomReservationsResult(
+            reservation,
+            officeId,
+            area?.id
+          )
           // add the first item in array to show at the top of the map in a list
           if (!idx) {
             upcomingItems.push(item)
@@ -206,10 +215,15 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           )
         )
       })
+      const office = appConfig.getOfficeById(officeId)
       roomReservations.forEach((reservation) => {
+        const area = office?.areas?.find((area) =>
+          area.meetingRooms?.find((room) => room.id === reservation.roomId)
+        )
+
         return addToUpcomingByDate(
           result,
-          formatRoomReservationsResult(reservation, officeId),
+          formatRoomReservationsResult(reservation, officeId, area?.id ?? ''),
           dayjs(reservation.startDate).toString(),
           VisitType.RoomReservation
         )

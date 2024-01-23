@@ -1,4 +1,4 @@
-import { any, z } from 'zod'
+import { z } from 'zod'
 
 const componentRef: z.ZodTypeAny = z.lazy(() =>
   z.union([
@@ -70,27 +70,18 @@ export const officeAreaDesk = z
     ])
   )
 
-export const officeArea = z.object({
-  id: z.string(),
-  available: z.boolean().default(true),
-  name: z.string(),
-  capacity: z.number().min(1),
-  map: z.string(),
-  // @todo remove type: "desks"
-  bookable: z.boolean().default(false),
-  desks: z.array(officeAreaDesk).min(1),
-  meetingRooms: z.array(officeAreaDesk).optional(),
-})
-
 export const officeRoom = z.object({
   id: z.string(),
   name: z.string(),
   available: z.boolean().default(true),
   description: z.string(),
-  areaId: z.string(),
   photo: z.string(),
   equipment: z.string(),
   capacity: z.number().min(1),
+  position: z.object({
+    x: z.number().min(0).max(100),
+    y: z.number().min(0).max(100),
+  }),
   workingHours: z.tuple([
     z.string().regex(/^([01][0-9]|2[0-4]):[0-5][0-9]$/),
     z.string().regex(/^([01][0-9]|2[0-4]):[0-5][0-9]$/),
@@ -98,6 +89,18 @@ export const officeRoom = z.object({
   autoConfirm: z.boolean(),
 })
 
+export const officeArea = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    capacity: z.number().min(1),
+    map: z.string(),
+    // @todo remove type: "desks"
+    bookable: z.boolean().default(false),
+    desks: z.array(officeAreaDesk).min(1),
+    meetingRooms: z.array(officeRoom).min(1).optional(),
+  })
+  .superRefine((office, ctx) => {})
 export const office = z
   .object({
     id: z.string(),
@@ -113,7 +116,6 @@ export const office = z
     address: z.string().optional(),
     visitsConfig: officeVisitsConfig.optional(),
     areas: z.array(officeArea).min(1).optional(),
-    rooms: z.array(officeRoom).min(1).optional(),
   })
   .superRefine((office, ctx) => {
     if (office.allowDeskReservation) {
@@ -135,15 +137,23 @@ export const office = z
       }
     }
     if (office.allowRoomReservation) {
-      const roomsParsed = z.array(officeRoom).min(1).safeParse(office.rooms)
+      let hasMeetingRooms = false
+      if (office.areas) {
+        for (const area of office.areas) {
+          if (area.meetingRooms && area.meetingRooms.length > 0) {
+            hasMeetingRooms = true
+            break
+          }
+        }
+      }
       const roomsPlaceholderMessageParsed = z
         .string()
         .nonempty()
         .safeParse(office.roomsPlaceholderMessage)
-      if (!roomsParsed.success && !roomsPlaceholderMessageParsed.success) {
+      if (!hasMeetingRooms && !roomsPlaceholderMessageParsed.success) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Property 'allowRoomReservation' is set but 'rooms' or 'roomsPlaceholderMessageParsed' is missing`,
+          message: `Property 'allowRoomReservation' is set but 'meetingRooms' or 'roomsPlaceholderMessageParsed' is missing in your office areas configuration`,
         })
       }
     }

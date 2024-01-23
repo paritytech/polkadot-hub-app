@@ -20,7 +20,7 @@ import {
   parseTimeSlot,
   timezoneDateToUTC,
 } from './helpers'
-import { isWithinWorkingHours } from '../shared-helpers'
+import { getRoom, getRooms, isWithinWorkingHours } from '../shared-helpers'
 import { Permissions } from '../permissions'
 import {
   OfficeRoomCompact,
@@ -72,7 +72,7 @@ const publicRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
 
       const office = appConfig.getOfficeById(device.office) || {}
-      const room = office.rooms!.find((x) => x.id === device?.roomId)
+      const room = getRoom(office, device?.roomId)
       if (!room) {
         reply.clearCookie(RoomDisplayDeviceCookie)
         return emptyResponse
@@ -198,7 +198,7 @@ const publicRouter: FastifyPluginCallback = async function (fastify, opts) {
       const data = req.body
       const officeId = req.query?.office
       const office = appConfig.getOfficeById(officeId)
-      const room = (office.rooms || []).find((x) => x.id === data.roomId)
+      const room = getRoom(office, data.roomId)
       if (!room) {
         return reply.throw.badParams('Invalid room ID')
       }
@@ -317,7 +317,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       })
       const reservedRooms = reservations.map((room) => room.roomId)
 
-      return (req.office?.rooms || []).filter((room) => {
+      return (getRooms(office) || []).filter((room) => {
+        if (!room) {
+          return false
+        }
         return (
           room.available &&
           !reservedRooms.includes(room.id) &&
@@ -767,7 +770,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       // Send user notification to the user via Matrix
       if (fastify.integrations.Matrix) {
         const office = appConfig.getOfficeById(reservation.office)
-        const room = office.rooms!.find((x) => x.id === reservation.roomId)
+        const room = getRoom(office, reservation.roomId)
         const data = {
           status,
           user: req.user.usePublicProfileView(),
@@ -830,9 +833,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
 
       const office = appConfig.getOfficeById(reservation.office) || {}
-      const roomDetail = office?.rooms!.find(
-        (room) => room.id == reservation?.roomId
-      )
+      const roomDetail = getRoom(office, reservation.roomId)
       return {
         id: reservation.id,
         status: reservation.status,
@@ -870,7 +871,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
       const roomId = req.body.roomId
       const office = appConfig.offices.find((o) =>
-        (o.rooms || []).some((r) => r.id === roomId)
+        (getRooms(o) || []).some((r) => r.id === roomId)
       )
       if (!office) {
         return reply.throw.rejected("Can't resolve a submitted room ID")
@@ -928,7 +929,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         process.nextTick(async () => {
           try {
             const office = appConfig.getOfficeById(reservation.office)
-            const room = office.rooms!.find((x) => x.id === reservation.roomId)
+            const room = getRoom(office, reservation.roomId)
             const data = {
               room: room ? room.name : reservation.roomId,
               date: getDateTimeString(reservation, office.timezone),
