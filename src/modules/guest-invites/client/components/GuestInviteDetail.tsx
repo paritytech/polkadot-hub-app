@@ -139,9 +139,10 @@ export const _GuestInviteDetail = () => {
               <div className="mt-6">
                 <OfficeFloorMap
                   area={area}
+                  mappablePoints={area.desks}
                   availableDeskIds={[]}
-                  selectedDeskId={guestInivite.deskId}
-                  onToggleDesk={() => null}
+                  selectedPointId={guestInivite.deskId}
+                  onToggle={() => null}
                 />
               </div>
             )}

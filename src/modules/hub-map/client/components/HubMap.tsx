@@ -3,10 +3,9 @@ import { Select, WidgetWrapper } from '#client/components/ui'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import { useOffice } from '#client/utils/hooks'
-import dayjs, { Dayjs } from 'dayjs'
+import dayjs from 'dayjs'
 import { DaySlider } from '#client/components/ui/DaySlider'
 import { DATE_FORMAT } from '#client/constants'
-import config from '#client/config'
 import { OfficeFloorMap } from '#client/components/OfficeFloorMap'
 import { DailyEventsList } from './DailyEventsList'
 import {
@@ -16,14 +15,9 @@ import {
 } from '#modules/visits/client/queries'
 import { propEq } from '#shared/utils'
 import { useOfficeVisitsUpcoming } from '#modules/office-visits/client/queries'
+import { assignKind, goToMeetings, goToVisits } from '../helpers'
+import { VisitType } from '#shared/types'
 
-const goToVisits = (selectedDesk: string, areaId: string, date: Dayjs) => {
-  const url = new URL(config.appHost + '/visits/request')
-  url.searchParams.set('deskId', String(selectedDesk))
-  url.searchParams.set('areaId', String(areaId))
-  url.searchParams.set('date', date.format(DATE_FORMAT))
-  window.location.href = url.toString()
-}
 export const HubMap = () => {
   const officeId = useStore(stores.officeId)
   const office = useOffice(officeId)
@@ -32,11 +26,12 @@ export const HubMap = () => {
   const { data: areas = [] } = useVisitsAreas(office?.id || '')
   const [areaId, setAreaId] = React.useState<string | null>(null)
   const area = React.useMemo(() => areas.find((x) => areaId === x.id), [areaId])
+  const [mappablePoints, setMappablePoints] = React.useState<any[]>([])
 
   const [date, setDate] = React.useState(dayjs())
-  const [selectedDeskId, setSelectedDeskId] = React.useState<string | null>(
-    null
-  )
+  const [selectedDailyEvent, setSelectedDailyEvent] = React.useState<
+    string | null
+  >(null)
   const { data: upcomingVisitsAll, refetch: refetchVisits } =
     useOfficeVisitsUpcoming(officeId, dayjs().toString())
 
@@ -48,8 +43,27 @@ export const HubMap = () => {
   React.useEffect(() => {
     if (areas.length) {
       setAreaId(areas[0].id)
+      const points = [...assignKind(areas[0].desks, VisitType.Visit)]
+      if (!!areas[0]?.meetingRooms) {
+        points.push(
+          ...assignKind(areas[0]?.meetingRooms, VisitType.RoomReservation)
+        )
+      }
+      setMappablePoints(points)
     }
   }, [areas])
+
+  React.useEffect(() => {
+    if (!!area) {
+      const points = [...assignKind(area.desks, VisitType.Visit)]
+      if (!!area?.meetingRooms?.length) {
+        points.push(
+          ...assignKind(area?.meetingRooms, VisitType.RoomReservation)
+        )
+      }
+      setMappablePoints(points)
+    }
+  }, [area])
 
   const onAreaChange = React.useCallback(
     (areaId: string) => setAreaId(areaId),
@@ -90,9 +104,16 @@ export const HubMap = () => {
   }, [upcomingVisitsAll?.byDate])
 
   const availableAreaDeskIds = React.useMemo(() => {
-    return availableDesks
+    let available = []
+    const desks = availableDesks
       .filter((x) => x.areaId === area?.id)
       .map((x) => x.deskId)
+
+    available = [...desks]
+    if (!!area?.meetingRooms) {
+      available = [...available, ...area?.meetingRooms.map((x) => x.id)]
+    }
+    return available
   }, [availableDesks, area])
 
   const isMobile = width <= 768
@@ -100,8 +121,8 @@ export const HubMap = () => {
     <WidgetWrapper className="transition-all delay-100" title={`Hub Map`}>
       <div className="overflow-none">
         <DailyEventsList
-          onChooseCard={(deskId, areaId, chosenDate) => {
-            setSelectedDeskId(deskId)
+          onChooseCard={(id, areaId, chosenDate) => {
+            setSelectedDailyEvent(id)
             setAreaId(areaId)
             setDate(chosenDate)
             resetOfficeVisits()
@@ -117,7 +138,9 @@ export const HubMap = () => {
               <div className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between mx-auto">
                 <div className="w-full sm:w-auto flex flex-col  gap-4 items-start sm:items-baseline justify-center">
                   <DaySlider
-                    onChange={setDate}
+                    onChange={(d) => {
+                      setDate(d)
+                    }}
                     reverse={true}
                     slideDate={date.format('YYYY-MM-DD')}
                     className="mx-auto sm:mx-0"
@@ -145,15 +168,23 @@ export const HubMap = () => {
             <div className="sm:max-w-[780px] h-[500px] sm:h-auto m-auto my-2 sm:my-10">
               <OfficeFloorMap
                 area={area}
+                mappablePoints={mappablePoints}
                 officeVisits={officeVisits}
                 showUsers={true}
-                selectedDeskId={selectedDeskId}
+                selectedPointId={selectedDailyEvent}
                 selectedAreaId={areaId}
                 availableDeskIds={availableAreaDeskIds}
                 panZoom={isMobile}
-                onToggleDesk={(selectedDesk) =>
-                  goToVisits(selectedDesk, String(areaId), date)
-                }
+                onToggle={(id, kind) => {
+                  switch (kind) {
+                    case VisitType.Visit:
+                      return goToVisits(id, String(areaId), date)
+                    case VisitType.RoomReservation:
+                      return goToMeetings(id, date)
+                    default:
+                      return
+                  }
+                }}
               />
             </div>
           </div>

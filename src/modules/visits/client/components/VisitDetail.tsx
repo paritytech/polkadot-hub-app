@@ -124,9 +124,10 @@ export const _VisitDetail = () => {
                 <div className="">
                   <OfficeFloorMap
                     area={area}
+                    mappablePoints={area.desks}
                     availableDeskIds={[]}
-                    selectedDeskId={visit.deskId}
-                    onToggleDesk={() => null}
+                    selectedPointId={visit.deskId}
+                    onToggle={() => null}
                   />
                 </div>
               )}

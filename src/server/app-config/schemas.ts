@@ -79,6 +79,7 @@ export const officeArea = z.object({
   // @todo remove type: "desks"
   bookable: z.boolean().default(false),
   desks: z.array(officeAreaDesk).min(1),
+  meetingRooms: z.array(officeAreaDesk).optional(),
 })
 
 export const officeRoom = z.object({
@@ -86,6 +87,7 @@ export const officeRoom = z.object({
   name: z.string(),
   available: z.boolean().default(true),
   description: z.string(),
+  areaId: z.string(),
   photo: z.string(),
   equipment: z.string(),
   capacity: z.number().min(1),

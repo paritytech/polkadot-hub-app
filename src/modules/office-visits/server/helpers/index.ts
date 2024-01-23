@@ -53,6 +53,8 @@ export const formatRoomReservationsResult = (
     dateTime: `${getTime(reservation.startDate)} - ${getTime(
       reservation.endDate
     )}`,
+    objectId: reservation.roomId,
+    areaId: officeRoom?.areaId,
     date: dayjs(reservation.startDate).format('YYYY-MM-DD'),
     value: 'Room ' + officeRoom?.name ?? '',
     description: officeRoom?.description ?? '',
@@ -67,6 +69,7 @@ export const formatVisit = (v: Visit, user?: User | null): any => {
     value: `Desk ${v.deskName}`,
     type: VisitType.Visit,
     deskId: v.deskId,
+    objectId: v.deskId,
     description: v.areaName,
     areaId: v.areaId,
     date: v.date,

@@ -170,9 +170,10 @@ export const AdminGuestInvite: React.FC = () => {
                 {!!area && (
                   <OfficeFloorMap
                     area={area}
+                    mappablePoints={area.desks}
                     availableDeskIds={availableAreaDeskIds}
-                    selectedDeskId={selectedDeskId}
-                    onToggleDesk={onToggleDesk}
+                    selectedPointId={selectedDeskId}
+                    onToggle={onToggleDesk}
                   />
                 )}
               </div>

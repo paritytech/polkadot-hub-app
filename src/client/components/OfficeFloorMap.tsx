@@ -1,6 +1,14 @@
 import React from 'react'
-import { Avatar, Button } from '#client/components/ui'
-import { DailyEventType, OfficeArea, UserMe } from '#shared/types'
+import { Avatar, Button, P } from '#client/components/ui'
+import {
+  DailyEventType,
+  OfficeArea,
+  OfficeAreaDesk,
+  OfficeRoom,
+  User,
+  UserMe,
+  VisitType,
+} from '#shared/types'
 import { cn } from '#client/utils'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
@@ -8,116 +16,168 @@ import { ImageWithPanZoom } from './ui/ImageWithPanZoom'
 
 type OfficeFloorMapProps = {
   area: OfficeArea
+  mappablePoints?: any
   availableDeskIds?: string[]
-  selectedDeskId: string | null
-  onToggleDesk: (deskId: string) => void
+  selectedPointId: string | null
+  onToggle: (deskId: string, kind: string) => void
   showUsers?: boolean
   officeVisits?: Record<string, Array<DailyEventType>>
   panZoom?: boolean
 }
 
+const PointComponent: Record<
+  VisitType,
+  (
+    item: OfficeAreaDesk,
+    isSelected: boolean,
+    isAvailable: boolean,
+    onClick: (id: string, kind: string) => void
+  ) => Element | JSX.Element
+> = {
+  [VisitType.Visit]: (
+    item: OfficeAreaDesk,
+    isSelected: boolean,
+    isAvailable: boolean,
+    onClick: (id: string, kind: string) => void
+  ) => (
+    <Button
+      size="small"
+      kind={isSelected ? 'primary' : 'secondary'}
+      disabled={!isAvailable}
+      color={isSelected ? 'purple' : 'default'}
+      className={cn(
+        'absolute -translate-y-2/4 -translate-x-2/4 whitespace-nowrap',
+        !isSelected && 'bg-gray-100',
+        'rounded-sm',
+        'hover:scale-105 transition-all delay-100'
+      )}
+      onClick={onClick(item.id, VisitType.Visit)}
+    >
+      {item?.name}
+    </Button>
+  ),
+  [VisitType.RoomReservation]: (
+    item: any,
+    isSelected: boolean,
+    isAvailable: boolean,
+    onClick: (id: string, kind: string) => void
+  ) => (
+    <Button
+      size="small"
+      kind={isSelected ? 'primary' : 'secondary'}
+      disabled={!isAvailable}
+      className={cn(
+        'absolute -translate-y-2/4 -translate-x-2/4 whitespace-nowrap',
+        isSelected && 'border-pink-600 border-2',
+        'bg-gray-100 text-black',
+        'rounded-sm  border-2  p-4',
+        'hover:scale-105 transition-all delay-100'
+      )}
+      onClick={onClick(item.id, VisitType.RoomReservation)}
+    >
+      <p className="font-bold">{item.name}</p>
+      <P textType="additional" className={cn('text-green-600 my-0')}>
+        available
+      </P>
+    </Button>
+  ),
+  [VisitType.Guest]: (
+    item: OfficeRoom,
+    isSelected: boolean,
+    isAvailable: boolean,
+    onClick: (id: string, kind: string) => void
+  ) => {},
+}
+
+const UserPoint = ({
+  isMe,
+  user,
+  point,
+}: {
+  isMe: boolean
+  user: User
+  point: OfficeAreaDesk
+}) => (
+  <div
+    className={cn(
+      'absolute',
+      `${isMe && 'border-4 border-purple-500 rounded-full'}`
+    )}
+    style={{
+      left: `${point.position?.x - 2}%`,
+      top: `${point.position?.y - 2.5}%`,
+    }}
+  >
+    <a href={`/profile/${user.id}`}>
+      <Avatar src={user?.avatar} userId={user?.id} size="medium" />
+    </a>
+  </div>
+)
+
 const AreaMapping: React.FC<{
   me?: UserMe | null
-  area: OfficeArea
+  objects: Array<OfficeAreaDesk>
+  areaId: string
   officeVisits?: Record<string, Array<DailyEventType>>
   showUsers: boolean
-  selectedDeskId: string | null
+  selectedPointId: string | null
   availableDeskIds?: string[]
-  onToggleDesk: (id: string) => void
+  onToggle: (id: string, kind: string) => void
 }> = ({
   me,
-  area,
+  objects,
+  areaId,
   showUsers = false,
   officeVisits,
-  selectedDeskId,
+  selectedPointId,
   availableDeskIds,
-  onToggleDesk,
+  onToggle,
 }) => {
   const onClick = React.useCallback(
-    (deskId: string) => (ev: React.MouseEvent<HTMLButtonElement>) => {
+    (id: string, kind: string) => (ev: React.MouseEvent<HTMLButtonElement>) => {
       ev.preventDefault()
-      onToggleDesk(deskId)
+      onToggle(id, kind)
+      console.log('tick')
     },
-    [onToggleDesk]
+    [onToggle]
   )
-  return area.desks
+
+  return objects
     .filter((x) => x.position)
     .map((x) => {
-      let isSelected = false
+      let isSelected = selectedPointId === x.id
       let isAvailable = false
       let user = null
 
-      if (showUsers && me) {
-        if (!!officeVisits) {
-          const bookedVisit: DailyEventType | undefined =
-            officeVisits.visit?.find(
-              (v) => v.areaId === area.id && v.deskId === x.id
-            )
-          if (!!bookedVisit) {
-            if (bookedVisit?.user?.id === me?.id) {
-              user = me
-            } else {
-              user = bookedVisit.user
-            }
+      if (!!officeVisits && me && showUsers) {
+        const bookedVisit: DailyEventType | undefined =
+          officeVisits.visit?.find(
+            (v) => v.areaId === areaId && v.objectId === x.id
+          )
+        if (!!bookedVisit) {
+          if (bookedVisit?.user?.id === me?.id) {
+            user = me
+          } else {
+            user = bookedVisit.user
           }
         }
-      } else {
-        isSelected = selectedDeskId === x.id
-        isAvailable = !!availableDeskIds?.includes(x.id)
       }
+      isSelected = selectedPointId === x.id
+      isAvailable = !!availableDeskIds?.includes(x.id)
       return (
         <div key={x.id}>
           {!!user && !!me ? (
-            <div
-              className={cn(
-                'absolute',
-                `${
-                  me?.id === user?.id &&
-                  'border-4 border-purple-500 rounded-full'
-                }`
-              )}
-              style={{
-                left: `${x.position?.x - 2}%`,
-                top: `${x.position?.y - 2.5}%`,
-              }}
-            >
-              <a href={`/profile/${user.id}`}>
-                <Avatar src={user?.avatar} userId={user?.id} size="medium" />
-              </a>
-            </div>
+            <UserPoint isMe={me?.id === user?.id} user={user} point={x} />
           ) : (
             <div
-              className={cn('absolute', !showUsers && 'w-[1px] h-[1px]')}
+              className={cn('absolute')}
               style={{
                 left: `${x.position?.x}%`,
                 top: `${x.position?.y}%`,
               }}
             >
-              <Button
-                size="small"
-                kind={isSelected ? 'primary' : 'secondary'}
-                disabled={!isAvailable && !showUsers}
-                color={isSelected ? 'purple' : 'default'}
-                className={cn(
-                  '2xl:hidden absolute -translate-y-2/4 -translate-x-2/4 whitespace-nowrap',
-                  !isSelected && 'bg-gray-100'
-                )}
-                onClick={onClick(x.id)}
-              >
-                {x.name}
-              </Button>
-              <Button
-                kind={isSelected ? 'primary' : 'secondary'}
-                disabled={!isAvailable && !showUsers}
-                color={isSelected ? 'purple' : 'default'}
-                className={cn(
-                  'hidden 2xl:inline absolute -translate-y-2/4 -translate-x-2/4 whitespace-nowrap',
-                  !isSelected && 'bg-gray-100'
-                )}
-                onClick={onClick(x.id)}
-              >
-                {x.name}
-              </Button>
+              {/* // @todo fix this */}
+              {PointComponent[x.kind](x, isSelected, isAvailable, onClick)}
             </div>
           )}
         </div>
@@ -127,9 +187,10 @@ const AreaMapping: React.FC<{
 
 export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
   area,
+  mappablePoints,
   availableDeskIds,
-  selectedDeskId,
-  onToggleDesk,
+  selectedPointId,
+  onToggle,
   showUsers = false,
   officeVisits,
   panZoom = false,
@@ -145,12 +206,13 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
         />
         <AreaMapping
           me={me}
-          area={area}
+          objects={mappablePoints}
+          areaId={area.id}
           showUsers={showUsers}
           officeVisits={officeVisits}
-          selectedDeskId={selectedDeskId}
+          selectedPointId={selectedPointId}
           availableDeskIds={availableDeskIds}
-          onToggleDesk={onToggleDesk}
+          onToggle={onToggle}
         />
       </div>
       <div
@@ -165,12 +227,13 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
           imageOverlayElement={
             <AreaMapping
               me={me}
-              area={area}
+              objects={mappablePoints}
+              areaId={area.id}
               showUsers={showUsers}
               officeVisits={officeVisits}
-              selectedDeskId={selectedDeskId}
+              selectedPointId={selectedPointId}
               availableDeskIds={availableDeskIds}
-              onToggleDesk={onToggleDesk}
+              onToggle={onToggle}
             />
           }
         />

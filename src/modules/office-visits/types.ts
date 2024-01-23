@@ -20,7 +20,7 @@ export type DailyEventType = {
   dateTime: string
   description: string
   areaId?: string
-  deskId?: string
+  objectId?: string
   user?: User
   status: string
 }

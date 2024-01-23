@@ -1,6 +1,6 @@
 import React from 'react'
 import { cn } from '#client/utils'
-import { DailyEventType, VisitType } from '#shared/types'
+import { DailyEventType, StatusColor, VisitType } from '#shared/types'
 import dayjs from 'dayjs'
 import { FButton, P } from '#client/components/ui'
 
@@ -29,14 +29,6 @@ export const OfficeVisitsHeaders = {
   [VisitType.Guest]: 'Guest Visits',
   [VisitType.RoomReservation]: 'Rooms',
 } as const
-
-// @todo fix type
-export const StatusColor: Record<string, string> = {
-  confirmed: 'bg-green-500',
-  pending: 'bg-yellow-500',
-  cancelled: 'bg-red-500',
-  rejected: 'bg-red-500',
-}
 
 const DateHeader = ({ dateValue }: { dateValue: string | Date }) => (
   <P textType="additional" className="mt-0 mb-0">

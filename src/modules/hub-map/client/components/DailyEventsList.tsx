@@ -19,11 +19,7 @@ import { FRIENDLY_DATE_FORMAT } from '#client/constants'
 import { DailyEvent } from './DailyEvent'
 
 export const DailyEventsList: React.FC<{
-  onChooseCard: (
-    deskId: string | null,
-    areaId: string | null,
-    date: Dayjs
-  ) => void
+  onChooseCard: (id: string | null, areaId: string | null, date: Dayjs) => void
   setDate: (d: Dayjs) => void
   date: Dayjs
   className?: string
@@ -84,7 +80,7 @@ export const DailyEventsList: React.FC<{
     setSelected(dailyEvent)
     setDate(dayjs(dailyEvent.date))
     onChooseCard(
-      dailyEvent.deskId ?? '',
+      dailyEvent.objectId ?? '',
       dailyEvent.areaId ?? '',
       dayjs(dailyEvent.date)
     )
@@ -115,6 +111,7 @@ export const DailyEventsList: React.FC<{
         status: 'cancelled',
       }
       updateFns[type](data)
+      setSelected(null)
       refetchVisits()
     }
   }
