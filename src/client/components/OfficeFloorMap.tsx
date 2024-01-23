@@ -17,9 +17,9 @@ import { ImageWithPanZoom } from './ui/ImageWithPanZoom'
 type OfficeFloorMapProps = {
   area: OfficeArea
   mappablePoints?: any
-  availableDeskIds?: string[]
+  clickablePoints?: string[]
   selectedPointId: string | null
-  onToggle: (deskId: string, kind: string) => void
+  onToggle: (id: string, kind: string) => void
   showUsers?: boolean
   officeVisits?: Record<string, Array<DailyEventType>>
   panZoom?: boolean
@@ -114,14 +114,14 @@ const UserPoint = ({
   </div>
 )
 
-const AreaMapping: React.FC<{
+const PointMapping: React.FC<{
   me?: UserMe | null
   objects: Array<OfficeAreaDesk>
   areaId: string
   officeVisits?: Record<string, Array<DailyEventType>>
   showUsers: boolean
   selectedPointId: string | null
-  availableDeskIds?: string[]
+  clickablePoints?: string[]
   onToggle: (id: string, kind: string) => void
 }> = ({
   me,
@@ -130,14 +130,13 @@ const AreaMapping: React.FC<{
   showUsers = false,
   officeVisits,
   selectedPointId,
-  availableDeskIds,
+  clickablePoints,
   onToggle,
 }) => {
   const onClick = React.useCallback(
     (id: string, kind: string) => (ev: React.MouseEvent<HTMLButtonElement>) => {
       ev.preventDefault()
       onToggle(id, kind)
-      console.log('tick')
     },
     [onToggle]
   )
@@ -163,7 +162,7 @@ const AreaMapping: React.FC<{
         }
       }
       isSelected = selectedPointId === x.id
-      isAvailable = !!availableDeskIds?.includes(x.id)
+      isAvailable = !!clickablePoints?.includes(x.id)
       return (
         <div key={x.id}>
           {!!user && !!me ? (
@@ -188,7 +187,7 @@ const AreaMapping: React.FC<{
 export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
   area,
   mappablePoints,
-  availableDeskIds,
+  clickablePoints,
   selectedPointId,
   onToggle,
   showUsers = false,
@@ -204,14 +203,14 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
           alt={`${area.name} floor plan`}
           className="block w-full opacity-60"
         />
-        <AreaMapping
+        <PointMapping
           me={me}
           objects={mappablePoints}
           areaId={area.id}
           showUsers={showUsers}
           officeVisits={officeVisits}
           selectedPointId={selectedPointId}
-          availableDeskIds={availableDeskIds}
+          clickablePoints={clickablePoints}
           onToggle={onToggle}
         />
       </div>
@@ -225,14 +224,14 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
           initialScale={1.5}
           initialStartPosition={{ x: 30, y: 30 }}
           imageOverlayElement={
-            <AreaMapping
+            <PointMapping
               me={me}
               objects={mappablePoints}
               areaId={area.id}
               showUsers={showUsers}
               officeVisits={officeVisits}
               selectedPointId={selectedPointId}
-              availableDeskIds={availableDeskIds}
+              clickablePoints={clickablePoints}
               onToggle={onToggle}
             />
           }

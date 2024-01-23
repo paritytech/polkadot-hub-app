@@ -15,7 +15,7 @@ import {
 } from '#modules/visits/client/queries'
 import { propEq } from '#shared/utils'
 import { useOfficeVisitsUpcoming } from '#modules/office-visits/client/queries'
-import { assignKind, goToMeetings, goToVisits } from '../helpers'
+import { getPoints, goToMeetings, goToVisits } from '../helpers'
 import { VisitType } from '#shared/types'
 
 export const HubMap = () => {
@@ -36,32 +36,20 @@ export const HubMap = () => {
     useOfficeVisitsUpcoming(officeId, dayjs().toString())
 
   React.useEffect(() => {
-    setOfficeVisits(upcomingVisitsAll?.byDate[date.format('YYYY-MM-DD')])
+    setOfficeVisits(upcomingVisitsAll?.byDate[date.format(DATE_FORMAT)])
   }, [upcomingVisitsAll?.byDate, date])
 
   const [officeVisits, setOfficeVisits] = React.useState([])
   React.useEffect(() => {
-    if (areas.length) {
+    if (!!areas.length) {
       setAreaId(areas[0].id)
-      const points = [...assignKind(areas[0].desks, VisitType.Visit)]
-      if (!!areas[0]?.meetingRooms) {
-        points.push(
-          ...assignKind(areas[0]?.meetingRooms, VisitType.RoomReservation)
-        )
-      }
-      setMappablePoints(points)
+      setMappablePoints(getPoints(areas[0]))
     }
   }, [areas])
 
   React.useEffect(() => {
     if (!!area) {
-      const points = [...assignKind(area.desks, VisitType.Visit)]
-      if (!!area?.meetingRooms?.length) {
-        points.push(
-          ...assignKind(area?.meetingRooms, VisitType.RoomReservation)
-        )
-      }
-      setMappablePoints(points)
+      setMappablePoints(getPoints(area))
     }
   }, [area])
 
@@ -98,9 +86,7 @@ export const HubMap = () => {
   )
 
   const resetOfficeVisits = React.useCallback(() => {
-    setOfficeVisits(
-      upcomingVisitsAll.byDate[dayjs().format('YYYY-MM-DD')] ?? []
-    )
+    setOfficeVisits(upcomingVisitsAll.byDate[dayjs().format(DATE_FORMAT)] ?? [])
   }, [upcomingVisitsAll?.byDate])
 
   const availableAreaDeskIds = React.useMemo(() => {
@@ -142,7 +128,7 @@ export const HubMap = () => {
                       setDate(d)
                     }}
                     reverse={true}
-                    slideDate={date.format('YYYY-MM-DD')}
+                    slideDate={date.format(DATE_FORMAT)}
                     className="mx-auto sm:mx-0"
                   />
                   <div className="text-text-tertiary">
@@ -173,7 +159,7 @@ export const HubMap = () => {
                 showUsers={true}
                 selectedPointId={selectedDailyEvent}
                 selectedAreaId={areaId}
-                availableDeskIds={availableAreaDeskIds}
+                clickablePoints={availableAreaDeskIds}
                 panZoom={isMobile}
                 onToggle={(id, kind) => {
                   switch (kind) {

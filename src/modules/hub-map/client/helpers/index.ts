@@ -1,15 +1,42 @@
 import config from '#client/config'
 import { DATE_FORMAT } from '#client/constants'
+import {
+  OfficeArea,
+  OfficeAreaDesk,
+  OfficeRoom,
+  VisitType,
+} from '#shared/types'
 import { Dayjs } from 'dayjs'
 
-export const assignKind = (arr: Array<any>, kind: string) => {
+export const addParams = (
+  arr: Array<OfficeAreaDesk> | Array<OfficeRoom>,
+  params: { kind: string; areaId: string }
+) => {
   if (!arr.length) {
     return []
   }
-  return arr.map((item) => {
-    item.kind = kind
-    return item
-  })
+  return arr.map((item) => ({
+    ...item,
+    ...params,
+  }))
+}
+
+export const getPoints = (area: OfficeArea) => {
+  const points = [
+    ...addParams(area?.desks, {
+      areaId: area.id,
+      kind: VisitType.Visit,
+    }),
+  ]
+  if (!!area?.meetingRooms?.length) {
+    points.push(
+      ...addParams(area?.meetingRooms, {
+        areaId: area.id,
+        kind: VisitType.RoomReservation,
+      })
+    )
+  }
+  return points
 }
 
 export const goToVisits = (

@@ -11,7 +11,7 @@ import { showNotification } from '#client/components/ui/Notifications'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import config from '#client/config'
 import * as stores from '#client/stores'
-import { VisitStatus } from '#shared/types'
+import { VisitStatus, VisitType } from '#shared/types'
 import { propEq } from '#shared/utils/fp'
 import { useStore } from '@nanostores/react'
 import dayjs from 'dayjs'
@@ -26,6 +26,8 @@ import {
 import { VisitStatusTag } from './VisitStatusTag'
 import Permissions from '#shared/permissions'
 import { DATE_FORMAT_DAY_NAME_FULL } from '#client/constants'
+// @todo shared place for this
+import { addParams } from '#modules/hub-map/client/helpers'
 
 export const VisitDetail = () => (
   <PermissionsValidator required={[Permissions.visits.Create]} onRejectGoHome>
@@ -124,8 +126,11 @@ export const _VisitDetail = () => {
                 <div className="">
                   <OfficeFloorMap
                     area={area}
-                    mappablePoints={area.desks}
-                    availableDeskIds={[]}
+                    mappablePoints={addParams(area.desks, {
+                      kind: VisitType.Visit,
+                      areaId: area.id,
+                    })}
+                    clickablePoints={[]}
                     selectedPointId={visit.deskId}
                     onToggle={() => null}
                   />

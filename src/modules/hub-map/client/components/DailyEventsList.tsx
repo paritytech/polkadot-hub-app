@@ -50,7 +50,7 @@ export const DailyEventsList: React.FC<{
     useOfficeVisitsUpcoming(officeId, dayjs().toString(), me?.id)
 
   React.useEffect(() => {
-    if (!upcomingEvents?.length && !!myUpcomingVisits?.upcoming) {
+    if (!!myUpcomingVisits?.upcoming) {
       setUpcomingEvents(myUpcomingVisits.upcoming)
     }
   }, [myUpcomingVisits])
