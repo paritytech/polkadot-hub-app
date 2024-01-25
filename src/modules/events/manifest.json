@@ -23,7 +23,13 @@
         "fullScreen": true
       }
     },
-    "user": {},
+    "user": {
+      "events": {
+        "path": "/events",
+        "componentId": "EventsPage",
+        "fullScreen": true
+      }
+    },
     "admin": {
       "adminEvents": {
         "path": "/admin/events",

@@ -12,9 +12,11 @@ import {
   EventParticipant,
   EventPreview,
   EventPublicResponse,
+  EventTimeMap,
   EventToogleCheckboxRequest,
   FormSubmissionRequest,
   GlobalEvent,
+  MyEventsStatusMap,
   PublicForm,
   User,
 } from '#shared/types'
@@ -39,10 +41,13 @@ export const useEventsAdmin = (
   )
 }
 
-export const useUpcomingEvents = (officeId: string | null) => {
+export const useUpcomingEvents = (
+  officeId: string | null,
+  byTime?: boolean
+) => {
   const path = '/user-api/events/event'
-  return useQuery<EventPublicResponse[], AxiosError>(
-    [path, { office: officeId }],
+  return useQuery<EventPublicResponse[] | EventTimeMap, AxiosError>(
+    [path, { office: officeId, byTime }],
     async ({ queryKey }) =>
       (await api.get<EventPublicResponse[]>(path, { params: queryKey[1] }))
         .data,
@@ -50,10 +55,10 @@ export const useUpcomingEvents = (officeId: string | null) => {
   )
 }
 
-export const useMyEvents = (officeId: string | null) => {
+export const useMyEvents = (officeId: string | null, byStatus?: boolean) => {
   const path = '/user-api/events/event/me'
-  return useQuery<Event[], AxiosError>(
-    [path, { office: officeId }],
+  return useQuery<Event[] | MyEventsStatusMap, AxiosError>(
+    [path, { office: officeId, byStatus }],
     async ({ queryKey }) =>
       (await api.get<Event[]>(path, { params: queryKey[1] })).data,
     { enabled: !!officeId }

@@ -127,3 +127,16 @@ export interface GlobalEvent {
 export type EventParticipant = Pick<User, 'id' | 'fullName' | 'avatar' | 'team'>
 
 export type EventPreview = Pick<Event, 'id' | 'title' | 'formId'>
+
+export interface MyEventsStatusMap {
+  [EventApplicationStatus.Confirmed]: Array<Event>
+  [EventApplicationStatus.Pending]: Array<Event>
+  [EventApplicationStatus.Opened]: Array<Event>
+  [EventApplicationStatus.CancelledAdmin]: Array<Event>
+  [EventApplicationStatus.CancelledUser]: Array<Event>
+}
+
+export interface EventTimeMap {
+  past: Array<Event>
+  upcoming: Array<Event>
+}
