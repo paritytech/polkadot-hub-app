@@ -17,6 +17,8 @@ import { propEq } from '#shared/utils'
 import { useOfficeVisitsUpcoming } from '#modules/office-visits/client/queries'
 import { getPoints, goToMeetings, goToVisits } from '../helpers'
 import { VisitType } from '#shared/types'
+import { useMyEvents, useUpcomingEvents } from '#modules/events/client/queries'
+import { useUpcoming } from '../queries'
 
 export const HubMap = () => {
   const officeId = useStore(stores.officeId)
@@ -32,8 +34,11 @@ export const HubMap = () => {
   const [selectedDailyEvent, setSelectedDailyEvent] = React.useState<
     string | null
   >(null)
-  const { data: upcomingVisitsAll, refetch: refetchVisits } =
-    useOfficeVisitsUpcoming(officeId, dayjs().toString())
+
+  const { data: upcomingVisitsAll, refetch: refetchVisits } = useUpcoming(
+    officeId,
+    dayjs().toString()
+  )
 
   React.useEffect(() => {
     setOfficeVisits(upcomingVisitsAll?.byDate[date.format(DATE_FORMAT)])

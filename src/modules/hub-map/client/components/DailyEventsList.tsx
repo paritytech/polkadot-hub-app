@@ -17,6 +17,7 @@ import {
 import { useOfficeVisitsUpcoming } from '#modules/office-visits/client/queries'
 import { FRIENDLY_DATE_FORMAT } from '#client/constants'
 import { DailyEvent } from './DailyEvent'
+import { useUpcoming } from '../queries'
 
 export const DailyEventsList: React.FC<{
   onChooseCard: (id: string | null, areaId: string | null, date: Dayjs) => void
@@ -46,8 +47,11 @@ export const DailyEventsList: React.FC<{
     status: VisitStatus | RoomReservationStatus | GuestInviteStatus
   }
 
-  const { data: myUpcomingVisits, refetch: refetchVisits } =
-    useOfficeVisitsUpcoming(officeId, dayjs().toString(), me?.id)
+  const { data: myUpcomingVisits, refetch: refetchVisits } = useUpcoming(
+    officeId,
+    dayjs().toString(),
+    me?.id
+  )
 
   React.useEffect(() => {
     if (!!myUpcomingVisits?.upcoming) {

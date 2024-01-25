@@ -39,7 +39,7 @@ const EventsList = ({
     <H2 className="mt-10 mb-4 capitalize">{title}</H2>
     <div className="flex flex-col gap-2">
       {events?.map((x: any, i) => {
-        if (title === Titles.upcoming && !!x.applications?.length) {
+        if (title === Sections.upcoming && !!x.applications?.length) {
           return
         }
         return (

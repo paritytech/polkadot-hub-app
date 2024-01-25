@@ -10,20 +10,11 @@ import {
   formatVisit,
   getBusinessDaysFromDate,
   getDate,
-  getRoomReservations,
-  getVisits,
 } from './helpers'
 import { Permissions } from '../permissions'
 import { Metadata } from '../metadata-schema'
-import {
-  Visit,
-  GenericVisit,
-  VisitType,
-  VisitsDailyStats,
-  DailyEventType,
-} from '#shared/types'
+import { Visit, GenericVisit, VisitType, VisitsDailyStats } from '#shared/types'
 import * as fp from '#shared/utils'
-import { User } from '#modules/users/server/models'
 import { appConfig } from '#server/app-config'
 
 dayjs.extend(localizedFormat)
@@ -43,89 +34,6 @@ const addToUpcomingByDate = (
 }
 
 const userRouter: FastifyPluginCallback = async function (fastify, opts) {
-  fastify.get(
-    '/upcoming',
-    async (
-      req: FastifyRequest<{
-        Querystring: {
-          date: string
-          limit: number
-          officeId: string
-          userId: string
-        }
-      }>,
-      reply
-    ) => {
-      const { date, officeId } = req.query
-      if (!officeId) {
-        return reply.throw.badParams('Missing office ID')
-      }
-      const office = appConfig.getOfficeById(officeId)
-
-      let visits = await getVisits(fastify, officeId, date, req.query.userId)
-      let roomReservations = await getRoomReservations(
-        fastify,
-        officeId,
-        req.user.id,
-        date
-      )
-
-      const upcomingItems: Array<DailyEventType> = []
-      const upcomingByDate: Record<string, any> = {}
-
-      const dailyEventsReservations = roomReservations.map(
-        (reservation, idx) => {
-          const area = office?.areas?.find((area) =>
-            area.meetingRooms?.find((room) => room.id === reservation.roomId)
-          )
-          const item = formatRoomReservationsResult(
-            reservation,
-            officeId,
-            area?.id
-          )
-          // add the first item in array to show at the top of the map in a list
-          if (!idx) {
-            upcomingItems.push(item)
-          }
-          addToUpcomingByDate(
-            upcomingByDate,
-            item,
-            dayjs(reservation.startDate).toString(),
-            VisitType.RoomReservation
-          )
-          return item
-        }
-      )
-
-      let dailyEventsVisits = []
-      for (const [idx, v] of visits.entries()) {
-        const item = formatVisit(v)
-        if (!idx) {
-          upcomingItems.push(item)
-        }
-        const user = await User.findByPk(v.userId)
-        addToUpcomingByDate(
-          upcomingByDate,
-          formatVisit(v, user),
-          v.date,
-          VisitType.Visit
-        )
-        dailyEventsVisits.push(item)
-      }
-
-      return {
-        upcoming: upcomingItems.sort((a: DailyEventType, b: DailyEventType) =>
-          dayjs(a.date).isAfter(dayjs(b.date)) ? 1 : -1
-        ),
-        byType: {
-          [VisitType.Visit]: dailyEventsVisits,
-          [VisitType.RoomReservation]: dailyEventsReservations,
-        },
-        byDate: upcomingByDate,
-      }
-    }
-  )
-
   fastify.get(
     '/',
     async (

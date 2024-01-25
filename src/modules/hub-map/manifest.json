@@ -1,7 +1,13 @@
 {
   "id": "hub-map",
   "name": "HubMap",
-  "dependencies": ["users"],
+  "dependencies": [
+    "visits",
+    "guest-invites",
+    "room-reservation",
+    "users",
+    "events"
+  ],
   "requiredIntegrations": [],
   "recommendedIntegrations": [],
   "models": [],

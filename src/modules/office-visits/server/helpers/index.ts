@@ -1,10 +1,8 @@
 import dayjs from 'dayjs'
 import { DATE_FORMAT } from '#server/constants'
 import { RoomReservation } from '#modules/room-reservation/server/models'
-import { DailyEventType, User, Visit, VisitType } from '#shared/types'
+import { User, Visit, VisitType } from '#shared/types'
 import { appConfig } from '#server/app-config'
-import { FastifyInstance } from 'fastify'
-import { Op } from 'sequelize'
 
 export const BUSINESS_DAYS_LIMIT: number = 40
 
@@ -85,49 +83,4 @@ export const formatVisit = (v: Visit, user?: User | null): any => {
         }
       : null,
   }
-}
-
-export const getVisits = async (
-  fastify: FastifyInstance,
-  officeId: string,
-  date: string,
-  userId: string
-) => {
-  const q = {
-    officeId,
-    status: {
-      [Op.in]: ['confirmed', 'pending'],
-    },
-    date: {
-      [Op.gte]: dayjs(date).toDate(),
-    },
-  }
-  if (userId) {
-    q['userId'] = userId
-  }
-  return fastify.db.Visit.findAll({
-    where: q,
-    order: ['date'],
-  })
-}
-
-export const getRoomReservations = async (
-  fastify: FastifyInstance,
-  officeId: string,
-  creatorUserId: string,
-  date: string
-) => {
-  return fastify.db.RoomReservation.findAll({
-    where: {
-      office: officeId,
-      creatorUserId,
-      status: {
-        [Op.in]: ['confirmed', 'pending'],
-      },
-      startDate: {
-        [Op.gte]: dayjs(date).toDate(),
-      },
-    },
-    order: ['startDate'],
-  })
 }
