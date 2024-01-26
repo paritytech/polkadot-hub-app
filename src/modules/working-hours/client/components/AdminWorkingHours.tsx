@@ -13,7 +13,7 @@ import {
 } from '#client/components/ui'
 import { by, groupBy, pick, propEq, propIn, sortBy } from '#shared/utils/fp'
 import { formatDateRange } from '#client/utils'
-import { DATE_FORMAT } from '#client/constants'
+import { DATE_FORMAT, USER_ROLES } from '#client/constants'
 import { useUsersCompact } from '#modules/users/client/queries'
 import {
   useAdminEntries,
@@ -88,9 +88,9 @@ export const AdminWorkingHours: React.FC = () => {
 
   const roles = React.useMemo(() => {
     const allowedRoles = Object.keys(configByRole)
-    return config.roles
-      .filter((x) => allowedRoles.includes(x.id))
-      .map(pick(['id', 'name']))
+    return USER_ROLES.filter((x) => allowedRoles.includes(x.id)).map(
+      pick(['id', 'name'])
+    )
   }, [configByRole])
 
   const moduleConfig = React.useMemo(

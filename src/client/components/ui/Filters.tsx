@@ -61,6 +61,7 @@ export const Filters = <T,>(props: React.PropsWithChildren<Props<T>>) => {
           }
           return (
             <Tag
+              size="small"
               key={String(x.id || '~none~')}
               className="inline-block cursor-pointer hover:opacity-70 mr-1 mb-1"
               color={isSelected ? 'blue' : 'gray'}

@@ -68,10 +68,13 @@ function getBuildConfig(): BuildOptions {
       'process.env.AUTH_MESSAGE_TO_SIGN': JSON.stringify(
         config.authMessageToSign
       ),
-      'process.env.ROLES': JSON.stringify(
-        appConfig.config.permissions.roles.map((x) => ({
-          ...fp.pick(['id', 'name', 'accessByDefault'])(x),
-          lowPriority: x.id === appConfig.lowPriorityRole,
+      'process.env.ROLE_GROUPS': JSON.stringify(
+        appConfig.config.permissions.roleGroups.map((x) => ({
+          ...x,
+          roles: x.roles.map((r) => ({
+            ...fp.pick(['id', 'name', 'accessByDefault'])(r),
+            lowPriority: r.id === appConfig.lowPriorityRole,
+          })),
         }))
       ),
     },

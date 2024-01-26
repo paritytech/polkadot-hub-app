@@ -4,7 +4,6 @@ import dayjs, { Dayjs } from 'dayjs'
 export const cn = (
   ...chunks: Array<string | boolean | null | undefined>
 ): string => {
-  // return chunks.map((x) => (typeof x === 'string' ? x : '')).join(' ')
   return twMerge(...chunks.map((x) => (typeof x === 'string' ? x : '')))
 }
 
@@ -12,9 +11,10 @@ export const toggleInArray = <T>(
   arr: T[],
   item: T,
   keepOne: boolean = false,
-  maxNumber?: number
+  maxNumber?: number,
+  autoDeselect?: boolean
 ): T[] => {
-  if (arr.indexOf(item) > -1) {
+  if (arr.includes(item)) {
     if (keepOne && arr.length === 1) {
       return arr
     }
@@ -22,6 +22,9 @@ export const toggleInArray = <T>(
   } else {
     if (maxNumber) {
       if (arr.length >= maxNumber) {
+        if (autoDeselect) {
+          return arr.slice(1).concat(item)
+        }
         return arr
       }
     }
@@ -56,11 +59,13 @@ export const generateId = (length: number = 16, prefix?: string): string => {
 //   window.location.href = url.toString()
 // }
 
-export const trimString = (str: string, length: number = 32, postfix: string = '...'): string => {
+export const trimString = (
+  str: string,
+  length: number = 32,
+  postfix: string = '...'
+): string => {
   if (!str) return ''
-  return str.length < length
-    ? str
-    : str.slice(0, length) + postfix
+  return str.length < length ? str : str.slice(0, length) + postfix
 }
 
 export const formatDateRange = (

@@ -9,9 +9,11 @@ export const DATE_FORMAT_DAY_NAME_FULL = 'dddd, MMMM D'
 
 export const FRIENDLY_DATE_FORMAT = 'MMMM D YYYY'
 
-export const USER_ROLE_BY_ID = config.roles.reduce(
+export const USER_ROLES = config.roleGroups.map((x) => x.roles).flat()
+
+export const USER_ROLE_BY_ID = USER_ROLES.reduce(
   (acc, x) => ({ ...acc, [x.id]: x }),
-  {} as Record<string, (typeof config.roles)[0]>
+  {} as Record<string, (typeof USER_ROLES)[0]>
 )
 
 export const OFFICE_BY_ID = config.offices.reduce(

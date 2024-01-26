@@ -13,6 +13,7 @@ import {
   IntegrationManifest,
   Office,
   AppConfigJson,
+  UserRole,
 } from './types'
 import * as schemas from './schemas'
 
@@ -28,6 +29,8 @@ class AppError extends Error {
 export class AppConfig {
   private superusers: Set<string> = new Set(config.superusers)
   private permissionsByRole!: Record<string, string[]>
+  private allRoles!: UserRole[]
+  private allRoleIds!: string[]
   private allPermissions!: string[]
 
   public config!: AppConfigJson
@@ -181,13 +184,16 @@ export class AppConfig {
     this.integrations = integrations
 
     // validate the `permittedRoles` lists for each desk
-    const allRoles = this.config.permissions.roles.map(fp.prop('id'))
+    this.allRoles = this.config.permissions.roleGroups
+      .map(fp.prop('roles'))
+      .flat()
+    this.allRoleIds = this.allRoles.map(fp.prop('id'))
     this.config.company.offices.forEach((o) => {
       o.areas?.forEach((a) => {
         a.desks.forEach((d) => {
           if (d.permittedRoles.length) {
             const unsupportedRole = d.permittedRoles.find(
-              (x) => !allRoles.includes(x)
+              (x) => !this.allRoleIds.includes(x)
             )
             if (unsupportedRole) {
               throw new AppError(
@@ -201,7 +207,7 @@ export class AppConfig {
     })
 
     // store permissions
-    this.permissionsByRole = this.config.permissions.roles.reduce((acc, x) => {
+    this.permissionsByRole = this.allRoles.reduce((acc, x) => {
       return { ...acc, [x.id]: x.permissions }
     }, {})
     this.allPermissions = appModules
@@ -284,7 +290,7 @@ export class AppConfig {
   }
 
   getRolesByPermission(permission: string): string[] {
-    return this.config.permissions.roles
+    return this.allRoles
       .filter((x) => x.permissions.includes(permission))
       .map((x) => x.id)
   }

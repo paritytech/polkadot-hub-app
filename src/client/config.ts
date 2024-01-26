@@ -2,7 +2,8 @@ import {
   Layout,
   ModuleClientRouter,
   Office,
-  AppRole,
+  UserRole,
+  UserRoleGroup,
   AppModule,
 } from '#shared/types'
 
@@ -27,10 +28,14 @@ export type ClientOfficeConfig = Pick<
 >
 
 export type ClientUserRole = Pick<
-  AppRole,
+  UserRole,
   'id' | 'name' | 'accessByDefault'
 > & {
   lowPriority: boolean
+}
+
+export type ClientUserRoleGroup = UserRoleGroup & {
+  roles: ClientUserRole[]
 }
 
 type ClientAppConfig = {
@@ -42,7 +47,7 @@ type ClientAppConfig = {
   appHost: string
   mapBoxApiKey: string
   layout: Layout
-  roles: ClientUserRole[]
+  roleGroups: ClientUserRoleGroup[]
   auth: ClientAuthConfig
   authMessageToSign: string
 }
@@ -58,7 +63,7 @@ const config: ClientAppConfig = {
   appHost: process.env.APP_HOST as unknown as string,
   mapBoxApiKey: process.env.MAPBOX_API_KEY as unknown as string,
   layout: process.env.LAYOUT as unknown as Layout,
-  roles: process.env.ROLES as unknown as ClientUserRole[],
+  roleGroups: process.env.ROLE_GROUPS as unknown as ClientUserRoleGroup[],
   auth: process.env.AUTH as unknown as ClientAuthConfig,
   authMessageToSign: process.env.AUTH_MESSAGE_TO_SIGN as unknown as string,
 }

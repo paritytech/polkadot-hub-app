@@ -9,6 +9,7 @@ import {
 import config from '#client/config'
 import { EntityVisibility } from '#shared/types'
 import { cn } from '#client/utils'
+import { USER_ROLES } from '#client/constants'
 import { prop } from '#shared/utils/fp'
 import React from 'react'
 
@@ -51,10 +52,10 @@ export const EntityAccessSelector: React.FC<Props> = ({
   ...props
 }) => {
   const [showAllRoles, setShowAllRoles] = React.useState(
-    config.roles.length <= 10
+    USER_ROLES.length <= 10
   )
   const roleIds = React.useMemo(
-    () => config.roles.filter(prop('accessByDefault')).map(prop('id')),
+    () => USER_ROLES.filter(prop('accessByDefault')).map(prop('id')),
     []
   )
 
@@ -134,13 +135,18 @@ export const EntityAccessSelector: React.FC<Props> = ({
   const filteredRoles = React.useMemo<
     Array<{ value: string; label: string }>
   >(() => {
-    return config.roles
-      .filter((x) => showAllRoles || x.accessByDefault)
-      .map((x) => ({
-        value: x.id,
-        label: x.name,
-      }))
-  }, [showAllRoles])
+    const availableRoles = USER_ROLES.map(prop('id'))
+    const unsupportedRoles = (props.value.allowedRoles || [])
+      .filter((x) => !availableRoles.includes(x))
+      .map((x) => ({ value: x, label: `${x} (UNSUPPORTED)` }))
+    const filteredRoles = USER_ROLES.filter(
+      (x) => showAllRoles || x.accessByDefault
+    ).map((x) => ({
+      value: x.id,
+      label: x.name,
+    }))
+    return unsupportedRoles.concat(filteredRoles)
+  }, [showAllRoles, props.value.allowedRoles])
 
   return (
     <div

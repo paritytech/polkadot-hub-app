@@ -23,30 +23,36 @@ export const UserLabel: React.FC<Props> = ({ user, hideRole = false }) => {
         href={`/profile/${user.id}`}
         target="_blank"
         className={cn(!user.isInitialised && 'opacity-50')}
-        title={!user.isInitialised ? 'The user has not been onboarded yet' : undefined}
+        title={
+          !user.isInitialised
+            ? 'The user has not been onboarded yet'
+            : undefined
+        }
         kind="secondary"
       >
         {user.fullName}
       </Link>
-      {!hideRole && (
-        <UserRoleLabel
-          role={user.role}
-          className="ml-2"
-        />
-      )}
+      {!hideRole && <UserRoleLabel role={user.role} className="ml-2" />}
     </span>
   ) : null
 }
 
 type UserRoleLabelType = {
-  role: User['role']
+  role: string
   className?: string
 }
-export const UserRoleLabel: React.FC<UserRoleLabelType> = ({ role, ...props }) => {
+export const UserRoleLabel: React.FC<UserRoleLabelType> = ({
+  role,
+  ...props
+}) => {
   const roleRecord = USER_ROLE_BY_ID[role]
-  // TODO: use roleRecord.color ?
   return (
-    <Tag className={cn(props.className)} color="gray" size="small">
+    <Tag
+      className={cn(props.className)}
+      size="small"
+      color={roleRecord ? 'gray' : 'red'}
+      title={roleRecord ? '' : 'Unsupported role'}
+    >
       {roleRecord?.name || role}
     </Tag>
   )

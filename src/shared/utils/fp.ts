@@ -18,6 +18,16 @@ export const propNotEq =
   (obj: O): boolean =>
     obj[field] !== ref
 
+export const isIn =
+  <E>(refArray: E[]) =>
+  (el: E): boolean =>
+    refArray.includes(el)
+
+export const isNotIn =
+  <E>(refArray: E[]) =>
+  (el: E): boolean =>
+    !refArray.includes(el)
+
 export const propIn =
   <O>(field: keyof O, refArray: any[]) =>
   (obj: O): boolean =>

@@ -13,6 +13,7 @@ import {
   UserLabel,
   Filters,
   LabelWrapper,
+  UserRoleLabel,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { USER_ROLE_BY_ID } from '#client/constants'
@@ -152,9 +153,7 @@ export const AdminForms = () => {
           accessor: (form: FormAdminResponse) => (
             <span className="inline-block -mr-1">
               {form.allowedRoles.map((x) => (
-                <Tag key={x} color="gray" size="small" className="mr-1">
-                  {USER_ROLE_BY_ID[x]?.name || x}
-                </Tag>
+                <UserRoleLabel role={x} />
               ))}
             </span>
           ),

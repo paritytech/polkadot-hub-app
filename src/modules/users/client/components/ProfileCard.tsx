@@ -1,5 +1,4 @@
 import React, { ReactNode } from 'react'
-import config from '#client/config'
 import { Icon, Icons } from '#client/components/ui/Icons'
 import {
   Avatar,
@@ -17,7 +16,7 @@ import { PublicUserProfile, UserMe } from '#shared/types'
 import dayjs from 'dayjs'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import Permissions from '#shared/permissions'
-import { USER_ROLE_BY_ID } from '#client/constants'
+import { USER_ROLES } from '#client/constants'
 
 const ProfileRow = ({
   label,
@@ -65,7 +64,7 @@ export const Card = ({
   }, [user])
 
   const userRoles = React.useMemo<string[]>(() => {
-    return config.roles.reduce<string[]>((acc, x) => {
+    return USER_ROLES.reduce<string[]>((acc, x) => {
       if (!user.roles.includes(x.id)) return acc
       return acc.concat(x.name)
     }, [])

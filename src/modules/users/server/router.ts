@@ -400,7 +400,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     return fastify.db.User.findAllActive({
       where: {
         [Op.and]: [
-          { role: { [Op.in]: ROLES_ALLOWED_TO_BE_ON_MAP } },
+          { roles: { [Op.overlap]: ROLES_ALLOWED_TO_BE_ON_MAP } },
           { 'geodata.doNotShareLocation': 'false' },
           { 'geodata.coordinates': { [Op.ne]: '[0, 0]' } },
         ],
@@ -424,7 +424,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     const users = await fastify.db.User.findAllActive({
       where: {
         [Op.and]: [
-          { role: { [Op.in]: ROLES_ALLOWED_TO_BE_ON_MAP } },
+          { roles: { [Op.overlap]: ROLES_ALLOWED_TO_BE_ON_MAP } },
           { 'geodata.doNotShareLocation': 'false' },
           { country: { [Op.ne]: null } },
         ],
@@ -610,35 +610,53 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
     ) => {
       req.check(Permissions.AdminAssignRoles)
 
-      let newRoles = req.body.roles
-      const availableRoles = appConfig.config.permissions.roles.map(
-        fp.prop('id')
-      )
-      if (newRoles.some((x) => !availableRoles.includes(x))) {
-        return reply.throw.badParams('Request contains an unsupported role')
+      const newRoleIds = req.body.roles
+      const roleGroups = appConfig.config.permissions.roleGroups
+      const availableRoles = roleGroups.map(fp.prop('roles')).flat()
+      const availableRoleIds = availableRoles.map(fp.prop('id'))
+
+      for (const roleGroup of roleGroups) {
+        if (roleGroup.constraints.unique) {
+          const availableRoles = roleGroup.roles.map(fp.prop('id'))
+          const roles = newRoleIds.filter(fp.isIn(availableRoles))
+          if (!roles.length) continue
+          const users = await fastify.db.User.findAll({
+            where: {
+              roles: {
+                [Op.overlap]: roles,
+              },
+            },
+          })
+          if (users.length) {
+            return reply.throw.badParams(
+              `Roles from the ${
+                roleGroup.name
+              } group should be unique. Conflicts with users: ${users
+                .map(fp.prop('email'))
+                .join(', ')}`
+            )
+          }
+        }
       }
 
       // sort roles array before saving
-      newRoles = appConfig.config.permissions.roles
-        .filter(fp.propIn('id', newRoles))
-        .map(fp.prop('id'))
+      const unsupportedRoles = newRoleIds.filter(fp.isNotIn(availableRoleIds))
+      const allowedRoles = availableRoleIds.filter(fp.isIn(newRoleIds))
+      const roles = unsupportedRoles.concat(allowedRoles)
 
       const user = await fastify.db.User.findByPkActive(req.params.userId)
       if (!user) {
         return reply.throw.notFound()
       }
       const previousRoles = [...user.roles]
-      await user.set({ roles: newRoles }).save()
+      await user.set({ roles }).save()
 
       if (fastify.integrations.Matrix) {
-        const rolesById = appConfig.config.permissions.roles.reduce(
-          fp.by('id'),
-          {}
-        )
+        const rolesById = availableRoles.reduce(fp.by('id'), {})
         const previousRoleNames = previousRoles.map(
           (x) => rolesById[x]?.name || x
         )
-        const targetRoleNames = newRoles.map((x) => rolesById[x]?.name || x)
+        const targetRoleNames = newRoleIds.map((x) => rolesById[x]?.name || x)
         const message = appConfig.templates.notification(
           'users',
           'roleChanged',
