@@ -63,6 +63,7 @@ export class Event
   declare notificationRule: EventModel['notificationRule']
   declare metadata: EventModel['metadata']
   declare responsibleUserIds: EventModel['responsibleUserIds']
+  declare applications?: EventModel['applications']
 
   usePublicView(
     application: EventApplication | null,

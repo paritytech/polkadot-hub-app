@@ -29,6 +29,7 @@ export interface Event {
   notificationRule: EventNotificationRule
   metadata: Record<string, any>
   responsibleUserIds: string[]
+  applications?: EventApplication[]
 }
 
 export type EventMetadata = {
@@ -73,6 +74,7 @@ export interface EventApplication {
   creatorUserId: string
   formId: string | null
   formSubmissionId: string | null
+  event?: Event
 }
 
 export enum EventApplicationStatus {

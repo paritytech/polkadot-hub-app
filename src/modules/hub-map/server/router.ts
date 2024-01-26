@@ -1,7 +1,7 @@
 import { User } from '#modules/users/server/models'
 import { appConfig } from '#server/app-config'
 import {
-  DailyEventType,
+  ScheduledItemType,
   EntityVisibility,
   EventApplicationStatus,
   GenericVisit,
@@ -62,7 +62,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         date
       )
 
-      const upcomingItems: Array<DailyEventType> = []
+      const upcomingItems: Array<ScheduledItemType> = []
       const upcomingByDate: Record<string, any> = {}
 
       const dailyEventsReservations = roomReservations.map(
@@ -143,8 +143,9 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
 
       return {
-        upcoming: upcomingItems.sort((a: DailyEventType, b: DailyEventType) =>
-          dayjs(a.date).isAfter(dayjs(b.date)) ? 1 : -1
+        upcoming: upcomingItems.sort(
+          (a: ScheduledItemType, b: ScheduledItemType) =>
+            dayjs(a.date).isAfter(dayjs(b.date)) ? 1 : -1
         ),
         byType: {
           [VisitType.Visit]: dailyEventsVisits,

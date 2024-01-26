@@ -488,7 +488,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
 
       return events.map((e) => {
-        const application = !!e.applications.length ? e.applications[0] : null
+        const application = !!e?.applications?.length ? e.applications[0] : null
         return e.usePublicView(application, [], null)
       })
     }
@@ -545,7 +545,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (!!req.query.byStatus) {
         const result: Record<
           EventApplicationStatus,
-          Array<EventApplication>
+          Array<Event & { applicationId: string }>
         > = {
           [EventApplicationStatus.Confirmed]: [],
           [EventApplicationStatus.Pending]: [],

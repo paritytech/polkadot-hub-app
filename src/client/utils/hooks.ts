@@ -154,10 +154,10 @@ export function usePanZoom(
 ): {
   position: { x: number; y: number }
   scale: number
-  handleTouchStart: (e: TouchEvent) => void
-  handleTouchMove: (e: TouchEvent) => void
-  handleTouchEnd: (e: TouchEvent) => void
-  handleWheel: (e: WheelEvent) => void
+  handleTouchStart: React.TouchEventHandler<HTMLDivElement>
+  handleTouchMove: React.TouchEventHandler<HTMLDivElement>
+  handleTouchEnd: React.TouchEventHandler<HTMLDivElement>
+  handleWheel: React.WheelEventHandler<HTMLDivElement>
 } {
   const [isPanning, setIsPanning] = useState(false)
   const [touchStart, setTouchStart] = useState({ x: 0, y: 0 })
@@ -186,16 +186,20 @@ export function usePanZoom(
     }
   }, [containerRef, imageRef, scale])
 
-  const handleTouchStart = useCallback((event: TouchEvent) => {
-    if (event.touches.length === 1) {
-      const touch = event.touches[0]
-      setTouchStart({
-        x: touch.clientX,
-        y: touch.clientY,
-      })
-      setIsPanning(true)
-    }
-  }, [])
+  const handleTouchStart: React.TouchEventHandler<HTMLDivElement> = useCallback(
+    (event) => {
+      console.log(event)
+      if (event.touches.length === 1) {
+        const touch = event.touches[0]
+        setTouchStart({
+          x: touch.clientX,
+          y: touch.clientY,
+        })
+        setIsPanning(true)
+      }
+    },
+    []
+  )
 
   const updatePositionWithinBounds = (newX: number, newY: number) => {
     const boundary = 100
@@ -208,14 +212,15 @@ export function usePanZoom(
     // a little crotch for now :)
     const indx = scale > 1.5 ? 200 : 50
     const yBoundaryTop = -imageDimensions.height + indx * scale
+    console.log(newX, ', ', newY)
     return {
       x: newX > 0 ? Math.min(newX, xBoundary) : Math.max(newX, -xBoundary),
       y: newY > 0 ? Math.min(newY, yBoundary) : Math.max(newY, yBoundaryTop),
     }
   }
 
-  const handleTouchMove = useCallback(
-    (event: TouchEvent) => {
+  const handleTouchMove: React.TouchEventHandler<HTMLDivElement> = useCallback(
+    (event) => {
       if (isPanning && event.touches.length === 1) {
         const touch = event.touches[0]
         const deltaX = touch.clientX - touchStart.x
@@ -240,14 +245,17 @@ export function usePanZoom(
     setIsPanning(false)
   }, [])
 
-  const handleWheel = useCallback((event: WheelEvent) => {
-    event.preventDefault()
-    const scaleAdjustment = event.deltaY > 0 ? 0.9 : 1.1
-    setScale((prevScale) => {
-      const newScale = prevScale * scaleAdjustment
-      return Math.max(1, newScale < MAX_ZOOM ? newScale : MAX_ZOOM)
-    })
-  }, [])
+  const handleWheel: React.WheelEventHandler<HTMLDivElement> = useCallback(
+    (event) => {
+      event.preventDefault()
+      const scaleAdjustment = event.deltaY > 0 ? 0.9 : 1.1
+      setScale((prevScale) => {
+        const newScale = prevScale * scaleAdjustment
+        return Math.max(1, newScale < MAX_ZOOM ? newScale : MAX_ZOOM)
+      })
+    },
+    []
+  )
 
   return {
     position,

@@ -7,17 +7,15 @@ import dayjs from 'dayjs'
 import { DaySlider } from '#client/components/ui/DaySlider'
 import { DATE_FORMAT } from '#client/constants'
 import { OfficeFloorMap } from '#client/components/OfficeFloorMap'
-import { DailyEventsList } from './DailyEventsList'
+import { ScheduledItemsList } from './ScheduledItemsList'
 import {
   useAvailableDesks,
   useOfficeVisitors,
   useVisitsAreas,
 } from '#modules/visits/client/queries'
 import { propEq } from '#shared/utils'
-import { useOfficeVisitsUpcoming } from '#modules/office-visits/client/queries'
 import { getPoints, goToMeetings, goToVisits } from '../helpers'
 import { VisitType } from '#shared/types'
-import { useMyEvents, useUpcomingEvents } from '#modules/events/client/queries'
 import { useUpcoming } from '../queries'
 
 export const HubMap = () => {
@@ -62,7 +60,7 @@ export const HubMap = () => {
     (areaId: string) => setAreaId(areaId),
     []
   )
-  // number of office visitors
+
   const { data: visitors } = useOfficeVisitors(
     officeId,
     dayjs(date).format(DATE_FORMAT)
@@ -111,7 +109,7 @@ export const HubMap = () => {
   return (
     <WidgetWrapper className="transition-all delay-100" title={`Hub Map`}>
       <div className="overflow-none">
-        <DailyEventsList
+        <ScheduledItemsList
           onChooseCard={(id, areaId, chosenDate) => {
             setSelectedDailyEvent(id)
             setAreaId(areaId)

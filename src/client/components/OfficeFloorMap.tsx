@@ -1,7 +1,7 @@
-import React from 'react'
+import React, { MouseEventHandler } from 'react'
 import { Avatar, Button, P } from '#client/components/ui'
 import {
-  DailyEventType,
+  ScheduledItemType,
   OfficeArea,
   OfficeAreaDesk,
   OfficeRoom,
@@ -14,32 +14,18 @@ import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import { ImageWithPanZoom } from './ui/ImageWithPanZoom'
 
-type OfficeFloorMapProps = {
-  area: OfficeArea
-  mappablePoints?: any
-  clickablePoints?: string[]
-  selectedPointId: string | null
-  onToggle: (id: string, kind: string) => void
-  showUsers?: boolean
-  officeVisits?: Record<string, Array<DailyEventType>>
-  panZoom?: boolean
-}
+type PointComponentFunctionProps = (
+  item: OfficeAreaDesk | OfficeRoom,
+  isSelected: boolean,
+  isAvailable: boolean,
+  onClick: (id: string, kind: string) => MouseEventHandler<HTMLAnchorElement>
+) => Element | JSX.Element
 
 const PointComponent: Record<
-  VisitType,
-  (
-    item: OfficeAreaDesk,
-    isSelected: boolean,
-    isAvailable: boolean,
-    onClick: (id: string, kind: string) => void
-  ) => Element | JSX.Element
+  VisitType.Visit | VisitType.RoomReservation,
+  PointComponentFunctionProps
 > = {
-  [VisitType.Visit]: (
-    item: OfficeAreaDesk,
-    isSelected: boolean,
-    isAvailable: boolean,
-    onClick: (id: string, kind: string) => void
-  ) => (
+  [VisitType.Visit]: (item, isSelected, isAvailable, onClick) => (
     <Button
       size="small"
       kind={isSelected ? 'primary' : 'secondary'}
@@ -56,12 +42,7 @@ const PointComponent: Record<
       {item?.name}
     </Button>
   ),
-  [VisitType.RoomReservation]: (
-    item: any,
-    isSelected: boolean,
-    isAvailable: boolean,
-    onClick: (id: string, kind: string) => void
-  ) => (
+  [VisitType.RoomReservation]: (item, isSelected, isAvailable, onClick) => (
     <Button
       size="small"
       kind={isSelected ? 'primary' : 'secondary'}
@@ -70,23 +51,14 @@ const PointComponent: Record<
         'absolute -translate-y-2/4 -translate-x-2/4 whitespace-nowrap',
         isSelected && 'border-pink-600 border-2',
         'bg-gray-100 text-black',
-        'rounded-sm  border-2  p-4',
+        'rounded-sm  border-2  sm:p-4',
         'hover:scale-105 transition-all delay-100'
       )}
       onClick={onClick(item.id, VisitType.RoomReservation)}
     >
-      <P textType="additional" className={cn('my-0')}>
-        Meeting Room
-      </P>
       <p className="font-bold">{item.name}</p>
     </Button>
   ),
-  [VisitType.Guest]: (
-    item: OfficeRoom,
-    isSelected: boolean,
-    isAvailable: boolean,
-    onClick: (id: string, kind: string) => void
-  ) => {},
 }
 
 const UserPoint = ({
@@ -114,16 +86,23 @@ const UserPoint = ({
   </div>
 )
 
-const PointMapping: React.FC<{
-  me?: UserMe | null
-  objects: Array<OfficeAreaDesk>
-  areaId: string
-  officeVisits?: Record<string, Array<DailyEventType>>
-  showUsers: boolean
+type PointMappingProps = {
+  officeVisits?: Record<string, Array<ScheduledItemType>>
+  showUsers?: boolean
   selectedPointId: string | null
   clickablePoints?: string[]
   onToggle: (id: string, kind: string) => void
-}> = ({
+}
+
+const PointMapping: React.FC<
+  PointMappingProps & {
+    me?: UserMe | null
+    objects: Array<
+      OfficeAreaDesk & { kind: VisitType.Visit | VisitType.RoomReservation }
+    >
+    areaId: string
+  }
+> = ({
   me,
   objects,
   areaId,
@@ -149,7 +128,7 @@ const PointMapping: React.FC<{
       let user = null
 
       if (!!officeVisits && me && showUsers) {
-        const bookedVisit: DailyEventType | undefined =
+        const bookedVisit: ScheduledItemType | undefined =
           officeVisits.visit?.find(
             (v) => v.areaId === areaId && v.objectId === x.id
           )
@@ -175,7 +154,7 @@ const PointMapping: React.FC<{
                 top: `${x.position?.y}%`,
               }}
             >
-              {/* // @todo fix this */}
+              {/* @ts-ignore */}
               {PointComponent[x.kind](x, isSelected, isAvailable, onClick)}
             </div>
           )}
@@ -183,6 +162,12 @@ const PointMapping: React.FC<{
       )
     })
 }
+
+type OfficeFloorMapProps = {
+  area: OfficeArea
+  mappablePoints?: any
+  panZoom?: boolean
+} & PointMappingProps
 
 export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
   area,

@@ -70,7 +70,7 @@ export const EventsPage = () => {
     return null
   }
 
-  if (!events || !Object.keys(events).length) {
+  if (!events || !(Sections.past in events && Sections.upcoming in events)) {
     return (
       <div className="text-gray-400 text-center">No upcoming events yet</div>
     )
@@ -84,6 +84,7 @@ export const EventsPage = () => {
         {!!myEvents && (
           <div>
             {Object.values(Sections).map((title) => {
+              // @ts-ignore
               const evs = myEvents[TitleStatus[title] as EventApplicationStatus]
               if (!!evs?.length) {
                 return <EventsList title={title} events={evs} />
@@ -91,15 +92,12 @@ export const EventsPage = () => {
             })}
           </div>
         )}
-        {Sections.past in events &&
-          Sections.upcoming in events &&
-          [Sections.upcoming, Sections.past].map((timeTitle) => {
-            console.log(timeTitle)
-            const evs = events[timeTitle]
-            if (evs?.length) {
-              return <EventsList title={timeTitle} events={evs} />
-            }
-          })}
+        {[Sections.upcoming, Sections.past].map((timeTitle) => {
+          const evs = events[timeTitle]
+          if (evs?.length) {
+            return <EventsList title={timeTitle} events={evs} />
+          }
+        })}
       </ComponentWrapper>
     </Background>
   )

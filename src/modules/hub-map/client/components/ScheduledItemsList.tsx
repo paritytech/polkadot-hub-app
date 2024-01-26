@@ -8,18 +8,17 @@ import * as stores from '#client/stores'
 import { useUpdateRoomReservationByUser } from '#modules/room-reservation/client/queries'
 import { useUpdateGuestInviteByUser } from '#modules/guest-invites/client/queries'
 import {
-  DailyEventType,
+  ScheduledItemType,
   GuestInviteStatus,
   RoomReservationStatus,
   VisitStatus,
   VisitType,
 } from '#shared/types'
-import { useOfficeVisitsUpcoming } from '#modules/office-visits/client/queries'
 import { FRIENDLY_DATE_FORMAT } from '#client/constants'
-import { DailyEvent } from './DailyEvent'
+import { ScheduledItem } from './ScheduledItem'
 import { useUpcoming } from '../queries'
 
-export const DailyEventsList: React.FC<{
+export const ScheduledItemsList: React.FC<{
   onChooseCard: (id: string | null, areaId: string | null, date: Dayjs) => void
   setDate: (d: Dayjs) => void
   date: Dayjs
@@ -27,12 +26,12 @@ export const DailyEventsList: React.FC<{
 }> = ({ onChooseCard, setDate, date, className }) => {
   const officeId = useStore(stores.officeId)
   const office = useOffice(officeId)
-  const [upcomingEvents, setUpcomingEvents] = React.useState([])
-  const [selected, setSelected] = React.useState<DailyEventType | null>(null)
+  const [scheduledItems, setScheduledItems] = React.useState([])
+  const [selected, setSelected] = React.useState<ScheduledItemType | null>(null)
 
   const cancellationCallback = () => {
     showNotification(`Successfully cancelled.`, 'success')
-    refetchVisits()
+    refetchUpcoming()
   }
 
   const me = useStore(stores.me)
@@ -47,46 +46,43 @@ export const DailyEventsList: React.FC<{
     status: VisitStatus | RoomReservationStatus | GuestInviteStatus
   }
 
-  const { data: myUpcomingVisits, refetch: refetchVisits } = useUpcoming(
-    officeId,
-    dayjs().toString(),
-    me?.id
-  )
+  const { data: myUpcomingScheduledItems, refetch: refetchUpcoming } =
+    useUpcoming(officeId, dayjs().toString(), me?.id)
 
   React.useEffect(() => {
-    if (!!myUpcomingVisits?.upcoming) {
-      setUpcomingEvents(myUpcomingVisits.upcoming)
+    if (!!myUpcomingScheduledItems?.upcoming) {
+      setScheduledItems(myUpcomingScheduledItems.upcoming)
     }
-  }, [myUpcomingVisits])
+  }, [myUpcomingScheduledItems])
 
   React.useEffect(() => {
     if (selected) {
       // if you removed the last item of this type
-      if (myUpcomingVisits?.byType[selected?.type].length === 0) {
+      if (myUpcomingScheduledItems?.byType[selected?.type].length === 0) {
         resetView()
       } else {
-        setUpcomingEvents(myUpcomingVisits?.byType[selected?.type])
+        setScheduledItems(myUpcomingScheduledItems?.byType[selected?.type])
       }
     }
-  }, [myUpcomingVisits?.byType, date])
+  }, [myUpcomingScheduledItems?.byType, date])
 
   const resetView = () => {
     setSelected(null)
-    setUpcomingEvents(myUpcomingVisits.upcoming)
+    setScheduledItems(myUpcomingScheduledItems.upcoming)
     onChooseCard(null, selected?.areaId ?? '', dayjs())
   }
 
-  const processOnClick = (dailyEvent: DailyEventType) => {
-    if (!dailyEvent) {
+  const processOnClick = (scheduledItem: ScheduledItemType) => {
+    if (!scheduledItem) {
       return
     }
-    setUpcomingEvents(myUpcomingVisits.byType[dailyEvent.type])
-    setSelected(dailyEvent)
-    setDate(dayjs(dailyEvent.date))
+    setScheduledItems(myUpcomingScheduledItems.byType[scheduledItem.type])
+    setSelected(scheduledItem)
+    setDate(dayjs(scheduledItem.date))
     onChooseCard(
-      dailyEvent.objectId ?? '',
-      dailyEvent.areaId ?? '',
-      dayjs(dailyEvent.date)
+      scheduledItem.objectId ?? '',
+      scheduledItem.areaId ?? '',
+      dayjs(scheduledItem.date)
     )
   }
 
@@ -116,7 +112,7 @@ export const DailyEventsList: React.FC<{
       }
       updateFns[type](data)
       setSelected(null)
-      refetchVisits()
+      refetchUpcoming()
     }
   }
 
@@ -137,11 +133,11 @@ export const DailyEventsList: React.FC<{
         </p>
       )}
       <div className="flex justify-start gap-4 overflow-x-auto max-w-[980px]">
-        {!!upcomingEvents?.length &&
-          upcomingEvents.map((v: DailyEventType, index) => (
-            <DailyEvent
-              key={v?.id}
-              dailyEvent={v}
+        {!!scheduledItems?.length &&
+          scheduledItems.map((item: ScheduledItemType, index) => (
+            <ScheduledItem
+              key={item?.id}
+              sheduledItem={item}
               onClick={processOnClick}
               selected={selected?.id ?? null}
               onEntityCancel={onEntityCancel}

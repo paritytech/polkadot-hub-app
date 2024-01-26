@@ -12,7 +12,7 @@ export const OfficeVisitsHeaders = {
   [VisitType.RoomReservation]: 'Meeting Room Bookings',
 } as const
 
-export type DailyEventType = {
+export type ScheduledItemType = {
   id: string
   value: string
   type: string

@@ -42,7 +42,7 @@ export const ImageWithPanZoom = ({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       className={cn(
-        'overflow-hidden relative w-full h-full',
+        'overflow-hidden relative w-full h-full sm:h-auto',
         containerClassName
       )}
     >
