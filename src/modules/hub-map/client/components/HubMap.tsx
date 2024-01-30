@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Select, WidgetWrapper } from '#client/components/ui'
+import { Avatar, Input, Select, WidgetWrapper } from '#client/components/ui'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import { useOffice } from '#client/utils/hooks'
@@ -105,7 +105,7 @@ export const HubMap = () => {
     return available
   }, [availableDesks, area])
 
-  const isMobile = width <= 768
+  const isMobile = width <= 480
   return (
     <WidgetWrapper className="transition-all delay-100" title={`Hub Map`}>
       <div className="overflow-none">
@@ -134,12 +134,14 @@ export const HubMap = () => {
                     slideDate={date.format(DATE_FORMAT)}
                     className="mx-auto sm:mx-0"
                   />
-                  <div className="text-text-tertiary">
-                    {userIsInOffce
-                      ? `You and ${visitorsNumber - 1}`
-                      : visitorsNumber}{' '}
-                    people in the {office?.name} office
-                  </div>
+                  {/* <Input
+                    className="w-56 rounded-md "
+                    value={date.format(DATE_FORMAT)}
+                    onChange={(d) => setDate(dayjs(d.toString()))}
+                    placeholder=""
+                    type="date"
+                    name="reservationDate"
+                  /> */}
                 </div>
                 <Select
                   label=""
@@ -152,6 +154,30 @@ export const HubMap = () => {
                   placeholder={'Select area'}
                   containerClassName="w-full sm:w-auto  mb-2"
                 />
+              </div>
+            </div>
+            <div className="flex flex-row gap-2 overflow-hidden mt-2 items-center flex-wrap">
+              {!!visitors?.length &&
+                visitors.map((v) => {
+                  return (
+                    <button
+                      key={v.userId}
+                      className="hover:opacity-80 transition-all delay-100"
+                      onClick={() => {
+                        setSelectedDailyEvent(v.deskId)
+                        setAreaId(v.areaId)
+                        resetOfficeVisits()
+                      }}
+                    >
+                      <Avatar size="medium" src={v.avatar} userId={v.userId} />
+                    </button>
+                  )
+                })}
+              <div className="text-text-tertiary">
+                {userIsInOffce
+                  ? `You and ${visitorsNumber - 1}`
+                  : visitorsNumber}{' '}
+                people in the {office?.name} hub
               </div>
             </div>
             <div className="sm:max-w-[780px] h-[500px] sm:h-auto m-auto my-2 sm:my-10">

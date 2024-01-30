@@ -184,11 +184,10 @@ export function usePanZoom(
         width: imageRef.current.width * scale,
       })
     }
-  }, [containerRef, imageRef, scale])
+  }, [containerRef, imageRef.current, scale])
 
   const handleTouchStart: React.TouchEventHandler<HTMLDivElement> = useCallback(
     (event) => {
-      console.log(event)
       if (event.touches.length === 1) {
         const touch = event.touches[0]
         setTouchStart({
@@ -212,11 +211,15 @@ export function usePanZoom(
     // a little crotch for now :)
     const indx = scale > 1.5 ? 200 : 50
     const yBoundaryTop = -imageDimensions.height + indx * scale
-    console.log(newX, ', ', newY)
     return {
       x: newX > 0 ? Math.min(newX, xBoundary) : Math.max(newX, -xBoundary),
       y: newY > 0 ? Math.min(newY, yBoundary) : Math.max(newY, yBoundaryTop),
     }
+  }
+
+  const resetScale = () => {
+    setScale(1)
+    setPosition({ x: 0, y: 0 })
   }
 
   const handleTouchMove: React.TouchEventHandler<HTMLDivElement> = useCallback(
@@ -264,5 +267,6 @@ export function usePanZoom(
     handleTouchMove,
     handleTouchEnd,
     handleWheel,
+    resetScale,
   }
 }

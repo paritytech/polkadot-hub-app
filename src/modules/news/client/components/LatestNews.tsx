@@ -68,15 +68,13 @@ export const LatestNews = () => {
               )}
             </div>
           ))}
-          {!showAll && news.length > MAX_NEWS_TO_SHOW ? (
-            <FButton
-              kind="link"
-              className="mt-4 ml-2"
-              onClick={() => setShowAll(true)}
-            >
-              Show more
-            </FButton>
-          ) : null}
+          <FButton
+            kind="link"
+            className="mt-4 ml-2"
+            onClick={() => stores.goTo('newsList')}
+          >
+            Show more
+          </FButton>
         </div>
       )}
     </WidgetWrapper>

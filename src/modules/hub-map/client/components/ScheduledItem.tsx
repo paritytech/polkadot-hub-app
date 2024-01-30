@@ -1,17 +1,39 @@
 import React from 'react'
 import { cn } from '#client/utils'
-import {
-  ColorsBg,
-  ColorsBorder,
-  ColorsHover,
-  ScheduledItemType,
-  StatusColor,
-} from '#shared/types'
+import { ScheduledItemType, VisitType } from '#shared/types'
 import dayjs from 'dayjs'
 import { FButton, P } from '#client/components/ui'
 
 export const PageUrls: Record<string, string> = {
   event: '/events',
+}
+
+const ColorsBg: Record<string, string> = {
+  [VisitType.RoomReservation]: 'bg-cta-hover-jade',
+  [VisitType.Visit]: 'bg-cta-hover-purple',
+  [VisitType.Guest]: 'bg-cta-hover-cerullean',
+  event: 'bg-gray-50',
+}
+
+const ColorsBorder: Record<string, string> = {
+  [VisitType.RoomReservation]: 'border-cta-jade',
+  [VisitType.Visit]: 'border-cta-purple',
+  [VisitType.Guest]: 'border-cta-hover-cerullean',
+  event: 'border-gray-300',
+}
+
+const ColorsHover: Record<string, string> = {
+  [VisitType.RoomReservation]: `hover:border-cta-jade`,
+  [VisitType.Visit]: `hover:border-cta-purple`,
+  [VisitType.Guest]: `hover:border-cta-hover-cerullean'`,
+  event: 'hover:border-gray-300',
+}
+
+const StatusColor: Record<string, string> = {
+  confirmed: 'bg-green-500',
+  pending: 'bg-yellow-500',
+  opened: 'bg-yellow-500',
+  cancelled: 'bg-red-500',
 }
 
 const DateHeader = ({ dateValue }: { dateValue: string | Date }) => {
@@ -76,14 +98,17 @@ export const ScheduledItem = ({
             <DateHeader dateValue={sheduledItem.date} />
             <div className="flex justify-between items-center mt-2">
               <p className={cn('capitalize', iAmSelected && 'font-bold')}>
-                {sheduledItem.value}
+                {sheduledItem.value.slice(0, 16)}
+                {sheduledItem.value.length > 16 && '...'}
               </p>
-              <div
-                className={cn(
-                  'h-2 w-2 rounded-full',
-                  StatusColor[sheduledItem.status]
-                )}
-              ></div>
+              {sheduledItem.status && (
+                <div
+                  className={cn(
+                    'h-2 w-2 rounded-full',
+                    StatusColor[sheduledItem.status]
+                  )}
+                ></div>
+              )}
             </div>
             <p className="text-text-secondary text-sm">
               {sheduledItem.dateTime ? sheduledItem.dateTime : ''}

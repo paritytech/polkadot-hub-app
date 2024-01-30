@@ -550,12 +550,11 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           [EventApplicationStatus.Confirmed]: [],
           [EventApplicationStatus.Pending]: [],
           [EventApplicationStatus.Opened]: [],
-          [EventApplicationStatus.CancelledUser]: [],
-          [EventApplicationStatus.CancelledAdmin]: [],
         }
 
         eventApplications.forEach((app) => {
           const event = app.event?.get({ plain: true })
+          console.log(app)
           if (app.status == EventApplicationStatus.Opened) {
             result[EventApplicationStatus.Pending].push({
               ...event,

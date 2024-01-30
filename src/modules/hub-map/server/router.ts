@@ -110,9 +110,13 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           model: Event,
           as: 'event',
           where: {
-            endDate: {
-              [Op.gte]: new Date(),
+            startDate: {
+              [Op.between]: [
+                dayjs().startOf('day').toDate(),
+                dayjs().startOf('day').add(14, 'days').toDate(),
+              ],
             },
+
             visibility: {
               [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
             },
@@ -131,15 +135,18 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           },
           userId: req.user.id,
         },
-        attributes: ['eventId'],
+        attributes: ['eventId', 'status'],
       })
 
-      const myEvents = eventApplications.map((application) =>
-        formatEvent(application?.event)
-      )
+      let myEvents = []
+      if (!!eventApplications.length) {
+        myEvents = eventApplications.map((application) =>
+          formatEvent(application?.event, application.status)
+        )
 
-      if (!!myEvents.length) {
-        upcomingItems.push(myEvents[0])
+        if (!!myEvents.length) {
+          upcomingItems.push(myEvents[0])
+        }
       }
 
       return {

@@ -34,6 +34,7 @@ const PointComponent: Record<
       className={cn(
         'absolute -translate-y-2/4 -translate-x-2/4 whitespace-nowrap',
         !isSelected && 'bg-gray-100',
+        isSelected && 'border-pink-600 border-2',
         'rounded-sm',
         'hover:scale-105 transition-all delay-100'
       )}
@@ -63,21 +64,24 @@ const PointComponent: Record<
 
 const UserPoint = ({
   isMe,
+  isSelected = false,
   user,
   point,
 }: {
   isMe: boolean
+  isSelected: boolean
   user: User
   point: OfficeAreaDesk
 }) => (
   <div
     className={cn(
-      'absolute',
-      `${isMe && 'border-4 border-purple-500 rounded-full'}`
+      'absolute -translate-y-2/4 -translate-x-2/4 whitespace-nowrap',
+      `${isMe && 'border-2 border-purple-500 rounded-full'}`,
+      `${!isMe && isSelected && 'border-4 border-blue-500 rounded-full'}`
     )}
     style={{
-      left: `${point.position?.x - 2}%`,
-      top: `${point.position?.y - 2.5}%`,
+      left: `${point.position?.x}%`,
+      top: `${point.position?.y}%`,
     }}
   >
     <a href={`/profile/${user.id}`}>
@@ -145,7 +149,12 @@ const PointMapping: React.FC<
       return (
         <div key={x.id}>
           {!!user && !!me ? (
-            <UserPoint isMe={me?.id === user?.id} user={user} point={x} />
+            <UserPoint
+              isMe={me?.id === user?.id}
+              isSelected={isSelected}
+              user={user}
+              point={x}
+            />
           ) : (
             <div
               className={cn('absolute')}
@@ -180,6 +189,11 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
   panZoom = false,
 }) => {
   const me = useStore(stores.me)
+  const initialStartingPosition = selectedPointId
+    ? mappablePoints?.find(
+        (point: ScheduledItemType) => point.id === selectedPointId
+      )
+    : null
   return (
     <div className="relative">
       <div className={cn(!!panZoom ? 'hidden' : 'block')}>
@@ -206,8 +220,15 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
           src={area.map}
           alt={`${area.name} floor plan`}
           className="block w-full opacity-60 object-contain overflow-hidden"
-          initialScale={1.5}
-          initialStartPosition={{ x: 30, y: 30 }}
+          initialScale={1}
+          initialStartPosition={
+            initialStartingPosition
+              ? {
+                  x: initialStartingPosition.position.x,
+                  y: initialStartingPosition.position.y,
+                }
+              : undefined
+          }
           imageOverlayElement={
             <PointMapping
               me={me}

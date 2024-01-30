@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { cn } from '#client/utils'
 import { usePanZoom } from '#client/utils/hooks'
 
@@ -19,6 +19,7 @@ export const ImageWithPanZoom = ({
   imageOverlayElement?: React.ReactNode
   containerClassName?: string
 }) => {
+  const [start, setStart] = useState(initialStartPosition)
   const containerRef = useRef(null)
   const imageRef = useRef(null)
   const {
@@ -28,11 +29,26 @@ export const ImageWithPanZoom = ({
     handleTouchMove,
     handleTouchEnd,
     handleWheel,
+    resetScale,
   } = usePanZoom(containerRef, imageRef, initialStartPosition, initialScale)
-
   const translateStyle = {
     transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
   }
+  useEffect(() => {
+    if (start.x !== 0 && start.y !== 0) {
+      resetScale()
+      setStart({ x: 0, y: 0 })
+    }
+  }, [start, resetScale])
+
+  useEffect(() => {
+    if (
+      start.x !== initialStartPosition.x &&
+      start.y !== initialStartPosition.y
+    ) {
+      setStart(initialStartPosition)
+    }
+  }, [initialStartPosition])
 
   return (
     <div

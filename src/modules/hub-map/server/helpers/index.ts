@@ -1,6 +1,17 @@
 import { appConfig } from '#server/app-config'
-import { DATE_FORMAT } from '#server/constants'
-import { Event, RoomReservation, User, Visit, VisitType } from '#shared/types'
+import {
+  DATE_FORMAT,
+  FRIENDLY_DATE_FORMAT,
+  FRIENDLY_DATE_FORMAT_SHORT,
+} from '#server/constants'
+import {
+  Event,
+  EventApplicationStatus,
+  RoomReservation,
+  User,
+  Visit,
+  VisitType,
+} from '#shared/types'
 import dayjs from 'dayjs'
 import { FastifyInstance } from 'fastify'
 import { Op } from 'sequelize'
@@ -54,8 +65,11 @@ export const formatVisit = (v: Visit, user?: User | null): any => {
   }
 }
 
-export const formatEvent = (event: Event) => {
-  const url = `/event/${event.id}`
+export const formatEvent = (
+  event: Event,
+  applicationStatus: EventApplicationStatus
+) => {
+  const url = `/events/${event.id}`
   const now = dayjs()
   const start = dayjs(event.startDate)
   const end = dayjs(event.endDate)
@@ -68,12 +82,15 @@ export const formatEvent = (event: Event) => {
     url: url,
     // @todo add different types
     type: 'event',
+    status: applicationStatus,
     date: start.format(DATE_FORMAT),
     description: isToday
       ? 'Today'
       : isSingleDay
       ? event.startDate
-      : `${start.format(DATE_FORMAT)} - ${end.format(DATE_FORMAT)}`,
+      : `${start.format(FRIENDLY_DATE_FORMAT_SHORT)} - ${end.format(
+          FRIENDLY_DATE_FORMAT_SHORT
+        )}`,
   }
 }
 

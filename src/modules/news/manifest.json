@@ -13,6 +13,13 @@
         "fullScreen": true
       }
     },
+    "user": {
+      "newsList": {
+        "path": "/news",
+        "componentId": "NewsListPage",
+        "fullScreen": true
+      }
+    },
     "admin": {
       "adminNews": {
         "path": "/admin/news",

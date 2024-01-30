@@ -1,7 +1,14 @@
 import { useStore } from '@nanostores/react'
 import * as React from 'react'
 import { Header } from '#client/components/Header'
-import { Background, ComponentWrapper, H1, H2, HR } from '#client/components/ui'
+import {
+  BackButton,
+  Background,
+  ComponentWrapper,
+  H1,
+  H2,
+  HR,
+} from '#client/components/ui'
 import * as stores from '#client/stores'
 import { useMyEvents, useUpcomingEvents } from '../queries'
 import { EventApplicationStatus } from '#shared/types'
@@ -80,6 +87,7 @@ export const EventsPage = () => {
     <Background>
       <Header />
       <ComponentWrapper>
+        <BackButton />
         <H1 className="my-10 text-center">Events</H1>
         {!!myEvents && (
           <div>

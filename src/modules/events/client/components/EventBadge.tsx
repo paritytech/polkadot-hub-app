@@ -11,8 +11,12 @@ type Props = {
   className?: string
   withApplyButton?: boolean
 }
-export const EventBadge: React.FC<Props> = ({ event, className = '', withApplyButton = false }) => {
-  const url = React.useMemo(() => `/event/${event.id}`, [event])
+export const EventBadge: React.FC<Props> = ({
+  event,
+  className = '',
+  withApplyButton = false,
+}) => {
+  const url = React.useMemo(() => `/events/${event.id}`, [event])
   const now = dayjs()
   const [startDate, endDate] = [event.startDate, event.endDate].map(dayjs)
   const isToday = now >= startDate && now <= endDate
@@ -32,13 +36,21 @@ export const EventBadge: React.FC<Props> = ({ event, className = '', withApplyBu
       </a>
       <a href={url} className="flex-1 block">
         <div className="text-accents-red mb-1 text-sm">
-          {isToday ? 'Today' : isSingleDay ? startDate.format(DATE_FORMAT) : `${startDate.format(DATE_FORMAT)} - ${endDate.format(DATE_FORMAT)}`}
+          {isToday
+            ? 'Today'
+            : isSingleDay
+            ? startDate.format(DATE_FORMAT)
+            : `${startDate.format(DATE_FORMAT)} - ${endDate.format(
+                DATE_FORMAT
+              )}`}
         </div>
         <div>{event.title}</div>
       </a>
       {withApplyButton && (
         <div className="flex items-center ml-4">
-          <FButton size="small" kind="secondary" href={url}>Apply</FButton>
+          <FButton size="small" kind="secondary" href={url}>
+            Apply
+          </FButton>
         </div>
       )}
     </div>
