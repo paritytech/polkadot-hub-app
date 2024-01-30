@@ -28,6 +28,7 @@ import { getApplicationMessage, getApplicationUpdateMessage } from './helpers'
 import { isEventApplicationUncompleted } from './helpers/checklists'
 import { Metadata } from '../metadata-schema'
 import { boolean } from 'zod'
+import { EventCheckmark } from './models'
 
 const mId = 'events'
 
@@ -525,6 +526,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
             'endDate',
             'coverImageUrl',
             'metadata',
+            'checklist',
           ],
           required: true,
           order: [['startDate', 'ASC']],
@@ -552,19 +554,31 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           [EventApplicationStatus.Opened]: [],
         }
 
-        eventApplications.forEach((app) => {
+        for (const app of eventApplications) {
           const event = app.event?.get({ plain: true })
-          console.log(app)
-          if (app.status == EventApplicationStatus.Opened) {
-            result[EventApplicationStatus.Pending].push({
-              ...event,
-              applicationId: app.id,
+          const checklistLength = app?.event?.checklist?.length
+          let checkmarks = []
+
+          if (checklistLength) {
+            checkmarks = await EventCheckmark.findAll({
+              where: {
+                userId: req.user.id,
+                eventId: app.eventId,
+              },
             })
-            return
-          } else {
-            result[app.status].push({ ...event, applicationId: app.id })
           }
-        })
+
+          const objectToAdd = {
+            ...event,
+            applicationId: app.id,
+            applicationComplete: checkmarks?.length == checklistLength,
+          }
+          if (app.status == EventApplicationStatus.Opened) {
+            result[EventApplicationStatus.Pending].push(objectToAdd)
+          } else {
+            result[app.status].push(objectToAdd)
+          }
+        }
         return result
       }
 

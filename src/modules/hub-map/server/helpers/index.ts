@@ -67,7 +67,8 @@ export const formatVisit = (v: Visit, user?: User | null): any => {
 
 export const formatEvent = (
   event: Event,
-  applicationStatus: EventApplicationStatus
+  applicationStatus: EventApplicationStatus,
+  complete: boolean
 ) => {
   const url = `/events/${event.id}`
   const now = dayjs()
@@ -84,6 +85,7 @@ export const formatEvent = (
     type: 'event',
     status: applicationStatus,
     date: start.format(DATE_FORMAT),
+    complete: complete,
     description: isToday
       ? 'Today'
       : isSingleDay

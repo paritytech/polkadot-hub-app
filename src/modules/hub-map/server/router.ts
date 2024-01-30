@@ -18,7 +18,7 @@ import {
 } from './helpers'
 import { getDate } from '#modules/office-visits/server/helpers'
 import { Op } from 'sequelize'
-import { Event } from '#modules/events/server/models'
+import { Event, EventCheckmark } from '#modules/events/server/models'
 
 const publicRouter: FastifyPluginCallback = async function (fastify, opts) {}
 
@@ -121,7 +121,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
               [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
             },
           },
-          attributes: ['id', 'title', 'startDate', 'endDate'],
+          attributes: ['id', 'title', 'startDate', 'endDate', 'checklist'],
           required: true,
           order: [['startDate', 'ASC']],
         },
@@ -140,9 +140,29 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
       let myEvents = []
       if (!!eventApplications.length) {
-        myEvents = eventApplications.map((application) =>
-          formatEvent(application?.event, application.status)
-        )
+        let myEvents = []
+
+        for (const application of eventApplications) {
+          const checklistLength = application?.event?.checklist.length
+          let checkmarks = []
+
+          if (checklistLength) {
+            checkmarks = await EventCheckmark.findAll({
+              where: {
+                userId: req.user.id,
+                eventId: application.eventId,
+              },
+            })
+          }
+
+          const eventFormatted = formatEvent(
+            application?.event,
+            application.status,
+            checkmarks.length === checklistLength
+          )
+
+          myEvents.push(eventFormatted)
+        }
 
         if (!!myEvents.length) {
           upcomingItems.push(myEvents[0])

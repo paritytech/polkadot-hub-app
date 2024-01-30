@@ -58,6 +58,9 @@ const EventsList = ({
               )}
               event={x}
               withApplyButton={!x.applicationId && !x.metadata?.global}
+              requiresAction={
+                title === Sections.confirmed && !x.applicationComplete
+              }
             />
           </div>
         )
