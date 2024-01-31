@@ -57,7 +57,7 @@ export const Avatar: React.FC<Props> = ({
   const [hasError, setHasError] = React.useState(false)
   const setError = () => setHasError(true)
   const resultClassName = cn(
-    'rounded-full bg-gray-200',
+    'block rounded-full bg-gray-200',
     SIZE_CLASSNAME[size],
     className
   )

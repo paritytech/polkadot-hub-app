@@ -158,6 +158,7 @@ export function usePanZoom(
   handleTouchMove: React.TouchEventHandler<HTMLDivElement>
   handleTouchEnd: React.TouchEventHandler<HTMLDivElement>
   handleWheel: React.WheelEventHandler<HTMLDivElement>
+  resetScale: () => void
 } {
   const [isPanning, setIsPanning] = useState(false)
   const [touchStart, setTouchStart] = useState({ x: 0, y: 0 })

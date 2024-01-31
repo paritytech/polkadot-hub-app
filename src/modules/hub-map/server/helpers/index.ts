@@ -1,9 +1,5 @@
 import { appConfig } from '#server/app-config'
-import {
-  DATE_FORMAT,
-  FRIENDLY_DATE_FORMAT,
-  FRIENDLY_DATE_FORMAT_SHORT,
-} from '#server/constants'
+import { DATE_FORMAT, FRIENDLY_DATE_FORMAT_SHORT } from '#server/constants'
 import {
   Event,
   EventApplicationStatus,
@@ -21,7 +17,7 @@ export const getTime = (date: string | Date) => dayjs(date).format('LT')
 export const formatRoomReservationsResult = (
   reservation: RoomReservation,
   officeId: string,
-  areaId: string
+  areaId: string | undefined
 ): any => {
   // @todo put this somewhere central
   const office = appConfig.offices.find((o) => o.id === officeId)

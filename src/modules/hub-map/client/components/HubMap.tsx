@@ -106,6 +106,10 @@ export const HubMap = () => {
   }, [availableDesks, area])
 
   const isMobile = width <= 480
+
+  if (!office?.allowDeskReservation) {
+    return <></>
+  }
   return (
     <WidgetWrapper className="transition-all delay-100" title={`Hub Map`}>
       <div className="overflow-none">
@@ -124,7 +128,7 @@ export const HubMap = () => {
         {area && (
           <div className="">
             <div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between mx-auto">
+              <div className="flex flex-col gap-4 sm:flex-row items-start sm:items-baseline justify-between mx-auto">
                 <div className="w-full sm:w-auto flex flex-col  gap-4 items-start sm:items-baseline justify-center">
                   <DaySlider
                     onChange={(d) => {
@@ -134,14 +138,6 @@ export const HubMap = () => {
                     slideDate={date.format(DATE_FORMAT)}
                     className="mx-auto sm:mx-0"
                   />
-                  {/* <Input
-                    className="w-56 rounded-md "
-                    value={date.format(DATE_FORMAT)}
-                    onChange={(d) => setDate(dayjs(d.toString()))}
-                    placeholder=""
-                    type="date"
-                    name="reservationDate"
-                  /> */}
                 </div>
                 <Select
                   label=""
@@ -156,7 +152,7 @@ export const HubMap = () => {
                 />
               </div>
             </div>
-            <div className="flex flex-row gap-2 overflow-hidden mt-2 items-center flex-wrap">
+            <div className="flex flex-row gap-2 overflow-hidden mt-6 sm:mt-2 items-center flex-wrap">
               {!!visitors?.length &&
                 visitors.map((v) => {
                   return (

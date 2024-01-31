@@ -140,8 +140,6 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
       let myEvents = []
       if (!!eventApplications.length) {
-        let myEvents = []
-
         for (const application of eventApplications) {
           const checklistLength = application?.event?.checklist.length
           let checkmarks = []
