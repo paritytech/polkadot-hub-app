@@ -203,18 +203,23 @@ export function usePanZoom(
 
   const updatePositionWithinBounds = (newX: number, newY: number) => {
     const boundary = 100
-    const xBoundary =
+    const xBoundaryRight =
       containerDimension.width -
       boundary * (containerDimension.width / containerDimension.height)
-    const yBoundary =
+    const xBoundaryLeft = -imageDimensions.width + 50 * scale
+    const yBoundaryBottom =
       containerDimension.height -
       boundary * (containerDimension.height / containerDimension.width)
-    // a little crotch for now :)
-    const indx = scale > 1.5 ? 200 : 50
-    const yBoundaryTop = -imageDimensions.height + indx * scale
+    const yBoundaryTop = -imageDimensions.height + 50 * scale
     return {
-      x: newX > 0 ? Math.min(newX, xBoundary) : Math.max(newX, -xBoundary),
-      y: newY > 0 ? Math.min(newY, yBoundary) : Math.max(newY, yBoundaryTop),
+      x:
+        newX > 0
+          ? Math.min(newX, xBoundaryRight)
+          : Math.max(newX, xBoundaryLeft),
+      y:
+        newY > 0
+          ? Math.min(newY, yBoundaryBottom)
+          : Math.max(newY, yBoundaryTop),
     }
   }
 
