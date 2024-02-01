@@ -41,13 +41,10 @@ export const useEventsAdmin = (
   )
 }
 
-export const useUpcomingEvents = (
-  officeId: string | null,
-  byTime?: boolean
-) => {
+export const useUpcomingEvents = (officeId: string | null, sortBy?: string) => {
   const path = '/user-api/events/event'
   return useQuery<EventPublicResponse[] | EventTimeMap, AxiosError>(
-    [path, { office: officeId, byTime }],
+    [path, { office: officeId, sortBy }],
     async ({ queryKey }) =>
       (await api.get<EventPublicResponse[]>(path, { params: queryKey[1] }))
         .data,
@@ -55,10 +52,10 @@ export const useUpcomingEvents = (
   )
 }
 
-export const useMyEvents = (officeId: string | null, byStatus?: boolean) => {
+export const useMyEvents = (officeId: string | null, sortBy?: string) => {
   const path = '/user-api/events/event/me'
   return useQuery<Event[] | MyEventsStatusMap, AxiosError>(
-    [path, { office: officeId, byStatus }],
+    [path, { office: officeId, sortBy }],
     async ({ queryKey }) =>
       (await api.get<Event[]>(path, { params: queryKey[1] })).data,
     { enabled: !!officeId }

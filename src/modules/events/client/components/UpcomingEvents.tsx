@@ -16,7 +16,7 @@ export const UpcomingEvents: React.FC = () => {
   const [eventData, setEventData] = useState<Array<EventPublicResponse>>([])
 
   useEffect(() => {
-    if (events?.length && isFetched) {
+    if (!!events?.length && isFetched) {
       let limit = page === 1 ? pageSize : page * pageSize
       const result = paginateArray(events, 1, limit)
       setEventData(result)

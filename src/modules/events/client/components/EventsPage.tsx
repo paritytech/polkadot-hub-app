@@ -71,10 +71,10 @@ const EventsList = ({
 
 export const EventsPage = () => {
   const officeId = useStore(stores.officeId)
-  const { data: events, isFetched } = useUpcomingEvents(officeId, true)
+  const { data: events, isFetched } = useUpcomingEvents(officeId, 'time')
   const { data: myEvents, isFetched: isMineFetched } = useMyEvents(
     officeId,
-    true
+    'status'
   )
   if (!isFetched && !isMineFetched) {
     return null

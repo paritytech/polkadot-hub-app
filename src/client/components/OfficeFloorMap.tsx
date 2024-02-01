@@ -182,13 +182,16 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
         {mapObjects(1)}
       </div>
       <div
-        className={cn(!!panZoom ? 'block' : 'hidden', 'border border-gray-300')}
+        className={cn(
+          !!panZoom ? 'block' : 'hidden',
+          'border border-gray-300 rounded-sm'
+        )}
       >
         <ImageWithPanZoom
           src={area.map}
           alt={`${area.name} floor plan`}
-          className="block w-full opacity-60 object-contain overflow-hidden"
-          initialScale={1}
+          className="block w-full opacity-60 object-contain overflow-hidden rounded-sm"
+          initialScale={2}
           initialStartPosition={
             initialStartingPosition
               ? {

@@ -443,7 +443,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     '/event',
     async (
       req: FastifyRequest<{
-        Querystring: { byTime?: boolean }
+        Querystring: { sortBy?: string }
       }>,
       reply
     ) => {
@@ -470,7 +470,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         order: ['startDate'],
       })
 
-      if (!!req.query.byTime) {
+      if (!!req.query.sortBy && req.query.sortBy === 'time') {
         const pastEvents = await fastify.db.Event.findAll({
           where: {
             endDate: {
@@ -499,7 +499,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     '/event/me',
     async (
       req: FastifyRequest<{
-        Querystring: { byStatus?: boolean }
+        Querystring: { sortBy?: string }
       }>,
       reply
     ) => {
@@ -544,7 +544,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         attributes: ['eventId', 'status', 'id'],
       })
 
-      if (!!req.query.byStatus) {
+      if (!!req.query.sortBy && req.query.sortBy === 'status') {
         const result: Record<
           EventApplicationStatus,
           Array<Event & { applicationId: string }>
