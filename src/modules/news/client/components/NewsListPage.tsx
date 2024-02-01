@@ -7,30 +7,29 @@ import {
   ComponentWrapper,
   FButton,
   H1,
-  H2,
-  HR,
   P,
 } from '#client/components/ui'
 import * as stores from '#client/stores'
 import { useNews } from '../queries'
 import { NewsItem } from '#shared/types'
 import dayjs from 'dayjs'
+import { paginateArray } from '#modules/events/client/helpers'
 
-const MAX_NEWS_TO_SHOW = 10
+const pageSize = 10
+
 export const NewsListPage = () => {
   const officeId = useStore(stores.officeId)
-  const { data: news, isFetching } = useNews(officeId)
+  const { data: news, isFetched } = useNews(officeId)
+  const [newsData, setNewsData] = React.useState<Array<NewsItem>>([])
+  const [page, setPage] = React.useState(1)
 
-  const [showAll, setShowAll] = React.useState(false)
-  const filteredNews = React.useMemo<NewsItem[]>(
-    () => (showAll ? news || [] : (news || []).slice(0, MAX_NEWS_TO_SHOW)),
-    [showAll, news]
-  )
   React.useEffect(() => {
-    if (news) {
-      setShowAll(news?.length < MAX_NEWS_TO_SHOW)
+    if (news?.length && isFetched) {
+      let limit = page === 1 ? pageSize : page * pageSize
+      const result = paginateArray(news, 1, limit)
+      setNewsData(result)
     }
-  }, [news])
+  }, [news, officeId, page])
 
   return (
     <Background>
@@ -39,8 +38,8 @@ export const NewsListPage = () => {
         <BackButton />
         <H1 className="my-10 text-center">News</H1>
         <div>
-          {!!filteredNews &&
-            filteredNews.map((x, i) => (
+          {!!newsData &&
+            newsData.map((x, i) => (
               <div
                 key={x.id}
                 onClick={() => stores.goTo('newsPage', { newsId: x.id })}
@@ -54,19 +53,18 @@ export const NewsListPage = () => {
                   </P>
                   <div className="mb-2">{x.title}</div>
                 </div>
-                {i + 1 === filteredNews.length &&
-                filteredNews.length <= MAX_NEWS_TO_SHOW ? (
+                {i + 1 === news?.length && news?.length <= pageSize ? (
                   ''
                 ) : (
                   <hr className="bg-applied-separator" />
                 )}
               </div>
             ))}
-          {!showAll && filteredNews.length > MAX_NEWS_TO_SHOW ? (
+          {!!news && news.length !== newsData.length ? (
             <FButton
               kind="link"
               className="mt-4 ml-2"
-              onClick={() => setShowAll(true)}
+              onClick={() => setPage((p) => p + 1)}
             >
               Show more
             </FButton>
