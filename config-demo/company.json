@@ -203,13 +203,5 @@
         }
       ]
     }
-  ],
-  "departments": [
-    "Engineering",
-    "Operations",
-    "Finance",
-    "Legal",
-    "Security",
-    "Marketing"
   ]
 }

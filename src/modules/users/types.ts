@@ -1,13 +1,11 @@
 export interface User {
   id: string
-  role: string
   roles: string[]
   fullName: string
   birthday: string | null
   email: string
   stealthMode: boolean
   avatar: string | null
-  department: string | null
   team: string | null
   jobTitle: string | null
   country: string | null
@@ -56,19 +54,18 @@ export interface Session {
 }
 
 export type OnboardingProfileRequest = {
-  department: string | null
   team: string | null
   jobTitle: string | null
   country: string | null
   city: string | null
   contacts: Record<string, string>
   tagIds: string[]
+  roles: string[]
 }
 
 export type ProfileRequest = {
   fullName: string
   birthday: string | null
-  department: string
   team: string
   jobTitle: string
   country: string
@@ -77,10 +74,10 @@ export type ProfileRequest = {
   geodata?: GeoData
   defaultLocation: string | null
   contacts: Record<string, string> | null
+  roles: string[]
 }
 
-export type ProfileFormData = Omit<ProfileRequest, 'department' | 'country'> & {
-  department: string | null
+export type ProfileFormData = Omit<ProfileRequest, 'country'> & {
   country: string | null
   contacts: Record<string, string> | null
 }
@@ -92,7 +89,7 @@ export type UserMe = User & {
 
 export type UserCompact = Pick<
   User,
-  'id' | 'fullName' | 'email' | 'avatar' | 'isInitialised' | 'role' | 'roles'
+  'id' | 'fullName' | 'email' | 'avatar' | 'isInitialised' | 'roles'
 >
 
 export type PublicUserProfile = Pick<
@@ -102,7 +99,6 @@ export type PublicUserProfile = Pick<
   | 'birthday'
   | 'email'
   | 'avatar'
-  | 'department'
   | 'team'
   | 'jobTitle'
   | 'country'
@@ -111,7 +107,6 @@ export type PublicUserProfile = Pick<
   | 'bio'
   | 'geodata'
   | 'defaultLocation'
-  | 'role'
   | 'roles'
 > & {
   countryName: string | null
@@ -131,7 +126,6 @@ export type UserMapPin = Pick<
   | 'id'
   | 'fullName'
   | 'avatar'
-  | 'department'
   | 'team'
   | 'jobTitle'
   | 'country'
@@ -212,7 +206,6 @@ export type ProfileFieldsMetadata = {
 
 export type ProfileMetadata = {
   birthday: ProfileField
-  department: ProfileField
   team: ProfileField
   jobTitle: ProfileField
   bio: ProfileField

@@ -118,7 +118,7 @@ export const plugin: FastifyPluginCallback = async (
       const newUser = await fastify.db.User.create({
         authIds: authIds as AuthIds,
         fullName: '',
-        role: appConfig.lowPriorityRole,
+        roles: [appConfig.lowPriorityRole],
         isInitialised: false,
         email: '',
       })

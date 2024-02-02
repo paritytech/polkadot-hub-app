@@ -6,6 +6,7 @@ import { safeRequire, getFilePath } from '#server/utils'
 import { PermissionsSet } from '#shared/utils'
 import * as fp from '#shared/utils/fp'
 import { log } from '#server/utils/log'
+import { SafeResponse } from '#server/types'
 import { AppTemplates } from './templates'
 import {
   AppModule,
@@ -293,6 +294,33 @@ export class AppConfig {
     return this.allRoles
       .filter((x) => x.permissions.includes(permission))
       .map((x) => x.id)
+  }
+
+  sortRoles(roleIds: string[]): string[] {
+    const unsupportedRoles = roleIds.filter(fp.isNotIn(this.allRoleIds))
+    const allowedRoles = this.allRoleIds.filter(fp.isIn(roleIds))
+    return unsupportedRoles.concat(allowedRoles)
+  }
+
+  validateAndMergeEditableRoles(
+    userRoles: string[],
+    editedRoles: string[]
+  ): SafeResponse<string[]> {
+    const editableRoleGroups = appConfig.config.permissions.roleGroups.filter(
+      (x) =>
+        x.rules.editableByRoles.length &&
+        x.rules.editableByRoles.some(fp.isIn(userRoles))
+    )
+    const editableRoles = editableRoleGroups
+      .map(fp.prop('roles'))
+      .flat()
+      .map(fp.prop('id'))
+    if (editedRoles.some(fp.isNotIn(editableRoles))) {
+      return { success: false, error: new Error('Invalid roles') }
+    }
+    let roles = userRoles.filter(fp.isNotIn(editableRoles)) // non-editable roles
+    roles = roles.concat(editedRoles) // concat them with editable roles from the request
+    return { success: true, data: this.sortRoles(roles) }
   }
 }
 

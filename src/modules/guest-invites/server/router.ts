@@ -429,7 +429,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
                 {
                   email: invite.email,
                   fullName: invite.fullName,
-                  role: appConfig.getDefaultUserRoleByEmail(invite.email),
+                  roles: [appConfig.getDefaultUserRoleByEmail(invite.email)],
                 },
                 { transaction: t }
               )

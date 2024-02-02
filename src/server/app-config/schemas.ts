@@ -157,23 +157,31 @@ export const office = z
 export const companyConfig = z.object({
   name: z.string().nonempty(),
   offices: z.array(office).min(1),
-  departments: z.array(z.string()).min(1).optional(),
 })
 
 export const userRole = z.object({
   id: z.string(),
   name: z.string(),
-  permissions: z.array(z.string()),
+  permissions: z.array(z.string()).default([]),
   accessByDefault: z.boolean().default(false).optional(),
 })
 
 export const userRoleGroup = z.object({
   id: z.string(),
   name: z.string(),
-  constraints: z
+  rules: z
     .object({
       max: z.number().min(1).optional(),
-      unique: z.boolean().default(false).optional(),
+      unique: z.boolean().default(false),
+      editableByRoles: z.array(z.string()).default([]),
+    })
+    .superRefine((rules, ctx) => {
+      if (rules.unique && rules.editableByRoles.length) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Unique fields cannot be editable by users',
+        })
+      }
     })
     .default({ max: undefined, unique: false }),
   roles: z.array(userRole).min(1),

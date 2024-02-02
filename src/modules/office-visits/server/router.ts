@@ -10,9 +10,10 @@ import {
   getBusinessDaysFromDate,
   getDate,
 } from './helpers'
-import { Permissions } from '../permissions'
 import { Visit, GenericVisit, VisitType, VisitsDailyStats } from '#shared/types'
 import * as fp from '#shared/utils'
+import { Permissions } from '../permissions'
+import { Metadata } from '../metadata-schema'
 
 dayjs.extend(localizedFormat)
 
@@ -182,6 +183,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         return reply.throw.badParams('Missing office ID')
       }
       req.check(Permissions.AdminList, req.office.id)
+      const metadata = appConfig.getModuleMetadata('office-visits') as Metadata
       const { from, to, format } = req.query
       if (!from || !to) {
         return reply.throw.badParams('Missing "from" or "to" parameter')
@@ -243,23 +245,30 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
           const date = dateRange[0].add(i, 'day').format(DATE_FORMAT)
           const visits = visitsByDate[date] || []
           const existingVisitsNumber = visits.length
-          const departments = visits.map((x) => {
+          const roleGroup = appConfig.config.permissions.roleGroups.find(
+            fp.propEq('id', metadata.statistics.splitByRoleGroup)
+          )!
+          const roleById = roleGroup.roles.reduce(fp.by('id'), {})
+          const roleIds = roleGroup.roles.map(fp.prop('id'))
+          const visitorsRoles = visits.map((x) => {
             if (!!x.metadata.guestInviteId) {
               return 'Guests'
             }
-            return userById[x.userId]?.department || 'Unknown'
+            const user = userById[x.userId]
+            const role = user.roles.find(fp.isIn(roleIds))
+            return role ? roleById[role].name : 'Unknown'
           })
-          const departmentDistribution = departments.reduce((acc, x) => {
+          const roleDistribution = visitorsRoles.reduce((acc, x) => {
             return acc[x] ? { ...acc, [x]: acc[x] + 1 } : { ...acc, [x]: 1 }
           }, {} as Record<string, number>)
-          const departmentRatios: Array<{
-            department: string
+          const roleRatios: Array<{
+            role: string
             occupancyPercent: number
           }> = []
-          for (const [key, value] of Object.entries(departmentDistribution)) {
-            departmentRatios.push({
-              department: key,
-              occupancyPercent: value / departments.length,
+          for (const [key, value] of Object.entries(roleDistribution)) {
+            roleRatios.push({
+              role: key,
+              occupancyPercent: value / visitorsRoles.length,
             })
           }
           const guests = visits
@@ -283,7 +292,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
             maxCapacity: visitsConfig.maxCapacity,
             existingVisitsNumber,
             occupancyPercent: existingVisitsNumber / visitsConfig.maxCapacity,
-            occupancyPercentByDepartment: departmentRatios,
+            occupancyPercentByRole: roleRatios,
             guests,
           })
         }

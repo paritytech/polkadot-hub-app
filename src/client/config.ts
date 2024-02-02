@@ -41,7 +41,6 @@ export type ClientUserRoleGroup = UserRoleGroup & {
 type ClientAppConfig = {
   modules: ClientModuleConfig[]
   offices: ClientOfficeConfig[]
-  departments: string[]
   appName: string
   companyName: string
   appHost: string
@@ -57,7 +56,6 @@ type ClientAuthConfig = { providers: string[] }
 const config: ClientAppConfig = {
   modules: process.env.APP_MODULES as unknown as ClientModuleConfig[],
   offices: process.env.APP_OFFICES as unknown as ClientOfficeConfig[],
-  departments: process.env.DEPARTMENTS as unknown as string[],
   appName: process.env.APP_NAME as unknown as string,
   companyName: process.env.COMPANY_NAME as unknown as string,
   appHost: process.env.APP_HOST as unknown as string,

@@ -16,7 +16,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       order: [['publishedAt', 'DESC']],
       where: {
         visibility: EntityVisibility.Visible,
-        allowedRoles: { [Op.contains]: [req.user.role] },
+        allowedRoles: { [Op.overlap]: req.user.roles },
         offices: { [Op.contains]: [req.office.id] },
         published: true,
       },
@@ -39,7 +39,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         where.visibility = {
           [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
         }
-        where.allowedRoles = { [Op.contains]: [req.user.role] }
+        where.allowedRoles = { [Op.overlap]: req.user.roles }
         where.published = true
       }
       const newsArticle = await fastify.db.News.findOne({ where })

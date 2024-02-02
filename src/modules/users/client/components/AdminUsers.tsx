@@ -25,7 +25,13 @@ import {
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
-import { pick, prop, propNotEq, hasIntersection } from '#shared/utils/fp'
+import {
+  pick,
+  prop,
+  propNotEq,
+  hasIntersection,
+  propEq,
+} from '#shared/utils/fp'
 import { User, ImportedTagGroup, Tag } from '#shared/types'
 import { FRIENDLY_DATE_FORMAT, USER_ROLES } from '#client/constants'
 import { useDebounce, useDocumentTitle } from '#client/utils/hooks'
@@ -54,11 +60,6 @@ export const AdminUsers: React.FC = () => {
 function matchRole(user: User, roles: string[]): boolean {
   return roles.length ? hasIntersection(user.roles, roles) : true
 }
-function matchDepartment(user: User, departments: string[]): boolean {
-  return departments.length
-    ? departments.includes(user.department || '~none~')
-    : true
-}
 function matchSearch(user: User, query: string): boolean {
   const trimmedQuery = query.trim()
   if (!trimmedQuery) return true
@@ -74,13 +75,10 @@ function matchSearch(user: User, query: string): boolean {
 export const UserTable: React.FC = () => {
   const permissions = useStore(stores.permissions)
   const [editedUserId, setEditedUserId] = React.useState<string | null>(null)
-  const [departmentFilterIsShown, setDepartmentFilterIsShown] =
-    React.useState(false)
   const [roleFilterIsShown, setRoleFilterIsShown] = React.useState(false)
   const [roleFilter, setRoleFilter] = React.useState<string[]>(
-    USER_ROLES.filter(propNotEq('lowPriority', true)).map(prop('id'))
+    USER_ROLES.filter(prop('accessByDefault')).map(prop('id'))
   )
-  const [departmentFilter, setDepartmentFilter] = React.useState<string[]>([])
   const [searchQuery, setSearchQuery] = React.useState<string>('')
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -116,18 +114,24 @@ export const UserTable: React.FC = () => {
   const filteredUsers = React.useMemo(() => {
     return users.filter((x) => {
       return !(
-        !matchRole(x, roleFilter) ||
-        !matchDepartment(x, departmentFilter) ||
-        !matchSearch(x, debouncedSearchQuery)
+        !matchRole(x, roleFilter) || !matchSearch(x, debouncedSearchQuery)
       )
     })
-  }, [users, roleFilter, departmentFilter, debouncedSearchQuery])
+  }, [users, roleFilter, debouncedSearchQuery])
 
   const columns = React.useMemo(
     () => [
       {
         Header: 'Name',
-        accessor: (x: User) => <UserLabel user={x} hideRole />,
+        accessor: (x: User) => <UserLabel user={x} />,
+      },
+      {
+        Header: 'Email',
+        accessor: (x: User) => (
+          <Link href={`mailto:${x.email}`} kind="secondary">
+            {x.email}
+          </Link>
+        ),
       },
       {
         Header: 'Roles',
@@ -164,24 +168,11 @@ export const UserTable: React.FC = () => {
         ),
       },
       {
-        Header: 'Email',
-        accessor: (x: User) => (
-          <Link href={`mailto:${x.email}`} kind="secondary">
-            {x.email}
-          </Link>
-        ),
-      },
-      {
-        Header: 'Department',
-        accessor: (u: User) =>
-          u.department || <span className="text-gray-300">UNKNOWN</span>,
-      },
-      {
         Header: 'Created at',
         accessor: (x: User) => dayjs(x.createdAt).format('D MMM, YYYY'),
       },
       {
-        Header: 'Delete',
+        Header: 'Actions',
         accessor: (u: User) => {
           if (u.scheduledToDelete && !u.deletedAt) {
             const scheduledAt = dayjs(u.scheduledToDelete).startOf('day')
@@ -249,46 +240,48 @@ export const UserTable: React.FC = () => {
       )}
       <H1>Users</H1>
 
-      <div className="flex flex-col gap-y-4 mb-6">
-        {!!config.departments && !!config.departments.length && (
-          <LabelWrapper label="Department">
-            {departmentFilterIsShown ? (
-              <Filters
-                options={[
-                  { id: null, name: 'Any' },
-                  ...config.departments.map((x) => ({ id: x, name: x })),
-                ]}
-                value={departmentFilter}
-                onChange={setDepartmentFilter}
-                multiple
-              />
-            ) : (
-              <Button
-                size="small"
-                onClick={() => setDepartmentFilterIsShown(true)}
-              >
-                Show filter
-              </Button>
-            )}
-          </LabelWrapper>
-        )}
-        <LabelWrapper label="Role">
-          {roleFilterIsShown ? (
-            <Filters
-              options={[
-                { id: null, name: 'Any' },
-                ...USER_ROLES.map((x) => ({ id: x.id, name: x.name })),
-              ]}
-              value={roleFilter}
-              onChange={setRoleFilter}
-              multiple
-            />
-          ) : (
-            <Button size="small" onClick={() => setRoleFilterIsShown(true)}>
-              Show filter
+      <div className="mb-4">
+        <LabelWrapper
+          label={
+            <Button
+              size="small"
+              onClick={() => setRoleFilterIsShown((x) => !x)}
+              className="relative"
+            >
+              {!roleFilterIsShown ? 'Show' : 'Hide'} filters
             </Button>
+          }
+        >
+          {!roleFilterIsShown && !!roleFilter.length && (
+            <span className="text-text-tertiary">Some filters are applied</span>
           )}
         </LabelWrapper>
+      </div>
+
+      <div className="flex flex-col gap-y-4 mb-6">
+        {roleFilterIsShown && (
+          <>
+            <LabelWrapper label="">
+              <Filters
+                options={[{ id: null, name: 'Any role' }]}
+                value={roleFilter}
+                onChange={setRoleFilter}
+                multiple
+              />
+            </LabelWrapper>
+            {config.roleGroups.map((g) => (
+              <LabelWrapper key={g.name} label={g.name}>
+                <Filters
+                  options={g.roles}
+                  value={roleFilter}
+                  onChange={setRoleFilter}
+                  multiple
+                />
+              </LabelWrapper>
+            ))}
+          </>
+        )}
+
         <LabelWrapper label="Search">
           <Input
             type="text"

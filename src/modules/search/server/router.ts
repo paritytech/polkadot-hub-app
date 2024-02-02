@@ -54,7 +54,7 @@ const getWhereClauseForUserSearch = (
   return {
     // TODO: full text search (+ ignore email/matrix domain)
     isInitialised: true,
-    role: { [Op.in]: SEARCHABLE_ROLES },
+    roles: { [Op.overlap]: SEARCHABLE_ROLES },
     [Op.or]: [
       { fullName: { [Op.iLike]: wrappedQuery } },
       { email: { [Op.iLike]: wrappedQuery } },
@@ -92,7 +92,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (EMAIL_REGEX.test(originalQuery)) {
         const user = await fastify.db.User.findOneActive({
           where: {
-            role: { [Op.in]: SEARCHABLE_ROLES },
+            roles: { [Op.overlap]: SEARCHABLE_ROLES },
             email: originalQuery,
           },
         })
@@ -105,7 +105,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (fastify.integrations.Matrix?.usernameRegex?.test(originalQuery)) {
         const user = await fastify.db.User.findOneActive({
           where: {
-            role: { [Op.in]: SEARCHABLE_ROLES },
+            roles: { [Op.overlap]: SEARCHABLE_ROLES },
             'contacts.matrix': originalQuery,
           },
         })
@@ -146,7 +146,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (EMAIL_REGEX.test(originalQuery)) {
         const user = await fastify.db.User.findOneActive({
           where: {
-            role: { [Op.in]: SEARCHABLE_ROLES },
+            roles: { [Op.overlap]: SEARCHABLE_ROLES },
             email: originalQuery,
           },
         })

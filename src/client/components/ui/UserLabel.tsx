@@ -8,9 +8,8 @@ import { USER_ROLE_BY_ID } from '#client/constants'
 
 type Props = {
   user: User | UserCompact
-  hideRole?: boolean
 }
-export const UserLabel: React.FC<Props> = ({ user, hideRole = false }) => {
+export const UserLabel: React.FC<Props> = ({ user }) => {
   return user ? (
     <span className="inline-flex items-center w-max">
       <Avatar
@@ -32,7 +31,6 @@ export const UserLabel: React.FC<Props> = ({ user, hideRole = false }) => {
       >
         {user.fullName}
       </Link>
-      {!hideRole && <UserRoleLabel role={user.role} className="ml-2" />}
     </span>
   ) : null
 }

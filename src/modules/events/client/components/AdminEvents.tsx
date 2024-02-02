@@ -142,7 +142,7 @@ export const AdminEvents = () => {
           Header: 'Creator',
           accessor: (event: EventAdminResponse) => {
             const user = usersById[event.creatorUserId]
-            return <UserLabel user={user} hideRole />
+            return <UserLabel user={user} />
           },
         },
         {

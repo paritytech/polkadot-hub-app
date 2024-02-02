@@ -245,7 +245,7 @@ export const WorkingHoursUserModal: React.FC<{
   return (
     <Modal onClose={onClose} title="User working hours" size="wide">
       <div className="flex flex-col gap-y-6">
-        <UserLabel user={user} hideRole />
+        <UserLabel user={user} />
         <div>Agreed working week: {mergedModuleConfig.weeklyWorkingHours}h</div>
         <div className="flex">
           <div className="flex-1">

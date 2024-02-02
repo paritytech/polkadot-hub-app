@@ -191,7 +191,7 @@ export const AdminWorkingHours: React.FC = () => {
         {
           Header: 'User',
           accessor: (x: UserWorkingHours) => {
-            return <UserLabel user={x.user} hideRole />
+            return <UserLabel user={x.user} />
           },
         },
         {

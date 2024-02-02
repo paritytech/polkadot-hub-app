@@ -48,9 +48,7 @@ export const UserRolesEditorModal: React.FC<{
     (groupId: string, roleId: string) => (ev: React.MouseEvent) => {
       ev.preventDefault()
       setChanged(true)
-      const constraints = config.roleGroups.find(
-        fp.propEq('id', groupId)
-      )!.constraints
+      const rules = config.roleGroups.find(fp.propEq('id', groupId))!.rules
       setGroupedRoleIds((value) => {
         return {
           ...value,
@@ -58,7 +56,7 @@ export const UserRolesEditorModal: React.FC<{
             value[groupId],
             roleId,
             false,
-            constraints.max || undefined,
+            rules.max || undefined,
             true
           ),
         }
@@ -97,7 +95,7 @@ export const UserRolesEditorModal: React.FC<{
   return (
     <Modal title="Role editor" size="normal" onClose={onCloseSafe}>
       <div className="mb-6">
-        <UserLabel user={user} hideRole />
+        <UserLabel user={user} />
       </div>
 
       {!!unsupportedUserRoles.length && (
@@ -133,19 +131,26 @@ export const UserRolesEditorModal: React.FC<{
           <div className="mb-2">
             <div className="font-semibold">{g.name}</div>
             <div className="text-sm">
-              {!!g.constraints.max && (
+              {!!g.rules.max && (
                 <span className="text-text-disabled">
-                  Only {g.constraints.max} role{g.constraints.max > 1 && 's'}{' '}
-                  can be selected
+                  Only {g.rules.max} role{g.rules.max > 1 && 's'} can be
+                  selected.{' '}
                 </span>
               )}
-              {!!g.constraints.unique && (
-                <>
-                  {!!g.constraints.max && ', '}
-                  <span className="text-text-disabled">
-                    Unique role per user
-                  </span>
-                </>
+              {!!g.rules.unique && (
+                <span className="text-text-disabled">
+                  Unique role per user.{' '}
+                </span>
+              )}
+              {!!g.rules.editableByRoles.length && (
+                <div className="text-text-disabled">
+                  Users with the following roles can change these roles in the
+                  profile form:{' '}
+                  {g.rules.editableByRoles
+                    .map((x) => USER_ROLE_BY_ID[x].name)
+                    .join(', ')}
+                  .
+                </div>
               )}
             </div>
           </div>

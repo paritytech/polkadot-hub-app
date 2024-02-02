@@ -19,7 +19,6 @@ export const schema = z
   .object({
     profileFields: z.object({
       birthday: profileFieldSchema.optional(),
-      department: profileFieldSchema.optional(),
       team: profileFieldSchema.optional(),
       jobTitle: profileFieldSchema.optional(),
       bio: profileFieldSchema.optional(),

@@ -66,7 +66,6 @@ export type GoogleParsedStateQueryParam = Record<
   string | null
 >
 
-export type SafeResponse<T = undefined> =
-  | { success: true; data: T extends undefined ? never : T }
-  | { success: false; error: Error }
-  | { success: true }
+export type SafeResponse<T = undefined> = T extends undefined
+  ? { success: true } | { success: false; error: Error }
+  : { success: true; data: T } | { success: false; error: Error }

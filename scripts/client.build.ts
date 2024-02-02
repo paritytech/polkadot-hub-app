@@ -57,9 +57,6 @@ function getBuildConfig(): BuildOptions {
           ])
         )
       ),
-      'process.env.DEPARTMENTS': JSON.stringify(
-        appConfig.config.company.departments
-      ),
       'process.env.LAYOUT': JSON.stringify(appConfig.config.application.layout),
       'process.env.APP_NAME': JSON.stringify(appConfig.config.application.name),
       'process.env.COMPANY_NAME': JSON.stringify(appConfig.config.company.name),

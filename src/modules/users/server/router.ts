@@ -91,11 +91,20 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         )
       }
 
+      // process roles
+      const mergeRolesRequest = appConfig.validateAndMergeEditableRoles(
+        req.user.roles,
+        req.body.roles
+      )
+      if (!mergeRolesRequest.success) {
+        return reply.throw.badParams(mergeRolesRequest.error.message)
+      }
+      const roles = mergeRolesRequest.data
+
       await req.user
         .set({
           fullName: req.body.fullName,
           birthday: req.body.birthday,
-          department: req.body.department,
           team: req.body.team,
           jobTitle: req.body.jobTitle,
           country: req.body.country,
@@ -113,6 +122,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
             appConfig.offices[0].id,
             appConfig.offices
           ),
+          roles,
         })
         .save()
       return reply.ok()
@@ -129,8 +139,15 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (req.user.isInitialised) {
         return reply.throw.rejected()
       }
+      const mergeRolesRequest = appConfig.validateAndMergeEditableRoles(
+        req.user.roles,
+        req.body.roles || []
+      )
+      if (!mergeRolesRequest.success) {
+        return reply.throw.badParams(mergeRolesRequest.error.message)
+      }
+      const roles = mergeRolesRequest.data
       const userData: Partial<User> = {
-        department: req.body.department || null,
         team: req.body.team || null,
         jobTitle: req.body.jobTitle || null,
         country: req.body.country || null,
@@ -142,6 +159,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           appConfig.offices
         ),
         contacts: req.body.contacts,
+        roles,
       }
 
       // build `geodata` field
@@ -185,7 +203,6 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     req.check(Permissions.AdminManage)
     await req.user
       .set({
-        department: null,
         team: null,
         jobTitle: null,
         country: null,
@@ -413,7 +430,6 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         'email',
         'avatar',
         'city',
-        'department',
         'team',
       ],
     })
@@ -613,10 +629,10 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       const newRoleIds = req.body.roles
       const roleGroups = appConfig.config.permissions.roleGroups
       const availableRoles = roleGroups.map(fp.prop('roles')).flat()
-      const availableRoleIds = availableRoles.map(fp.prop('id'))
 
+      // check for conflicts
       for (const roleGroup of roleGroups) {
-        if (roleGroup.constraints.unique) {
+        if (roleGroup.rules.unique) {
           const availableRoles = roleGroup.roles.map(fp.prop('id'))
           const roles = newRoleIds.filter(fp.isIn(availableRoles))
           if (!roles.length) continue
@@ -640,9 +656,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
 
       // sort roles array before saving
-      const unsupportedRoles = newRoleIds.filter(fp.isNotIn(availableRoleIds))
-      const allowedRoles = availableRoleIds.filter(fp.isIn(newRoleIds))
-      const roles = unsupportedRoles.concat(allowedRoles)
+      const roles = appConfig.sortRoles(newRoleIds)
 
       const user = await fastify.db.User.findByPkActive(req.params.userId)
       if (!user) {

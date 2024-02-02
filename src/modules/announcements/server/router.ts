@@ -27,7 +27,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       order: [['scheduledAt', 'ASC']],
       where: {
         visibility: EntityVisibility.Visible,
-        allowedRoles: { [Op.contains]: [req.user.role] },
+        allowedRoles: { [Op.overlap]: req.user.roles },
         offices: { [Op.contains]: [req.office.id] },
         scheduledAt: { [Op.lte]: today.toDate() },
         expiresAt: { [Op.gt]: today.toDate() },

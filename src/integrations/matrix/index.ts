@@ -143,7 +143,7 @@ class Matrix extends Integration {
   public async inviteUserInRoom(
     roomId: MatrixRoomId,
     username: MatrixUsername
-  ): Promise<SafeResponse<void>> {
+  ): Promise<SafeResponse> {
     const usernameFormatted = this.sanitizeUsername(username)
     if (config.debug) {
       console.log(
@@ -175,10 +175,7 @@ class Matrix extends Integration {
     process.nextTick(() => this.inviteUserInRoom(roomId, username))
   }
 
-  async sendMessageToUser(
-    user: User,
-    message: string
-  ): Promise<SafeResponse<void>> {
+  async sendMessageToUser(user: User, message: string): Promise<SafeResponse> {
     try {
       const roomId = await this.ensureUserRoom(user)
       if (roomId) {
@@ -194,9 +191,7 @@ class Matrix extends Integration {
     process.nextTick(() => this.sendMessageToUser(user, message))
   }
 
-  public async sendMessageInAdminRoom(
-    message: string
-  ): Promise<SafeResponse<void>> {
+  public async sendMessageInAdminRoom(message: string): Promise<SafeResponse> {
     try {
       await this.sendMessageInRoom(this.credentials.adminRoomId, message)
       return this.success()

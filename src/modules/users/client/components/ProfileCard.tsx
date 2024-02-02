@@ -85,14 +85,7 @@ export const Card = ({
           <P className="mb-0">{user.fullName}</P>
           <PermissionsValidator required={[Permissions.users.ListProfiles]}>
             <div className="text-text-tertiary text-base leading-6">
-              {[user.jobTitle, user.team, user.department]
-                .filter(Boolean)
-                .map((x, i) => (
-                  <span key={`${x}${i}`}>
-                    {!!i && <span> &#183; </span>}
-                    {x}
-                  </span>
-                ))}
+              {[user.jobTitle, user.team].filter(Boolean).join(' · ')}
             </div>
           </PermissionsValidator>
           <div className="mt-3">

@@ -70,11 +70,7 @@ class EmailSMTP extends Integration {
     })
   }
 
-  public async sendEmail({
-    to,
-    html,
-    subject,
-  }: Email): Promise<SafeResponse<void>> {
+  public async sendEmail({ to, html, subject }: Email): Promise<SafeResponse> {
     if (config.debug) {
       console.log(
         `Sending email skipped (debug mode).\nemail: ${to}\nsubject: ${subject}\nhtml: ${html}\n`

@@ -72,7 +72,7 @@ export const plugin: FastifyPluginCallback = async (
           fullName: data.name,
           email: data.email,
           avatar: data.picture,
-          role: appConfig.getDefaultUserRoleByEmail(data.email),
+          roles: [appConfig.getDefaultUserRoleByEmail(data.email)],
         })
       } else {
         await user.set({ avatar: data.picture }).save()

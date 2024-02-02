@@ -139,7 +139,7 @@ export const AdminForms = () => {
           Header: 'Creator',
           accessor: (form: FormAdminResponse) => {
             const user = usersById[form.creatorUserId]
-            return <UserLabel user={user} hideRole />
+            return <UserLabel user={user} />
           },
         },
         {
