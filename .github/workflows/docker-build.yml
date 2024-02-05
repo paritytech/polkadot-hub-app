@@ -41,7 +41,7 @@ jobs:
 
       - name: Prepare Docker environment
         run: |
-          export IMAGE_TAG=$(if [ "$GITHUB_REF" == "refs/heads/master" ]; then echo "master-${GITHUB_SHA::7}"; else echo "$GITHUB_REF_NAME"; fi) >> $GITHUB_ENV
+          echo IMAGE_TAG=$(if [ "$GITHUB_REF" == "refs/heads/master" ]; then echo "master-${GITHUB_SHA::7}"; else echo "$GITHUB_REF_NAME"; fi) >> $GITHUB_ENV
           echo $IMAGE_TAG
           echo "Docker image will be published with the tag: ${{ env.IMAGE_TAG }}!"
 
