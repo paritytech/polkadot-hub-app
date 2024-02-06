@@ -256,7 +256,7 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
           `The ${req.office.name} office doesn't support desk reservation`
         )
       }
-      return reply.send(req.office.areas)
+      return reply.send(req.office.areas?.filter((x) => x.available) || [])
     }
   )
 
@@ -286,6 +286,12 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
         return reply.throw.misconfigured(
           `The ${office.name} office doesn't support desk reservation`
         )
+      }
+      const availableAreaIds = office
+        .areas!.filter((x) => x.available)
+        .map((x) => x.id)
+      if (visits.some((x) => !availableAreaIds.includes(x.areaId))) {
+        return reply.throw.badParams('Request contains unavailable areas')
       }
 
       try {
@@ -472,7 +478,8 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
       )
 
       const desks = req.office
-        .areas!.map((a) =>
+        .areas!.filter((a) => a.available)
+        .map((a) =>
           a.desks.map((d) => ({
             areaId: a.id,
             deskId: d.id,
