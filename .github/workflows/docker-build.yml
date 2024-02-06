@@ -6,6 +6,8 @@ on:
       - master
     tags:
       - v*
+      - stg-v*
+
 env:
   IMAGE_NAME: paritytech/polkadot-hub-app
 
