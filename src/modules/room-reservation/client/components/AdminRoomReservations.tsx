@@ -51,7 +51,7 @@ const _AdminRoomReservations: React.FC = () => {
     retry: false,
   })
   const usersById = React.useMemo(() => users.reduce(by('id'), {}), [users])
-  const { data: rooms = [] } = useRooms(officeId)
+  const { data: rooms = [] } = useRooms(officeId, true)
   const roomsById = React.useMemo<Record<string, OfficeRoom>>(
     () => rooms.reduce(by('id'), {}),
     [rooms]

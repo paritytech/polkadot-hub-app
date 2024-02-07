@@ -5,6 +5,7 @@ import { Filterable, Op } from 'sequelize'
 import { appConfig } from '#server/app-config'
 import { DATE_FORMAT } from '#server/constants'
 import { appEvents } from '#server/utils/app-events'
+import { OfficeRoom } from '#shared/types'
 import {
   compareTimes,
   getAvailableRanges,
@@ -268,7 +269,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (isWeekend(req.query.date) || isBeforeToday(req.query.date)) {
         return []
       }
-      const office = appConfig.getOfficeById(req.query.office)
+      const office = req.office!
       const { startT, endT } = parseTimeSlot(req.query.slot)
       const start = getDateTimeInTimezone(
         office.timezone,
@@ -318,6 +319,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
       return (req.office?.rooms || []).filter((room) => {
         return (
+          room.available &&
           !reservedRooms.includes(room.id) &&
           isWithinWorkingHours(req.query.slot, room.workingHours)
         )
@@ -350,9 +352,11 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
       const requestedDuration = req.query.duration ?? 30
       const office = appConfig.getOfficeById(req.query.office)
-      const roomWorkingHours = office.rooms!.find(
-        (room) => room.id === req.params.roomId
-      )?.workingHours ?? ['08:00', '19:00']
+      const room = office.rooms!.find((room) => room.id === req.params.roomId)
+      if (!room || !room.available) {
+        return reply.throw.badParams('Invalid room ID')
+      }
+      const roomWorkingHours = room.workingHours ?? ['08:00', '19:00']
 
       // UTC start and date because we want to query the database where we save datetime in UTC
 
@@ -418,7 +422,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 
   fastify.get(
-    '/placeholderMessages',
+    '/placeholder-messages',
     async (
       req: FastifyRequest<{
         Querystring: { office: string; duration?: number }
@@ -426,8 +430,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       req.check(Permissions.Create)
-      const office = appConfig.getOfficeById(req.query.office)
-      return office?.roomsPlaceholderMessage ?? ''
+      return req.office?.roomsPlaceholderMessage ?? ''
     }
   )
 
@@ -451,10 +454,11 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         return []
       }
       const requestedDuration = req.query.duration ?? 30
-      const office = req.office ?? null
+      const office = req.office
       let earliestStart: Array<string> = []
       let latestEnd: Array<string> = []
-      office.rooms?.forEach((room) => {
+      const rooms = (office.rooms || []).filter((room) => room.available)
+      rooms.forEach((room) => {
         const [workingHoursStart, workingHoursEnd] = room.workingHours.map(
           (time) => time.split(':')
         )
@@ -492,7 +496,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         latestEnd,
         req.query.date
       )
-      const roomCount = office.rooms?.length
+      const roomCount = rooms.length
 
       if (!roomCount) {
         return []
@@ -556,16 +560,24 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     }
   )
 
-  fastify.get('/room', async (req, reply) => {
-    req.check(Permissions.Create)
-    if (req.office) {
-      return req.office.rooms || []
+  fastify.get(
+    '/room',
+    async (
+      req: FastifyRequest<{ Querystring: { allRooms: 'true' | undefined } }>,
+      reply
+    ) => {
+      req.check(Permissions.Create)
+      if (req.office) {
+        const rooms = req.office.rooms || []
+        return req.query.allRooms ? rooms : rooms.filter((x) => x.available)
+      }
+      const rooms = appConfig.offices
+        .map((x) => x.rooms)
+        .flat()
+        .filter(Boolean)
+      return req.query.allRooms ? rooms : rooms.filter((x) => x?.available)
     }
-    return appConfig.offices
-      .map((x) => x.rooms)
-      .flat()
-      .filter(Boolean)
-  })
+  )
 
   fastify.get(
     '/room/:roomId/occupancy',
@@ -582,7 +594,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         return reply.throw.badParams('Invalid office ID')
       }
       const room = req.office.rooms!.find((x) => x.id === req.params.roomId)
-      if (!room) {
+      if (!room || !room.available) {
         return reply.throw.badParams('Invalid room ID')
       }
 
@@ -618,7 +630,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
       const data = req.body
       const room = (req.office.rooms || []).find((x) => x.id === data.roomId)
-      if (!room) {
+      if (!room || !room.available) {
         return reply.throw.badParams('Invalid room ID')
       }
       // @todo isWeekend -> get office working days data from the config
