@@ -81,6 +81,7 @@ export const officeArea = z.object({
 export const officeRoom = z.object({
   id: z.string(),
   name: z.string(),
+  available: z.boolean().default(true),
   description: z.string(),
   photo: z.string(),
   equipment: z.string(),

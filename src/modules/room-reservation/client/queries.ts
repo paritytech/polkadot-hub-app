@@ -11,7 +11,7 @@ import {
 } from '#shared/types'
 
 export const usePlaceholderMessages = (officeId: string | undefined) => {
-  const path = '/user-api/room-reservation/placeholderMessages'
+  const path = '/user-api/room-reservation/placeholder-messages'
   return useQuery<string, AxiosError>(
     [path, { office: officeId }],
     async ({ queryKey }) =>
@@ -19,10 +19,13 @@ export const usePlaceholderMessages = (officeId: string | undefined) => {
   )
 }
 
-export const useRooms = (officeId: string | undefined) => {
+export const useRooms = (
+  officeId: string | undefined,
+  allRooms: boolean = false
+) => {
   const path = '/user-api/room-reservation/room'
   return useQuery<OfficeRoom[], AxiosError>(
-    [path, { office: officeId }],
+    [path, { office: officeId, allRooms: allRooms || undefined }],
     async ({ queryKey }) =>
       (await api.get<OfficeRoom[]>(path, { params: queryKey[1] })).data
   )
