@@ -638,6 +638,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
           if (!roles.length) continue
           const users = await fastify.db.User.findAll({
             where: {
+              id: { [Op.not]: req.params.userId },
               roles: {
                 [Op.overlap]: roles,
               },

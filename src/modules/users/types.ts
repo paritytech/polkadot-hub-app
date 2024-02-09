@@ -198,6 +198,7 @@ export type ProfileField = {
   required: boolean
   placeholder?: string
   prefix?: string
+  requiredForRoles: string[]
 }
 
 export type ProfileFieldsMetadata = {

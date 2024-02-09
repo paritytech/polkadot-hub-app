@@ -4,6 +4,7 @@ const contactFieldSchema = z.object({
   label: z.string().optional(),
   placeholder: z.string().optional(),
   required: z.boolean().optional(),
+  requiredForRoles: z.array(z.string()).default([]),
   prefix: z.string().optional(), // Optional because not all fields have it
 })
 

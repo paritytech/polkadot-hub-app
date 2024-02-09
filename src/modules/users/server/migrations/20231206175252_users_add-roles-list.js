@@ -22,6 +22,15 @@ module.exports = {
       `,
         { transaction }
       )
+      await queryInterface.changeColumn(
+        'users',
+        'role',
+        {
+          type: DataTypes.STRING,
+          allowNull: true,
+        },
+        { transaction }
+      )
     })
   },
   async down({ context: queryInterface, appConfig }) {

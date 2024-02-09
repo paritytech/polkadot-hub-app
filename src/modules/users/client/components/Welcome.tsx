@@ -381,13 +381,19 @@ const Contacts: React.FC<{
   onSubmit: (value: { contacts: Record<string, string> }) => void
   onMoveBack: () => void
 }> = ({ metadata, onSubmit, onMoveBack }) => {
+  const me = useStore(stores.me)
   const metadataFields = Object.keys(metadata)
   const [state, setState] = React.useState<Record<string, string>>({})
   const [isValid, setIsValid] = React.useState(false)
 
-  const requiredFieldsIds: string[] = metadataFields.filter(
-    (contactId) => metadata[contactId].required
-  )
+  const requiredFieldsIds: string[] = metadataFields.filter((contactId) => {
+    const contactField = metadata[contactId]
+    const userRoles = me?.roles || []
+    return (
+      contactField.required ||
+      fp.hasIntersection(contactField.requiredForRoles, userRoles)
+    )
+  })
 
   const [selectedFieldIds, setSelectedFieldIds] =
     React.useState<string[]>(requiredFieldsIds)
@@ -462,7 +468,7 @@ const Contacts: React.FC<{
                   }
                   label={x.label}
                   containerClassName="w-full mb-4"
-                  required={x.required}
+                  required={requiredFieldsIds.includes(x.id)}
                 />
               )
             })}

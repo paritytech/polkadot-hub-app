@@ -93,7 +93,7 @@ export const UserRolesEditorModal: React.FC<{
   }, [props.onChange, props.onClose, groupedRoleIds, unsupportedRoleIds])
 
   return (
-    <Modal title="Role editor" size="normal" onClose={onCloseSafe}>
+    <Modal title="Roles editor" size="normal" onClose={onCloseSafe}>
       <div className="mb-6">
         <UserLabel user={user} />
       </div>
