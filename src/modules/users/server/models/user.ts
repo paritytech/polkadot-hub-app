@@ -21,7 +21,7 @@ import { Tag } from './tag'
 import { appConfig } from '#server/app-config'
 import dayjs from 'dayjs'
 
-type UserCreateFields = Pick<UserModel, 'fullName' | 'email' | 'role'> &
+type UserCreateFields = Pick<UserModel, 'fullName' | 'email' | 'roles'> &
   Partial<UserModel>
 
 export class User
@@ -29,16 +29,16 @@ export class User
   implements UserModel
 {
   declare id: CreationOptional<string>
-  declare role: UserModel['role']
+  // declare role: UserModel['role'] TODO: migration: delete column
+  declare roles: UserModel['roles']
   declare fullName: UserModel['fullName']
   declare birthday: UserModel['birthday']
   declare email: UserModel['email']
   declare stealthMode: UserModel['stealthMode']
   declare avatar: UserModel['avatar']
-  declare department: UserModel['department']
+  // declare department: UserModel['department'] TODO: migration: delete column
   declare team: UserModel['team']
   declare jobTitle: UserModel['jobTitle']
-  declare division: UserModel['division']
   declare country: UserModel['country']
   declare city: UserModel['city']
   declare contacts: UserModel['contacts']
@@ -70,10 +70,20 @@ export class User
         'avatar',
         'email',
         'isInitialised',
-        'role',
-        'division',
+        'roles',
       ],
     })
+  }
+
+  useCompactView(): UserCompact {
+    return {
+      id: this.id,
+      fullName: this.fullName,
+      avatar: this.avatar,
+      email: this.email,
+      isInitialised: this.isInitialised,
+      roles: this.roles,
+    }
   }
 
   useMeView(): UserMe {
@@ -107,7 +117,6 @@ export class User
       birthday: this.birthday,
       email: this.email,
       avatar: this.avatar,
-      department: this.department,
       team: this.team,
       jobTitle: this.jobTitle,
       country: hideGeoData ? null : this.country,
@@ -118,7 +127,7 @@ export class User
       geodata: this.geodata,
       defaultLocation: hideGeoData ? null : this.defaultLocation,
       tags,
-      role: this.role,
+      roles: this.roles,
     }
   }
 
@@ -179,7 +188,7 @@ export class User
   async anonymize(this: User): Promise<User> {
     const shortId = this.id.split('-').reverse()[0]
     return this.set({
-      role: appConfig.lowPriorityRole,
+      roles: [appConfig.lowPriorityRole],
       fullName: shortId,
       birthday: null,
       email: `${shortId}@delet.ed`,
@@ -208,9 +217,10 @@ User.init(
       allowNull: false,
       primaryKey: true,
     },
-    role: {
-      type: DataTypes.STRING,
+    roles: {
+      type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
+      defaultValue: [],
     },
     fullName: {
       type: DataTypes.STRING,
@@ -233,14 +243,6 @@ User.init(
       allowNull: true,
     },
     jobTitle: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    division: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-    department: {
       type: DataTypes.STRING,
       allowNull: true,
     },

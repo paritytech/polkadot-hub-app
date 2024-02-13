@@ -20,6 +20,8 @@ import {
   RootComponentProps,
   Tag as TagType,
 } from '#shared/types'
+import { toggleInArray } from '#client/utils'
+import * as fp from '#shared/utils/fp'
 import {
   useCitySearchSuggestion,
   useCountries,
@@ -27,6 +29,12 @@ import {
   useMyTags,
   useUpdateProfile,
 } from '../queries'
+
+const EDITABLE_ROLE_GROUPS = config.roleGroups.filter(
+  (x) => x.rules.editableByRoles.length
+)
+
+type RolesByGroupId = Record<string, string[]>
 
 export const ProfileForm: React.FC<RootComponentProps> = ({ portals }) => {
   const me = useStore(stores.me)
@@ -41,7 +49,6 @@ export const ProfileForm: React.FC<RootComponentProps> = ({ portals }) => {
   const [state, setState] = React.useState<ProfileFormData>({
     fullName: me?.fullName || '',
     birthday: me?.birthday || '',
-    department: me?.department || null,
     team: me?.team || '',
     jobTitle: me?.jobTitle || '',
     country: me?.country || null,
@@ -50,7 +57,21 @@ export const ProfileForm: React.FC<RootComponentProps> = ({ portals }) => {
     bio: me?.bio || '',
     geodata: me?.geodata || undefined,
     defaultLocation: me?.defaultLocation || null,
+    roles: [], // will be overwritten in the `onSubmitForm` function
   })
+  const [rolesByGroupId, setRolesByGroupId] = React.useState<RolesByGroupId>(
+    (() => {
+      const result: RolesByGroupId = {}
+      EDITABLE_ROLE_GROUPS.filter((g) =>
+        g.rules.editableByRoles.some(fp.isIn(me?.roles || []))
+      ).forEach((g) => {
+        result[g.id] = g.roles
+          .map(fp.prop('id'))
+          .filter(fp.isIn(me?.roles || []))
+      })
+      return result
+    })()
+  )
 
   const { data: countries } = useCountries()
   const { data: citySuggestions = [] } = useCitySearchSuggestion(
@@ -133,16 +154,16 @@ export const ProfileForm: React.FC<RootComponentProps> = ({ portals }) => {
       const c = cityValue[0]
       save({
         ...state,
-        department: state.department || '',
         country: state.country || '',
         city: c ? c.label : '',
         birthday: !state.birthday ? null : state.birthday,
         geodata: {
           doNotShareLocation: state.geodata?.doNotShareLocation || false,
         },
+        roles: Object.values(rolesByGroupId).flat(),
       })
     },
-    [state, cityValue]
+    [state, cityValue, rolesByGroupId]
   )
   const onShareLocationChange = () => {
     setState({
@@ -170,6 +191,24 @@ export const ProfileForm: React.FC<RootComponentProps> = ({ portals }) => {
     setCityValue(value)
     setIsChanged(true)
   }
+
+  const onToggleRole = React.useCallback(
+    (groupId: string, roleId: string) => (ev: React.MouseEvent) => {
+      const group = EDITABLE_ROLE_GROUPS.find(fp.propEq('id', groupId))!
+      setRolesByGroupId((value) => ({
+        ...value,
+        [groupId]: toggleInArray(
+          value[groupId],
+          roleId,
+          true,
+          group.rules.max,
+          true
+        ),
+      }))
+      setIsChanged(true)
+    },
+    []
+  )
 
   React.useEffect(() => {
     if (
@@ -200,6 +239,31 @@ export const ProfileForm: React.FC<RootComponentProps> = ({ portals }) => {
           containerClassName="w-full"
           required={isRequired('fullName')}
         />
+        {EDITABLE_ROLE_GROUPS.filter((g) =>
+          g.rules.editableByRoles.some(fp.isIn(me?.roles || []))
+        ).map((g) => (
+          <div key={g.id}>
+            <LabelWrapper label={g.name}>
+              <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap -mr-1 -mb-2">
+                  {g.roles.map((x) => (
+                    <Tag
+                      key={x.id}
+                      size="normal"
+                      color={
+                        rolesByGroupId[g.id].includes(x.id) ? 'purple' : 'gray'
+                      }
+                      className="mb-2 mr-1 cursor-pointer hover:opacity-80"
+                      onClick={onToggleRole(g.id, x.id)}
+                    >
+                      {x.name}
+                    </Tag>
+                  ))}
+                </div>
+              </div>
+            </LabelWrapper>
+          </div>
+        ))}
         {metadata?.birthday && (
           <Input
             type="date"
@@ -208,21 +272,6 @@ export const ProfileForm: React.FC<RootComponentProps> = ({ portals }) => {
             value={state.birthday || ''}
             onChange={onChangeForm('birthday')}
             required={isRequired('birthday')}
-            containerClassName="w-full"
-          />
-        )}
-        {metadata?.department && (
-          <Select
-            name="department"
-            options={config.departments.map((x) => ({
-              value: x,
-              label: x,
-            }))}
-            value={state.department || undefined}
-            placeholder={metadata.department.placeholder}
-            label={metadata.department.label}
-            onChange={onChangeForm('department')}
-            required={isRequired('department')}
             containerClassName="w-full"
           />
         )}

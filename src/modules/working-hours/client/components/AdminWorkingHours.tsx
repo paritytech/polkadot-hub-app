@@ -1,5 +1,6 @@
 import * as React from 'react'
 import dayjs, { Dayjs } from 'dayjs'
+import config from '#client/config'
 import {
   Button,
   H1,
@@ -10,9 +11,9 @@ import {
   Tag,
   UserLabel,
 } from '#client/components/ui'
-import { by, groupBy, propEq, sortBy } from '#shared/utils/fp'
+import { by, groupBy, pick, propEq, propIn, sortBy } from '#shared/utils/fp'
 import { formatDateRange } from '#client/utils'
-import { DATE_FORMAT } from '#client/constants'
+import { DATE_FORMAT, USER_ROLES } from '#client/constants'
 import { useUsersCompact } from '#modules/users/client/queries'
 import {
   useAdminEntries,
@@ -53,7 +54,7 @@ type Unit = 'week' | 'month'
 export const AdminWorkingHours: React.FC = () => {
   const [offset, setOffset] = React.useState<number>(0)
   const [unit, setUnit] = React.useState<Unit>('week')
-  const [division, setDivision] = React.useState<string>('')
+  const [role, setRole] = React.useState<string>('')
   const [showExportModal, setShowExportModal] = React.useState(false)
   const [shownUser, setShownUser] = React.useState<UserCompact | null>(null)
 
@@ -65,7 +66,7 @@ export const AdminWorkingHours: React.FC = () => {
     return [start, end]
   }, [offset, unit])
 
-  const { data: configByDivision = {} } = useAdminConfig()
+  const { data: configByRole = {} } = useAdminConfig()
   const { data: entries = [] } = useAdminEntries(
     period[0].format(DATE_FORMAT),
     period[1].format(DATE_FORMAT),
@@ -77,7 +78,7 @@ export const AdminWorkingHours: React.FC = () => {
     null
   )
   const { data: userConfigs = [] } = useAdminUserConfigs({
-    division,
+    role,
   })
 
   const userConfigByUserId = React.useMemo(
@@ -85,14 +86,16 @@ export const AdminWorkingHours: React.FC = () => {
     [userConfigs]
   )
 
-  const divisions = React.useMemo(
-    () => Object.keys(configByDivision),
-    [configByDivision]
-  )
+  const roles = React.useMemo(() => {
+    const allowedRoles = Object.keys(configByRole)
+    return USER_ROLES.filter((x) => allowedRoles.includes(x.id)).map(
+      pick(['id', 'name'])
+    )
+  }, [configByRole])
 
   const moduleConfig = React.useMemo(
-    () => (division ? configByDivision[division] : null),
-    [configByDivision, division]
+    () => (role ? configByRole[role] : null),
+    [configByRole, role]
   )
 
   const { data: users = [] } = useUsersCompact(undefined, {
@@ -124,7 +127,10 @@ export const AdminWorkingHours: React.FC = () => {
 
   const userWorkingHours = React.useMemo<UserWorkingHours[]>(() => {
     return users
-      .filter((user) => user.division === division)
+      .filter((user) => {
+        const userRole = roles.find(propIn('id', user.roles))
+        return userRole?.id === role
+      })
       .map((user) => {
         const workingHours = calculateTotalWorkingHours(
           entriesByUser[user.id] || []
@@ -164,7 +170,8 @@ export const AdminWorkingHours: React.FC = () => {
   }, [
     entriesByUser,
     users,
-    division,
+    role,
+    roles,
     moduleConfig,
     unit,
     period,
@@ -184,13 +191,8 @@ export const AdminWorkingHours: React.FC = () => {
         {
           Header: 'User',
           accessor: (x: UserWorkingHours) => {
-            return <UserLabel user={x.user} hideRole />
+            return <UserLabel user={x.user} />
           },
-        },
-        {
-          Header: 'Division',
-          accessor: (x: UserWorkingHours) =>
-            x.user.division || <span className="text-gray-300">UNKNOWN</span>,
         },
         {
           Header: 'Working hours',
@@ -261,10 +263,10 @@ export const AdminWorkingHours: React.FC = () => {
   )
 
   React.useEffect(() => {
-    if (divisions.length) {
-      setDivision(divisions[0])
+    if (roles.length) {
+      setRole(roles[0].id)
     }
-  }, [divisions])
+  }, [roles])
 
   const isQueryParamsHandled = React.useRef<boolean>(false)
 
@@ -355,14 +357,14 @@ export const AdminWorkingHours: React.FC = () => {
             containerClassName="mr-2"
           />
 
-          {/* division picker */}
+          {/* role picker */}
           <Select
             className="py-[5px]"
-            options={divisions.map((x) => ({ value: x, label: x }))}
-            value={division}
+            options={roles.map((x) => ({ value: x.id, label: x.name }))}
+            value={role}
             onChange={(value) => {
               setOffset(0)
-              setDivision(value)
+              setRole(value)
             }}
           />
         </div>
@@ -393,7 +395,7 @@ export const AdminWorkingHours: React.FC = () => {
       {showExportModal && (
         <WorkingHoursExportModal
           onClose={() => setShowExportModal(false)}
-          divisions={divisions}
+          roles={roles}
           defaultPeriod={period}
         />
       )}

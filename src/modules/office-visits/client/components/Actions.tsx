@@ -20,7 +20,7 @@ export const Actions = () => {
     () => config.offices.find(fp.propEq('id', officeId)),
     [officeId]
   )
-  if (!permissions.hasAnyOf(requiredPermissions)) {
+  if (!permissions.hasAnyOf(requiredPermissions, officeId)) {
     return null
   }
   if (
@@ -35,7 +35,10 @@ export const Actions = () => {
     <WidgetWrapper>
       <div className="flex justify-around items-start -mx-4 -my-4">
         {office.allowDeskReservation && (
-          <PermissionsValidator required={[Permissions.visits.Create]}>
+          <PermissionsValidator
+            officeId={officeId}
+            required={[Permissions.visits.Create]}
+          >
             <CTA
               type={CTAType.Visit}
               onClick={() => stores.goTo('visitRequest')}
@@ -44,6 +47,7 @@ export const Actions = () => {
         )}
         {office.allowRoomReservation && (
           <PermissionsValidator
+            officeId={officeId}
             required={[Permissions['room-reservation'].Create]}
           >
             <CTA
@@ -54,6 +58,7 @@ export const Actions = () => {
         )}
         {office.allowGuestInvitation && (
           <PermissionsValidator
+            officeId={officeId}
             required={[Permissions['guest-invites'].Create]}
           >
             <CTA

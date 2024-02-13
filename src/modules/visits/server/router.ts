@@ -11,6 +11,7 @@ import {
 import config from '#server/config'
 import { OfficeArea, Office } from '#server/app-config/types'
 import { appEvents } from '#server/utils/app-events'
+import * as fp from '#shared/utils/fp'
 import {
   getConflictedVisits,
   getFullBookableAreas,
@@ -49,10 +50,10 @@ const publicRouter: FastifyPluginCallback = async (fastify, opts) => {
 
 const userRouter: FastifyPluginCallback = async (fastify, opts) => {
   fastify.get('/notice', async (req: FastifyRequest, reply) => {
-    req.check(Permissions.Create)
     if (!req.office) {
       return reply.throw.badParams('Missing office ID')
     }
+    req.check(Permissions.Create, req.office.id)
     return appConfig.templates.text(mId, 'visitNotice', {
       officeId: req.office,
     })
@@ -67,10 +68,10 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
       if (!req.office) {
         return reply.throw.badParams('Missing office ID')
       }
+      req.check(Permissions.Create, req.office.id)
       if (!req.office.allowDeskReservation) {
         return reply.throw.misconfigured(
           `The ${req.office.name} office doesn't support desk reservation`
@@ -102,17 +103,19 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
       if (!req.params.visitId) {
         return reply.throw.badParams()
       }
-      const where: Filterable<Visit>['where'] = { id: req.params.visitId }
-      if (!req.can(Permissions.AdminList)) {
-        where.userId = req.user.id
-      }
-      const visit = await fastify.db.Visit.findOne({ where })
+      const visit = await fastify.db.Visit.findByPk(req.params.visitId)
       if (!visit) {
         return reply.throw.notFound()
+      }
+      req.check(Permissions.Create, visit.officeId)
+      if (
+        req.user.id !== visit.id &&
+        !req.can(Permissions.AdminManage, visit.officeId)
+      ) {
+        return reply.throw.accessDenied()
       }
       return reply.send(visit)
     }
@@ -127,20 +130,21 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
       const visitId = req.params.visitId
       const status = req.body.status
-
-      const where: Filterable<Visit>['where'] = { id: req.params.visitId }
-      if (!req.can(Permissions.AdminManage)) {
-        where.userId = req.user.id
-      }
-      const visit = await fastify.db.Visit.findOne({ where })
+      const visit = await fastify.db.Visit.findByPk(visitId)
       if (!visit) {
         return reply.throw.notFound()
       }
+      req.check(Permissions.Create, visit.officeId)
+      if (
+        req.user.id !== visit.userId &&
+        !req.can(Permissions.AdminManage, visit.officeId)
+      ) {
+        return reply.throw.accessDenied()
+      }
 
-      if (visit.status !== 'confirmed' && req.body.status !== 'cancelled') {
+      if (visit.status !== 'confirmed' && status !== 'cancelled') {
         return reply.throw.rejected()
       }
       await fastify.db.Visit.update({ status }, { where: { id: visitId } })
@@ -190,10 +194,10 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
   fastify.get(
     '/occupancy',
     async (req: FastifyRequest<{ Reply: VisitsOccupancy }>, reply) => {
-      req.check(Permissions.Create)
       if (!req.office) {
         return reply.throw.badParams('Missing office ID')
       }
+      req.check(Permissions.Create, req.office.id)
       if (!req.office.allowDeskReservation) {
         return reply.throw.misconfigured(
           `The ${req.office.name} office doesn't support desk reservation`
@@ -247,10 +251,10 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
   fastify.get(
     '/areas',
     async (req: FastifyRequest<{ Reply: OfficeArea[] }>, reply) => {
-      req.check(Permissions.Create)
       if (!req.office) {
         return reply.throw.badParams('Missing office ID')
       }
+      req.check(Permissions.Create, req.office.id)
       if (!req.office.allowDeskReservation) {
         return reply.throw.misconfigured(
           `The ${req.office.name} office doesn't support desk reservation`
@@ -263,7 +267,10 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
   fastify.post(
     '/visit',
     async (req: FastifyRequest<{ Body: VisitsCreationRequest }>, reply) => {
-      req.check(Permissions.Create)
+      if (!req.body.officeId) {
+        return reply.throw.badParams()
+      }
+      req.check(Permissions.Create, req.body.officeId)
       let visits: Array<PickedVisit> = []
       for (const visitsGroup of req.body.visits) {
         for (const date of visitsGroup.dates) {
@@ -326,7 +333,7 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
             )
           }
 
-          // "full_area" areaId + deskId pairs
+          // "fullAreaBooking" areaId + deskId pairs
           const bookableAreaDeskPairs = getFullBookableAreas(office.areas!)
 
           // check whether the requested desks are in fully booked areas
@@ -443,10 +450,10 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
       if (!req.office) {
         return reply.throw.badParams('Missing office ID')
       }
+      // req.check(Permissions.Create, req.office.id)
       if (!req.office.allowDeskReservation) {
         return reply.throw.misconfigured(
           `The ${req.office.name} office doesn't support desk reservation`
@@ -477,7 +484,7 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
         fullBookableAreas
       )
 
-      const desks = req.office
+      const allDesks = req.office
         .areas!.filter((a) => a.available)
         .map((a) =>
           a.desks.map((d) => ({
@@ -486,13 +493,39 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
             type: d.type,
             user: d.user,
             multiple: d.allowMultipleBookings,
+            permittedRoles: d.permittedRoles,
           }))
         )
         .flat()
+
+      const deskRoles = Array.from(
+        new Set(
+          allDesks
+            .filter((x) => x.permittedRoles.length)
+            .map((x) => x.permittedRoles)
+            .flat()
+        )
+      )
+      const usersWithDeskRoles = await fastify.db.User.findAll({
+        where: { roles: { [Op.overlap]: deskRoles } },
+      })
+      const deskRolesPresented = deskRoles.filter((x) =>
+        usersWithDeskRoles.some((u) => u.roles.includes(x))
+      )
+
+      const desks = allDesks
         .filter((x) => {
           // desk is in the fully reserved area
           if (reservedAreaIds.includes(x.areaId)) {
             return false
+          }
+          // desk is only available for specified list of roles
+          if (x.permittedRoles.length) {
+            if (x.permittedRoles.some((x) => deskRolesPresented.includes(x))) {
+              if (!x.permittedRoles.some((x) => req.user.roles.includes(x))) {
+                return false
+              }
+            }
           }
           // Desk can be booked multiple times
           if (x.multiple) {
@@ -518,6 +551,7 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
           )
         })
         .map((x) => ({ areaId: x.areaId, deskId: x.deskId }))
+
       return desks
     }
   )
@@ -531,10 +565,10 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
       }>,
       reply
     ) => {
-      req.check(Permissions.ListVisitors)
       if (!req.office) {
         return reply.throw.badParams('Missing office ID')
       }
+      req.check(Permissions.ListVisitors, req.office.id)
       if (!req.office.allowDeskReservation) {
         return reply.throw.misconfigured(
           `The ${req.office.name} office doesn't support desk reservation`
@@ -571,7 +605,6 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
   fastify.post(
     '/stealth',
     async (req: FastifyRequest<{ Body: { stealthMode: boolean } }>, reply) => {
-      req.check(Permissions.ListVisitors)
       await fastify.db.User.update(
         { stealthMode: req.body.stealthMode },
         { where: { id: req.user.id } }
@@ -591,10 +624,10 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
       }>,
       reply
     ) => {
-      req.check(Permissions.AdminList)
       if (!req.office) {
         return reply.throw.badParams('Missing office ID')
       }
+      req.check(Permissions.AdminList, req.office.id)
       const dates = req.query['dates[]']
       const where: Filterable<Visit>['where'] = { officeId: req.office.id }
       if (dates?.length) {
@@ -616,13 +649,13 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
       }>,
       reply
     ) => {
-      req.check(Permissions.AdminList, Permissions.AdminManage)
       const visitId = req.params.visitId
       const status = req.body.status
       const visit = await fastify.db.Visit.findByPk(req.params.visitId)
       if (!visit) {
         return reply.throw.notFound()
       }
+      req.check(Permissions.AdminManage, visit.officeId)
       await fastify.db.Visit.update({ status }, { where: { id: visitId } })
       // Send user notification to the user via Matrix
       if (fastify.integrations.Matrix) {
@@ -665,7 +698,7 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
           )
         }
       }
-      appEvents.useModule('admin').emit('update_counters')
+      // appEvents.useModule('admin').emit('update_counters')
       return reply.code(200).send()
     }
   )

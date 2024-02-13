@@ -19,11 +19,6 @@ e.g
             "label": "Birthday",
             "required": false
         },
-        "department": {
-            "label": "Department",
-            "placeholder": "Select a department",
-            "required": true,
-        },
         "team": {
             "label": "Team",
             "placeholder": "Team name",

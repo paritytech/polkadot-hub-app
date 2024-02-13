@@ -51,11 +51,16 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       return null
     }
     const metadata = appConfig.getModuleMetadata('working-hours') as Metadata
-    if (!metadata || !req.user.division) return null
-    const divisionConfig = metadata.configByDivision[req.user.division] || null
-    if (!divisionConfig) return null
+    if (!metadata) return null
+
+    const allowedRoles = Object.keys(metadata.configByRole)
+    const userRole = req.user.roles.find((x) => allowedRoles.includes(x))
+    if (!userRole) return null
+
+    const roleConfig = metadata.configByRole[userRole] || null
+    if (!roleConfig) return null
     const result: WorkingHoursConfig = {
-      ...divisionConfig,
+      ...roleConfig,
       personalDefaultEntries: [],
     }
 
@@ -376,7 +381,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
   fastify.get('/config', async (req: FastifyRequest, reply) => {
     req.check(Permissions.AdminList)
     const metadata = appConfig.getModuleMetadata('working-hours') as Metadata
-    return metadata.configByDivision
+    return metadata.configByRole
   })
 
   fastify.get(
@@ -448,7 +453,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
     async (
       req: FastifyRequest<{
         Querystring: {
-          division?: string
+          role?: string
           userId?: string
         }
       }>,
@@ -456,19 +461,17 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
     ) => {
       req.check(Permissions.AdminList)
       const metadata = appConfig.getModuleMetadata('working-hours') as Metadata
-      const divisions = Object.keys(metadata.configByDivision)
+      const allowedRoles = Object.keys(metadata.configByRole)
 
       const where: WhereOptions<WorkingHoursUserConfig> = {}
       if (req.query.userId) {
         where['userId'] = req.query.userId
-      } else if (req.query.division) {
-        if (!divisions.includes(req.query.division)) {
-          return reply.throw.badParams(
-            `Unknown division "${req.query.division}"`
-          )
+      } else if (req.query.role) {
+        if (!allowedRoles.includes(req.query.role)) {
+          return reply.throw.badParams(`Unknown role "${req.query.role}"`)
         }
         const userIds = await fastify.db.User.findAllActive({
-          where: { division: req.query.division },
+          where: { roles: { [Op.contains]: [req.query.role] } },
           attributes: ['id'],
         }).then(map(prop('id')))
         where['userId'] = { [Op.in]: userIds }
@@ -486,7 +489,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
     async (
       req: FastifyRequest<{
         Querystring: {
-          division: string
+          role: string
           from: string
           to: string
           roundUp?: string
@@ -495,19 +498,19 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       req.check(Permissions.AdminList)
-      if (!req.query.division || !req.query.from || !req.query.to) {
+      if (!req.query.role || !req.query.from || !req.query.to) {
         return reply.throw.badParams('Missing parameters')
       }
       const metadata = appConfig.getModuleMetadata('working-hours') as Metadata
       if (
         !metadata ||
-        !req.query.division ||
-        !metadata.configByDivision[req.query.division]
+        !req.query.role ||
+        !metadata.configByRole[req.query.role]
       ) {
-        return reply.throw.misconfigured('Unsuported division')
+        return reply.throw.misconfigured('Unsuported role')
       }
-      const moduleConfig = metadata.configByDivision[
-        req.query.division
+      const moduleConfig = metadata.configByRole[
+        req.query.role
       ] as WorkingHoursConfig
 
       const roundUp = !!req.query.roundUp
@@ -523,7 +526,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       )
 
       const users = await fastify.db.User.findAll({
-        where: { division: req.query.division },
+        where: { roles: { [Op.contains]: [req.query.role] } },
       })
       const userConfigs = await fastify.db.WorkingHoursUserConfig.findAll({
         where: { userId: { [Op.in]: users.map(prop('id')) } },
@@ -717,7 +720,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       const csvContent = csvParser.unparse(csvRows)
       reply.headers({
         'Content-Type': 'text/csv',
-        'Content-Disposition': `attachment; filename=time-tracking-${req.query.division}-${req.query.from}-${req.query.to}.csv`,
+        'Content-Disposition': `attachment; filename=time-tracking-${req.query.role}-${req.query.from}-${req.query.to}.csv`,
         Pragma: 'no-cache',
       })
       return reply.code(200).send(csvContent)
@@ -739,16 +742,12 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
 
       const metadata = appConfig.getModuleMetadata('working-hours') as Metadata
-      if (
-        !metadata ||
-        !req.user.division ||
-        !metadata.configByDivision[req.user.division]
-      ) {
-        return reply.throw.misconfigured('Unsuported division')
+      const allowedRoles = Object.keys(metadata.configByRole)
+      const userRole = user.roles.find((x) => allowedRoles.includes(x))
+      if (!userRole) {
+        return reply.throw.misconfigured('Unsuported role')
       }
-      const moduleConfig = metadata.configByDivision[
-        req.user.division
-      ] as WorkingHoursConfig
+      const moduleConfig = metadata.configByRole[userRole] as WorkingHoursConfig
 
       const userConfig = await fastify.db.WorkingHoursUserConfig.findOne({
         where: { userId: user.id },

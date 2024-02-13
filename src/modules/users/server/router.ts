@@ -1,13 +1,19 @@
+import dayjs from 'dayjs'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Filterable, Op } from 'sequelize'
 import { appConfig } from '#server/app-config'
 import config from '#server/config'
-import { COUNTRIES, COUNTRY_COORDINATES, DATE_FORMAT } from '#server/constants'
-import { AuthAccount, DefaultPermissionPostfix } from '#shared/types'
+import {
+  COUNTRIES,
+  COUNTRY_COORDINATES,
+  DATE_FORMAT,
+  ADMIN_ACCESS_PERMISSION_RE,
+} from '#server/constants'
+import { AuthAccount } from '#shared/types'
+import * as fp from '#shared/utils/fp'
 import { Permissions } from '../permissions'
 import {
   AuthProvider,
-  ProfileField,
   GeoData,
   ImportedTag,
   ImportedTagGroup,
@@ -23,7 +29,7 @@ import {
   getUserProviderQuery,
   removeAuthId,
 } from './helpers'
-import dayjs from 'dayjs'
+
 import { Metadata } from '../metadata-schema'
 
 const ROLES_ALLOWED_TO_BE_ON_MAP = appConfig.getRolesByPermission(
@@ -38,9 +44,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
   fastify.get('/me', async (req, reply) => {
     return {
-      isAdmin: req.permissions.some((x) =>
-        x.endsWith(DefaultPermissionPostfix.Admin)
-      ),
+      isAdmin: req.permissions.some((x) => ADMIN_ACCESS_PERMISSION_RE.test(x)),
       user: req.user.useMeView(), // FIXME: store countryName in the database (geodata)
       permissions: Array.from(req.permissions),
     }
@@ -87,11 +91,20 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         )
       }
 
+      // process roles
+      const mergeRolesRequest = appConfig.validateAndMergeEditableRoles(
+        req.user.roles,
+        req.body.roles
+      )
+      if (!mergeRolesRequest.success) {
+        return reply.throw.badParams(mergeRolesRequest.error.message)
+      }
+      const roles = mergeRolesRequest.data
+
       await req.user
         .set({
           fullName: req.body.fullName,
           birthday: req.body.birthday,
-          department: req.body.department,
           team: req.body.team,
           jobTitle: req.body.jobTitle,
           country: req.body.country,
@@ -109,6 +122,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
             appConfig.offices[0].id,
             appConfig.offices
           ),
+          roles,
         })
         .save()
       return reply.ok()
@@ -125,8 +139,15 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (req.user.isInitialised) {
         return reply.throw.rejected()
       }
+      const mergeRolesRequest = appConfig.validateAndMergeEditableRoles(
+        req.user.roles,
+        req.body.roles || []
+      )
+      if (!mergeRolesRequest.success) {
+        return reply.throw.badParams(mergeRolesRequest.error.message)
+      }
+      const roles = mergeRolesRequest.data
       const userData: Partial<User> = {
-        department: req.body.department || null,
         team: req.body.team || null,
         jobTitle: req.body.jobTitle || null,
         country: req.body.country || null,
@@ -138,6 +159,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           appConfig.offices
         ),
         contacts: req.body.contacts,
+        roles,
       }
 
       // build `geodata` field
@@ -177,10 +199,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
   // NOTE: temporary route for the onboarding demo
   fastify.get('/me/reset', async (req, reply) => {
-    req.check(Permissions.UseOnboarding, Permissions.AdminManage)
+    req.check(Permissions.UseOnboarding)
+    req.check(Permissions.AdminManage)
     await req.user
       .set({
-        department: null,
         team: null,
         jobTitle: null,
         country: null,
@@ -232,7 +254,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 
   fastify.get(
-    '/user/:userId',
+    '/profile/:userId',
     async (req: FastifyRequest<{ Params: { userId: string } }>, reply) => {
       req.check(Permissions.ListProfiles)
       const user = await fastify.db.User.findByPkActive(req.params.userId, {
@@ -248,6 +270,18 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       return user.usePublicProfileView(user.tags, {
         forceHideGeoData: !req.can(Permissions.UseMap),
       })
+    }
+  )
+
+  fastify.get(
+    '/user/:userId',
+    async (req: FastifyRequest<{ Params: { userId: string } }>, reply) => {
+      req.check(Permissions.ListProfiles)
+      const user = await fastify.db.User.findByPkActive(req.params.userId)
+      if (!user) {
+        return reply.throw.notFound()
+      }
+      return user.useCompactView()
     }
   )
 
@@ -356,7 +390,8 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 
   fastify.get('/me/tags', async (req, reply) => {
-    req.check(Permissions.ManageProfile, Permissions.ListProfiles)
+    req.check(Permissions.ManageProfile)
+    req.check(Permissions.ListProfiles)
     // FIXME: missed types for sequelize lazy loading methods (many-to-many relation)
     // @ts-ignore
     const tags = (await req.user.getTags()) as Tag[]
@@ -382,7 +417,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     return fastify.db.User.findAllActive({
       where: {
         [Op.and]: [
-          { role: { [Op.in]: ROLES_ALLOWED_TO_BE_ON_MAP } },
+          { roles: { [Op.overlap]: ROLES_ALLOWED_TO_BE_ON_MAP } },
           { 'geodata.doNotShareLocation': 'false' },
           { 'geodata.coordinates': { [Op.ne]: '[0, 0]' } },
         ],
@@ -395,7 +430,6 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         'email',
         'avatar',
         'city',
-        'department',
         'team',
       ],
     })
@@ -406,7 +440,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     const users = await fastify.db.User.findAllActive({
       where: {
         [Op.and]: [
-          { role: { [Op.in]: ROLES_ALLOWED_TO_BE_ON_MAP } },
+          { roles: { [Op.overlap]: ROLES_ALLOWED_TO_BE_ON_MAP } },
           { 'geodata.doNotShareLocation': 'false' },
           { country: { [Op.ne]: null } },
         ],
@@ -581,49 +615,71 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
     }
   )
 
-  fastify.get(
-    '/users/:userId',
-    async (req: FastifyRequest<{ Params: { userId: string } }>, reply) => {
-      return fastify.db.User.findByPkActive(req.params.userId)
-    }
-  )
-
   fastify.put(
     '/user/:userId',
     async (
       req: FastifyRequest<{
         Params: { userId: string }
-        Body: Pick<User, 'role'>
+        Body: Pick<User, 'roles'>
       }>,
       reply
     ) => {
       req.check(Permissions.AdminAssignRoles)
-      if (
-        !appConfig.config.permissions.roles.some((x) => x.id === req.body.role)
-      ) {
-        return reply.throw.badParams('Invalid role')
+
+      const newRoleIds = req.body.roles
+      const roleGroups = appConfig.config.permissions.roleGroups
+      const availableRoles = roleGroups.map(fp.prop('roles')).flat()
+
+      // check for conflicts
+      for (const roleGroup of roleGroups) {
+        if (roleGroup.rules.unique) {
+          const availableRoles = roleGroup.roles.map(fp.prop('id'))
+          const roles = newRoleIds.filter(fp.isIn(availableRoles))
+          if (!roles.length) continue
+          const users = await fastify.db.User.findAll({
+            where: {
+              id: { [Op.not]: req.params.userId },
+              roles: {
+                [Op.overlap]: roles,
+              },
+            },
+          })
+          if (users.length) {
+            return reply.throw.badParams(
+              `Roles from the ${
+                roleGroup.name
+              } group should be unique. Conflicts with users: ${users
+                .map(fp.prop('email'))
+                .join(', ')}`
+            )
+          }
+        }
       }
+
+      // sort roles array before saving
+      const roles = appConfig.sortRoles(newRoleIds)
+
       const user = await fastify.db.User.findByPkActive(req.params.userId)
       if (!user) {
         return reply.throw.notFound()
       }
-      const previousRole = user.role
-      await user.set({ role: req.body.role }).save()
+      const previousRoles = [...user.roles]
+      await user.set({ roles }).save()
+
       if (fastify.integrations.Matrix) {
-        const rolesById = appConfig.config.permissions.roles.reduce(
-          (acc, x) => ({ ...acc, [x.id]: x }),
-          {} as Record<string, any>
+        const rolesById = availableRoles.reduce(fp.by('id'), {})
+        const previousRoleNames = previousRoles.map(
+          (x) => rolesById[x]?.name || x
         )
-        const previousRoleName = rolesById[previousRole]?.name || previousRole
-        const targetRoleName = rolesById[req.body.role]?.name || req.body.role
+        const targetRoleNames = newRoleIds.map((x) => rolesById[x]?.name || x)
         const message = appConfig.templates.notification(
           'users',
           'roleChanged',
           {
             admin: req.user.usePublicProfileView(),
             user: user.usePublicProfileView(),
-            previousRoleName,
-            targetRoleName,
+            previousRoleNames,
+            targetRoleNames,
           }
         )
         if (message) {

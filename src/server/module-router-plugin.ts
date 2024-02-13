@@ -1,9 +1,12 @@
-import path from 'path'
 import Bottleneck from 'bottleneck'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import nodeCron from 'node-cron'
-import { SESSION_TOKEN_COOKIE_NAME } from '#server/constants'
-import { appConfig, AppConfig } from '#server/app-config'
+import {
+  SESSION_TOKEN_COOKIE_NAME,
+  ADMIN_ACCESS_PERMISSION_POSTFIX,
+  ADMIN_ACCESS_PERMISSION_RE,
+} from '#server/constants'
+import { appConfig } from '#server/app-config'
 import config from '#server/config'
 import { sequelize } from '#server/db'
 import { safeRequire, getFilePath } from '#server/utils'
@@ -13,7 +16,6 @@ import {
   ConnectedModels,
   ConnectedIntegrations,
 } from '#server/types'
-import { DefaultPermissionPostfix } from '#shared/types'
 import { PermissionsSet } from '#shared/utils'
 import * as fp from '#shared/utils/fp'
 
@@ -125,16 +127,16 @@ export const moduleRouterPlugin =
                   req.permissions = appConfig.getUserPermissions(
                     user.email,
                     user.getAuthAddresses(),
-                    user.role
+                    user.roles
                   )
                 }
               }
             }
-            req.can = (permission: string) => {
-              return req.permissions.has(permission)
+            req.can = (permission: string, officeId?: string) => {
+              return req.permissions.has(permission, officeId)
             }
-            req.check = (...permissions: string[]) => {
-              if (!req.permissions.hasAll(permissions)) {
+            req.check = (permission: string, officeId?: string) => {
+              if (!req.can(permission, officeId)) {
                 reply.status(403)
                 throw new Error('Access denied')
               }
@@ -169,9 +171,11 @@ export const moduleRouterPlugin =
             if (moduleRouters.adminRouter) {
               fastify.register(async (fastify) => {
                 fastify.addHook('onRequest', async (req, reply) => {
-                  if (
-                    !req.can(`${module.id}.${DefaultPermissionPostfix.Admin}`)
-                  ) {
+                  const adminAccessPermission = `${module.id}.${ADMIN_ACCESS_PERMISSION_POSTFIX}`
+                  const canAccess = req.permissions.some((x) =>
+                    x.startsWith(adminAccessPermission)
+                  )
+                  if (!canAccess) {
                     return reply.throw.accessDenied()
                   }
                 })
@@ -223,9 +227,9 @@ export const moduleRouterPlugin =
     fastify.decorate('sequelize', sequelize)
   }
 
-const initialiseIntegrations = async (): Promise<
+async function initialiseIntegrations(): Promise<
   Record<string, { name: string; instance: any }>
-> => {
+> {
   const integrationById: Record<string, { name: string; instance: any }> = {}
   for (const appIntegration of appConfig.integrations) {
     const { default: Integration } = require(getFilePath(

@@ -19,21 +19,27 @@ import {
   Button,
   Textarea,
   UserLabel,
-  Select,
   Filters,
   LabelWrapper,
   Input,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
-import { pick, prop, propEq, propNotEq } from '#shared/utils/fp'
-import { User, Tag, ImportedTagGroup } from '#shared/types'
-import { FRIENDLY_DATE_FORMAT, USER_ROLE_BY_ID } from '#client/constants'
+import {
+  pick,
+  prop,
+  propNotEq,
+  hasIntersection,
+  propEq,
+} from '#shared/utils/fp'
+import { User, ImportedTagGroup, Tag } from '#shared/types'
+import { FRIENDLY_DATE_FORMAT, USER_ROLES } from '#client/constants'
 import { useDebounce, useDocumentTitle } from '#client/utils/hooks'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import Permissions from '#shared/permissions'
 import { DeleteUserModal } from './DeleteUserModal'
+import { UserRolesEditorModal } from './UserRolesEditorModal'
 
 export const AdminUsers: React.FC = () => {
   useDocumentTitle('Users')
@@ -52,15 +58,7 @@ export const AdminUsers: React.FC = () => {
 }
 
 function matchRole(user: User, roles: string[]): boolean {
-  return roles.length ? roles.includes(user.role) : true
-}
-function matchDivision(user: User, divisions: string[]): boolean {
-  return divisions.length ? divisions.includes(user.division || '~none~') : true
-}
-function matchDepartment(user: User, departments: string[]): boolean {
-  return departments.length
-    ? departments.includes(user.department || '~none~')
-    : true
+  return roles.length ? hasIntersection(user.roles, roles) : true
 }
 function matchSearch(user: User, query: string): boolean {
   const trimmedQuery = query.trim()
@@ -77,11 +75,10 @@ function matchSearch(user: User, query: string): boolean {
 export const UserTable: React.FC = () => {
   const permissions = useStore(stores.permissions)
   const [editedUserId, setEditedUserId] = React.useState<string | null>(null)
+  const [roleFilterIsShown, setRoleFilterIsShown] = React.useState(false)
   const [roleFilter, setRoleFilter] = React.useState<string[]>(
-    config.roles.filter(propNotEq('lowPriority', true)).map(prop('id'))
+    USER_ROLES.filter(prop('accessByDefault')).map(prop('id'))
   )
-  const [divisionFilter, setDivisionFilter] = React.useState<string[]>([])
-  const [departmentFilter, setDepartmentFilter] = React.useState<string[]>([])
   const [searchQuery, setSearchQuery] = React.useState<string>('')
   const debouncedSearchQuery = useDebounce(searchQuery, 300)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -107,64 +104,26 @@ export const UserTable: React.FC = () => {
     refetch()
   })
 
+  const onChangeUserRoles = React.useCallback(
+    (userId: string) => (roles: string[]) => {
+      updateUser({ id: userId, roles })
+    },
+    []
+  )
+
   const filteredUsers = React.useMemo(() => {
     return users.filter((x) => {
       return !(
-        !matchRole(x, roleFilter) ||
-        !matchDivision(x, divisionFilter) ||
-        !matchDepartment(x, departmentFilter) ||
-        !matchSearch(x, debouncedSearchQuery)
+        !matchRole(x, roleFilter) || !matchSearch(x, debouncedSearchQuery)
       )
     })
-  }, [
-    users,
-    roleFilter,
-    divisionFilter,
-    departmentFilter,
-    debouncedSearchQuery,
-  ])
+  }, [users, roleFilter, debouncedSearchQuery])
 
   const columns = React.useMemo(
     () => [
       {
         Header: 'Name',
-        accessor: (x: User) => <UserLabel user={x} hideRole />,
-      },
-      {
-        Header: 'Role',
-        accessor: (u: User) => (
-          <div>
-            <div className="flex">
-              <div className="flex-1">
-                <UserRoleLabel role={u.role} />
-              </div>
-              {permissions.has(Permissions.users.AdminAssignRoles) && (
-                <Button
-                  size="small"
-                  kind="secondary"
-                  onClick={() =>
-                    setEditedUserId(editedUserId === u.id ? null : u.id)
-                  }
-                >
-                  {editedUserId === u.id ? 'Cancel' : 'Edit'}
-                </Button>
-              )}
-            </div>
-            {editedUserId === u.id && (
-              <div className="mt-4 _-mb-2 _flex _flex-wrap">
-                <Select
-                  className="py-1 px-3"
-                  onChange={onChangeUserRole(u.id)}
-                  value={u.role}
-                  options={config.roles.map((x) => ({
-                    label: x.name,
-                    value: x.id,
-                  }))}
-                />
-              </div>
-            )}
-          </div>
-        ),
+        accessor: (x: User) => <UserLabel user={x} />,
       },
       {
         Header: 'Email',
@@ -175,21 +134,45 @@ export const UserTable: React.FC = () => {
         ),
       },
       {
-        Header: 'Division',
-        accessor: (u: User) =>
-          u.division || <span className="text-gray-300">UNKNOWN</span>,
-      },
-      {
-        Header: 'Department',
-        accessor: (u: User) =>
-          u.department || <span className="text-gray-300">UNKNOWN</span>,
+        Header: 'Roles',
+        accessor: (u: User) => (
+          <>
+            <div className="flex items-start">
+              <div className="flex-1">
+                <div className="-mb-1 -mr-1 flex flex-wrap">
+                  {u.roles.map((x) => (
+                    <UserRoleLabel key={x} role={x} className="mr-1 mb-1" />
+                  ))}
+                </div>
+              </div>
+              {permissions.has(Permissions.users.AdminAssignRoles) && (
+                <Button
+                  size="small"
+                  kind="secondary"
+                  onClick={() =>
+                    setEditedUserId(editedUserId === u.id ? null : u.id)
+                  }
+                >
+                  Edit
+                </Button>
+              )}
+            </div>
+            {editedUserId === u.id && (
+              <UserRolesEditorModal
+                user={u}
+                onClose={() => setEditedUserId(null)}
+                onChange={onChangeUserRoles(u.id)}
+              />
+            )}
+          </>
+        ),
       },
       {
         Header: 'Created at',
         accessor: (x: User) => dayjs(x.createdAt).format('D MMM, YYYY'),
       },
       {
-        Header: 'Delete',
+        Header: 'Actions',
         accessor: (u: User) => {
           if (u.scheduledToDelete && !u.deletedAt) {
             const scheduledAt = dayjs(u.scheduledToDelete).startOf('day')
@@ -246,25 +229,6 @@ export const UserTable: React.FC = () => {
     [editedUserId]
   )
 
-  const onChangeUserRole = React.useCallback(
-    (userId: string /*, newRole: string*/) => (role: string) => {
-      const user = users.find(propEq('id', userId))
-      if (!user) return
-      const currentRole = USER_ROLE_BY_ID[user.role]
-      const targetRole = USER_ROLE_BY_ID[role]
-      if (
-        window.confirm(
-          `🛑 Are you sure to change ${user.fullName}'s role from "${
-            currentRole?.name || user.role
-          }" to "${targetRole.name}"?`
-        )
-      ) {
-        updateUser({ id: user.id, role })
-      }
-    },
-    [users]
-  )
-
   return (
     <div>
       {showDeleteModal && userForDeletion && (
@@ -276,44 +240,48 @@ export const UserTable: React.FC = () => {
       )}
       <H1>Users</H1>
 
-      <div className="flex flex-col gap-y-4 mb-6">
-        {!!config.divisions && !!config.divisions.length && (
-          <LabelWrapper label="Division">
-            <Filters
-              options={[
-                { id: null, name: 'Any' },
-                ...config.divisions.map((x) => ({ id: x, name: x })),
-              ]}
-              value={divisionFilter}
-              onChange={setDivisionFilter}
-              multiple
-            />
-          </LabelWrapper>
-        )}
-        {!!config.departments && !!config.departments.length && (
-          <LabelWrapper label="Department">
-            <Filters
-              options={[
-                { id: null, name: 'Any' },
-                ...config.departments.map((x) => ({ id: x, name: x })),
-              ]}
-              value={departmentFilter}
-              onChange={setDepartmentFilter}
-              multiple
-            />
-          </LabelWrapper>
-        )}
-        <LabelWrapper label="Role">
-          <Filters
-            options={[
-              { id: null, name: 'Any' },
-              ...config.roles.map((x) => ({ id: x.id, name: x.name })),
-            ]}
-            value={roleFilter}
-            onChange={setRoleFilter}
-            multiple
-          />
+      <div className="mb-4">
+        <LabelWrapper
+          label={
+            <Button
+              size="small"
+              onClick={() => setRoleFilterIsShown((x) => !x)}
+              className="relative"
+            >
+              {!roleFilterIsShown ? 'Show' : 'Hide'} filters
+            </Button>
+          }
+        >
+          {!roleFilterIsShown && !!roleFilter.length && (
+            <span className="text-text-tertiary">Some filters are applied</span>
+          )}
         </LabelWrapper>
+      </div>
+
+      <div className="flex flex-col gap-y-4 mb-6">
+        {roleFilterIsShown && (
+          <>
+            <LabelWrapper label="">
+              <Filters
+                options={[{ id: null, name: 'Any role' }]}
+                value={roleFilter}
+                onChange={setRoleFilter}
+                multiple
+              />
+            </LabelWrapper>
+            {config.roleGroups.map((g) => (
+              <LabelWrapper key={g.name} label={g.name}>
+                <Filters
+                  options={g.roles}
+                  value={roleFilter}
+                  onChange={setRoleFilter}
+                  multiple
+                />
+              </LabelWrapper>
+            ))}
+          </>
+        )}
+
         <LabelWrapper label="Search">
           <Input
             type="text"

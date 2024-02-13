@@ -14,14 +14,18 @@ import { useUsersCompact } from '#modules/users/client/queries'
 import { useUpdateVisitAdmin, useVisitsAdmin } from '../queries'
 import { VisitStatusTag } from './VisitStatusTag'
 
-export const AdminVisits: React.FC<RootComponentProps> = ({ portals }) => (
-  <PermissionsValidator
-    required={[Permissions.visits.__Admin, Permissions.visits.AdminList]}
-    onRejectGoHome
-  >
-    <_AdminVisits portals={portals} />
-  </PermissionsValidator>
-)
+export const AdminVisits: React.FC<RootComponentProps> = ({ portals }) => {
+  const officeId = useStore(stores.officeId)
+  return (
+    <PermissionsValidator
+      officeId={officeId}
+      required={[Permissions.visits.__Admin, Permissions.visits.AdminList]}
+      onRejectGoHome
+    >
+      <_AdminVisits portals={portals} />
+    </PermissionsValidator>
+  )
+}
 
 export const _AdminVisits: React.FC<RootComponentProps> = ({ portals }) => {
   useDocumentTitle('Visits')

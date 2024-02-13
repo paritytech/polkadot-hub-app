@@ -1,6 +1,7 @@
 import { UniqueConstraintError } from 'sequelize'
 import { CronJob, CronJobContext } from '#server/types'
 import { EntityVisibility } from '#shared/types'
+import * as fp from '#shared/utils/fp'
 import {
   getGlobalEventDefaultChecklist,
   getGlobalEventDefaultContent,
@@ -96,9 +97,11 @@ export const cronJob: CronJob = {
             ? EntityVisibility.None
             : EntityVisibility.Visible
 
-          const allowedRoles = ctx.appConfig.config.permissions.roles
+          const allowedRoles = ctx.appConfig.config.permissions.roleGroups
+            .map(fp.prop('roles'))
+            .flat()
             .filter((x) => (isInternal ? x.accessByDefault : true))
-            .map((x) => x.id)
+            .map(fp.prop('id'))
 
           try {
             await ctx.models.Event.create({

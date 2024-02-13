@@ -12,6 +12,7 @@ import {
   PublicForm,
 } from '#modules/forms/types'
 import { EntityVisibility } from '#shared/types'
+import * as fp from '#shared/utils/fp'
 import { Permissions } from '../permissions'
 import {
   Event,
@@ -58,8 +59,10 @@ const publicRouter: FastifyPluginCallback = async function (fastify, opts) {
         if (event.visibility === EntityVisibility.None) {
           return reply.throw.notFound()
         }
-        const userRole = req.user ? req.user.role : appConfig.lowPriorityRole
-        if (!event.allowedRoles.includes(userRole)) {
+        const userRoles = req.user
+          ? req.user.roles
+          : [appConfig.lowPriorityRole]
+        if (!fp.hasIntersection(event.allowedRoles, userRoles)) {
           return reply.throw.notFound()
         }
       }
@@ -100,7 +103,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         if (event.visibility === EntityVisibility.None) {
           return reply.throw.notFound()
         }
-        if (!event.allowedRoles.includes(req.user.role)) {
+        if (!fp.hasIntersection(event.allowedRoles, req.user.roles)) {
           return reply.throw.notFound()
         }
       }
@@ -169,7 +172,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           return reply.throw.notFound()
         }
         // Inherit access policy from the parent event
-        if (!event.allowedRoles.includes(req.user.role)) {
+        if (!fp.hasIntersection(event.allowedRoles, req.user.roles)) {
           return reply.throw.notFound()
         }
       }
@@ -235,7 +238,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           return reply.throw.notFound()
         }
         // Inherit access policy from the parent event
-        if (!event.allowedRoles.includes(req.user.role)) {
+        if (!fp.hasIntersection(event.allowedRoles, req.user.roles)) {
           return reply.throw.notFound()
         }
       }
@@ -444,7 +447,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           [Op.gte]: new Date(),
         },
         visibility: EntityVisibility.Visible,
-        allowedRoles: { [Op.contains]: [req.user.role] },
+        allowedRoles: { [Op.overlap]: req.user.roles },
         offices: { [Op.contains]: [req.office.id] },
       },
       order: ['startDate'],
@@ -574,7 +577,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         if (event.visibility === EntityVisibility.None) {
           return reply.throw.accessDenied()
         }
-        if (!event.allowedRoles.includes(req.user.role)) {
+        if (!fp.hasIntersection(event.allowedRoles, req.user.roles)) {
           return reply.throw.accessDenied()
         }
       }
@@ -761,7 +764,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
               },
               'metadata.global': true,
               visibility: EntityVisibility.Visible,
-              allowedRoles: { [Op.contains]: [req.user.role] },
+              allowedRoles: { [Op.overlap]: req.user.roles },
             },
           ],
         },
@@ -789,7 +792,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         },
       }
       if (!req.can(Permissions.AdminManage)) {
-        where.allowedRoles = { [Op.contains]: [req.user.role] }
+        where.allowedRoles = { [Op.overlap]: req.user.roles }
       }
       const event = await fastify.db.Event.findOne({ where })
       if (!event) {
@@ -1162,7 +1165,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       Permissions.AdminReceiveNotifications
     )
     return fastify.db.User.findAllActive({
-      where: { role: { [Op.in]: roles } },
+      where: { roles: { [Op.overlap]: roles } },
     })
   })
 }

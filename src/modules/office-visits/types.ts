@@ -26,8 +26,8 @@ export type VisitsDailyStats = {
   maxCapacity: number
   existingVisitsNumber: number
   occupancyPercent: number
-  occupancyPercentByDepartment: Array<{
-    department: string
+  occupancyPercentByRole: Array<{
+    role: string
     occupancyPercent: number
   }>
   guests: Array<{ fullName: string; email: string }>

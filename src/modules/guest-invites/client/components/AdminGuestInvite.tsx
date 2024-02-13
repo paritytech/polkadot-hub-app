@@ -3,7 +3,7 @@ import dayjs from 'dayjs'
 import { useStore } from '@nanostores/react'
 import config from '#client/config'
 import * as stores from '#client/stores'
-import { useUserAdmin } from '#modules/users/client/queries'
+import { useUserCompact } from '#modules/users/client/queries'
 import {
   useVisitsAreas,
   useAvailableDesks,
@@ -30,7 +30,7 @@ export const AdminGuestInvite: React.FC = () => {
   const inviteId =
     page?.route === 'adminGuestInvite' ? page.params.inviteId : null
   const { data: invite } = useGuestInviteAdmin(inviteId)
-  const { data: user } = useUserAdmin(invite?.creatorUserId || '', {
+  const { data: user } = useUserCompact(invite?.creatorUserId || '', {
     enabled: !!invite?.creatorUserId,
   })
   const office = React.useMemo(() => {
@@ -47,10 +47,10 @@ export const AdminGuestInvite: React.FC = () => {
     }
   }, [areas])
   const area = React.useMemo(() => areas.find((x) => areaId === x.id), [areaId])
-  const onAreaChange = React.useCallback(
-    (areaId: string) => setAreaId(areaId),
-    []
-  )
+  const onAreaChange = React.useCallback((areaId: string) => {
+    setSelectedDeskId(null)
+    setAreaId(areaId)
+  }, [])
 
   const { data: availableDesks = [] } = useAvailableDesks(
     office?.id || '',
@@ -111,7 +111,7 @@ export const AdminGuestInvite: React.FC = () => {
                   <div className="flex flex-col gap-4">
                     {invite.dates.map((x, i) => (
                       <span key={x}>
-                        <Tag color="gray">
+                        <Tag color="gray" className="nowrap" size="small">
                           {dayjs(x, DATE_FORMAT).format('D MMMM, YYYY')}
                         </Tag>
                         {i !== invite.dates.length - 1 && ', '}
@@ -141,6 +141,7 @@ export const AdminGuestInvite: React.FC = () => {
                   inputs={[
                     areas.length > 1 && (
                       <Select
+                        className="w-full"
                         label="Area"
                         options={areas.map((x) => ({
                           label: x.name,

@@ -24,8 +24,8 @@ declare module 'fastify' {
   interface FastifyRequest {
     user: User
     permissions: PermissionsSet
-    can: (permission: string) => boolean
-    check: (...permissions: string[]) => void | never
+    can: (permission: string, officeId?: string) => boolean
+    check: (permission: string, officeId?: string) => void | never
     office?: Office
   }
   interface FastifyReply {
@@ -66,7 +66,6 @@ export type GoogleParsedStateQueryParam = Record<
   string | null
 >
 
-export type SafeResponse<T = undefined> =
-  | { success: true; data: T extends undefined ? never : T }
-  | { success: false; error: Error }
-  | { success: true }
+export type SafeResponse<T = undefined> = T extends undefined
+  ? { success: true } | { success: false; error: Error }
+  : { success: true; data: T } | { success: false; error: Error }

@@ -15,7 +15,7 @@ import dayjs from 'dayjs'
 import { DATE_FORMAT_DAY_NAME_FULL } from '#client/constants'
 import { useMemo } from 'react'
 import { RoomReservationStatusTag } from './RoomReservationStatusTag'
-import { useUserAdmin } from '#modules/users/client/queries'
+import { useUserCompact } from '#modules/users/client/queries'
 
 export const RoomReservationDetail = () => (
   <PermissionsValidator required={[]} onRejectGoHome>
@@ -44,7 +44,7 @@ const _RoomReservationDetail = () => {
     () => roomReservation?.creatorUserId === me?.id,
     [roomReservation, me]
   )
-  const { data: user = null } = useUserAdmin(
+  const { data: user = null } = useUserCompact(
     roomReservation?.creatorUserId || '',
     {
       enabled: !!roomReservation && roomReservation.creatorUserId !== me?.id,

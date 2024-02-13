@@ -6,6 +6,7 @@ import { safeRequire, getFilePath } from '#server/utils'
 import { PermissionsSet } from '#shared/utils'
 import * as fp from '#shared/utils/fp'
 import { log } from '#server/utils/log'
+import { SafeResponse } from '#server/types'
 import { AppTemplates } from './templates'
 import {
   AppModule,
@@ -13,6 +14,7 @@ import {
   IntegrationManifest,
   Office,
   AppConfigJson,
+  UserRole,
 } from './types'
 import * as schemas from './schemas'
 
@@ -28,6 +30,8 @@ class AppError extends Error {
 export class AppConfig {
   private superusers: Set<string> = new Set(config.superusers)
   private permissionsByRole!: Record<string, string[]>
+  private allRoles!: UserRole[]
+  private allRoleIds!: string[]
   private allPermissions!: string[]
 
   public config!: AppConfigJson
@@ -180,8 +184,31 @@ export class AppConfig {
     }
     this.integrations = integrations
 
+    // validate the `permittedRoles` lists for each desk
+    this.allRoles = this.config.permissions.roleGroups
+      .map(fp.prop('roles'))
+      .flat()
+    this.allRoleIds = this.allRoles.map(fp.prop('id'))
+    this.config.company.offices.forEach((o) => {
+      o.areas?.forEach((a) => {
+        a.desks.forEach((d) => {
+          if (d.permittedRoles.length) {
+            const unsupportedRole = d.permittedRoles.find(
+              (x) => !this.allRoleIds.includes(x)
+            )
+            if (unsupportedRole) {
+              throw new AppError(
+                `There is an unsupported role assigned to the "${o.id} ${a.id} ${d.id}" desk. Please change it to one of the roles listed in the "./config/permissions.json" file.`,
+                unsupportedRole
+              )
+            }
+          }
+        })
+      })
+    })
+
     // store permissions
-    this.permissionsByRole = this.config.permissions.roles.reduce((acc, x) => {
+    this.permissionsByRole = this.allRoles.reduce((acc, x) => {
       return { ...acc, [x.id]: x.permissions }
     }, {})
     this.allPermissions = appModules
@@ -231,7 +258,7 @@ export class AppConfig {
   getUserPermissions(
     email: string | null,
     authAddresses: string[],
-    role: string
+    roles: string[]
   ): PermissionsSet {
     if (email && this.superusers.has(email)) {
       return new PermissionsSet(this.allPermissions)
@@ -243,7 +270,9 @@ export class AppConfig {
         }
       }
     }
-    return new PermissionsSet(this.permissionsByRole[role] || [])
+    return new PermissionsSet(
+      roles.map((x) => this.permissionsByRole[x] || []).flat()
+    )
   }
 
   getModuleMetadata(moduleId: string): unknown | null {
@@ -262,9 +291,36 @@ export class AppConfig {
   }
 
   getRolesByPermission(permission: string): string[] {
-    return this.config.permissions.roles
+    return this.allRoles
       .filter((x) => x.permissions.includes(permission))
       .map((x) => x.id)
+  }
+
+  sortRoles(roleIds: string[]): string[] {
+    const unsupportedRoles = roleIds.filter(fp.isNotIn(this.allRoleIds))
+    const allowedRoles = this.allRoleIds.filter(fp.isIn(roleIds))
+    return unsupportedRoles.concat(allowedRoles)
+  }
+
+  validateAndMergeEditableRoles(
+    userRoles: string[],
+    editedRoles: string[]
+  ): SafeResponse<string[]> {
+    const editableRoleGroups = appConfig.config.permissions.roleGroups.filter(
+      (x) =>
+        x.rules.editableByRoles.length &&
+        x.rules.editableByRoles.some(fp.isIn(userRoles))
+    )
+    const editableRoles = editableRoleGroups
+      .map(fp.prop('roles'))
+      .flat()
+      .map(fp.prop('id'))
+    if (editedRoles.some(fp.isNotIn(editableRoles))) {
+      return { success: false, error: new Error('Invalid roles') }
+    }
+    let roles = userRoles.filter(fp.isNotIn(editableRoles)) // non-editable roles
+    roles = roles.concat(editedRoles) // concat them with editable roles from the request
+    return { success: true, data: this.sortRoles(roles) }
   }
 }
 

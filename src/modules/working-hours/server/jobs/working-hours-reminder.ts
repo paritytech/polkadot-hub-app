@@ -20,11 +20,11 @@ export const cronJob: CronJob = {
     const moduleMetadata = ctx.appConfig.getModuleMetadata(
       'working-hours'
     ) as Metadata
-    const configByDivision = moduleMetadata?.configByDivision as Record<
+    const configByRole = moduleMetadata?.configByRole as Record<
       string,
       WorkingHoursConfig
     >
-    const divisions = Object.keys(configByDivision)
+    const allowedRoles = Object.keys(configByRole)
 
     const lastWorkingDay = getPreviousWeekday()
     const today = dayjs()
@@ -55,7 +55,7 @@ export const cronJob: CronJob = {
     const users = await ctx.models.User.findAllActive({
       where: {
         id: { [Op.notIn]: excludedUserIds },
-        division: { [Op.in]: divisions },
+        roles: { [Op.overlap]: allowedRoles },
         isInitialised: true,
         // NOTE: test mode
         email: { [Op.in]: config.workingHoursTestGroup },
@@ -82,7 +82,8 @@ export const cronJob: CronJob = {
 
     const report = { succeeded: 0, failed: 0 }
     for (const user of users) {
-      const config = configByDivision[user.division || '']
+      const userRole = user.roles.find((x) => allowedRoles.includes(x))
+      const config = configByRole[userRole || '']
       if (!config) continue
       const response = await ctx.integrations.Matrix.sendMessageToUser(
         user,

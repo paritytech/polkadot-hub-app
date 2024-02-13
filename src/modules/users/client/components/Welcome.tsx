@@ -22,7 +22,7 @@ import config from '#client/config'
 import * as stores from '#client/stores'
 import { ProfileField, OnboardingProfileRequest, Tag } from '#shared/types'
 import { toggleInArray } from '#client/utils'
-import { groupBy, pick, prop } from '#shared/utils/fp'
+import * as fp from '#shared/utils/fp'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import Permissions from '#shared/permissions'
 import {
@@ -33,6 +33,12 @@ import {
   useSubmitOnboarding,
   useTags,
 } from '../queries'
+
+const EDITABLE_ROLE_GROUPS = config.roleGroups.filter(
+  (x) => x.rules.editableByRoles.length
+)
+
+type RolesByGroupId = Record<string, string[]>
 
 enum ScreenName {
   General = 'General',
@@ -53,13 +59,13 @@ export const _Welcome: React.FC = () => {
   const me = useStore(stores.me)
 
   const [state, setState] = React.useState<OnboardingProfileRequest>({
-    department: me?.department || '',
     team: me?.team || '',
     jobTitle: me?.jobTitle || '',
     country: me?.country || '',
     city: me?.city || '',
     tagIds: [],
     contacts: me?.contacts ?? {},
+    roles: me?.roles || [], // will be overwritten in the `onSubmitForm` function
   })
 
   const { data: metadata = null, isFetched: isMetadataFetched } = useMetadata()
@@ -109,7 +115,7 @@ export const _Welcome: React.FC = () => {
   const stepComponents = {
     [ScreenName.General]: (
       <GeneralInfo
-        formData={pick(['jobTitle', 'country', 'city', 'department', 'team'])(
+        formData={fp.pick(['jobTitle', 'country', 'city', 'team', 'roles'])(
           state
         )}
         onSubmit={onSubmitStep()}
@@ -156,14 +162,31 @@ export const _Welcome: React.FC = () => {
   )
 }
 
-type GeneralInfoFormData = Pick<OnboardingProfileRequest, 'city' | 'country'> &
-  Partial<Pick<OnboardingProfileRequest, 'jobTitle' | 'department' | 'team'>>
+type GeneralInfoFormData = Pick<
+  OnboardingProfileRequest,
+  'city' | 'country' | 'roles'
+> &
+  Partial<Pick<OnboardingProfileRequest, 'jobTitle' | 'team'>>
 
 const GeneralInfo: React.FC<{
   formData: GeneralInfoFormData
   onSubmit: (value: GeneralInfoFormData) => void
 }> = ({ formData, onSubmit }) => {
+  const me = useStore(stores.me)
   const [state, setState] = React.useState(formData)
+  const [rolesByGroupId, setRolesByGroupId] = React.useState<RolesByGroupId>(
+    (() => {
+      const result: RolesByGroupId = {}
+      EDITABLE_ROLE_GROUPS.filter((g) =>
+        g.rules.editableByRoles.some(fp.isIn(me?.roles || []))
+      ).forEach((g) => {
+        result[g.id] = g.roles
+          .map(fp.prop('id'))
+          .filter(fp.isIn(formData.roles))
+      })
+      return result
+    })()
+  )
 
   const [cityQuery, setCityQuery] = React.useState('')
   const [cityOption, setCityOption] = React.useState<TypeaheadInputOption[]>([])
@@ -200,9 +223,25 @@ const GeneralInfo: React.FC<{
   const onSubmitClick = React.useCallback(
     (ev: React.MouseEvent) => {
       ev.preventDefault()
-      onSubmit(state)
+      onSubmit({ ...state, roles: Object.values(rolesByGroupId).flat() })
     },
-    [state]
+    [state, rolesByGroupId]
+  )
+  const onToggleRole = React.useCallback(
+    (groupId: string, roleId: string) => (ev: React.MouseEvent) => {
+      const group = EDITABLE_ROLE_GROUPS.find(fp.propEq('id', groupId))!
+      setRolesByGroupId((value) => ({
+        ...value,
+        [groupId]: toggleInArray(
+          value[groupId],
+          roleId,
+          true,
+          group.rules.max,
+          true
+        ),
+      }))
+    },
+    []
   )
 
   React.useEffect(() => {
@@ -218,37 +257,49 @@ const GeneralInfo: React.FC<{
   }, [])
 
   const generalInfoConfigured =
-    !!metadata && (metadata.department || metadata.team || metadata.jobTitle)
+    !!metadata && (metadata.team || metadata.jobTitle)
   return (
     <div>
       <H1 className="my-10">Complete Setting Up Your Profile</H1>
       {generalInfoConfigured && (
         <div className="my-10">
           <FormLabel>General Information</FormLabel>
-          <P className="text-text-tertiary">
+          <P className="text-text-tertiary mb-4">
             Specify what you're working on for hub members who'll be interested
             in collaborating on new projects
           </P>
-          {!!metadata.department && (
-            <Select
-              name="department"
-              options={config.departments.map((x) => ({
-                value: x,
-                label: x,
-              }))}
-              value={state.department || undefined}
-              placeholder={metadata.department.placeholder}
-              className="w-full"
-              containerClassName="mb-4"
-              onChange={(value) =>
-                setState((x) => ({ ...x, department: value }))
-              }
-              required={true}
-            />
-          )}
+
+          {EDITABLE_ROLE_GROUPS.filter((g) =>
+            g.rules.editableByRoles.some(fp.isIn(me?.roles || []))
+          ).map((g) => (
+            <div key={g.id} className="mb-4">
+              <LabelWrapper label={g.name}>
+                <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap -mr-1 -mb-2">
+                    {g.roles.map((x) => (
+                      <TagSpan
+                        key={x.id}
+                        size="normal"
+                        color={
+                          rolesByGroupId[g.id].includes(x.id)
+                            ? 'purple'
+                            : 'gray'
+                        }
+                        className="mb-2 mr-1 cursor-pointer hover:opacity-80"
+                        onClick={onToggleRole(g.id, x.id)}
+                      >
+                        {x.name}
+                      </TagSpan>
+                    ))}
+                  </div>
+                </div>
+              </LabelWrapper>
+            </div>
+          ))}
 
           {!!metadata?.team && (
             <Input
+              label={metadata.team.label}
               name="team"
               type="text"
               placeholder={metadata.team.placeholder}
@@ -263,6 +314,7 @@ const GeneralInfo: React.FC<{
 
           {!!metadata.jobTitle && (
             <Input
+              label={metadata.jobTitle.label}
               name="jobTitle"
               type="text"
               placeholder={metadata.jobTitle.placeholder}
@@ -277,7 +329,7 @@ const GeneralInfo: React.FC<{
       )}
       <div className="my-10">
         <FormLabel>What is you permanent Location?</FormLabel>
-        <P className="text-text-tertiary">
+        <P className="text-text-tertiary mb-4">
           By knowing your timezone hub members would better adjust teamwork and
           meetings time
         </P>
@@ -329,13 +381,19 @@ const Contacts: React.FC<{
   onSubmit: (value: { contacts: Record<string, string> }) => void
   onMoveBack: () => void
 }> = ({ metadata, onSubmit, onMoveBack }) => {
+  const me = useStore(stores.me)
   const metadataFields = Object.keys(metadata)
   const [state, setState] = React.useState<Record<string, string>>({})
   const [isValid, setIsValid] = React.useState(false)
 
-  const requiredFieldsIds: string[] = metadataFields.filter(
-    (contactId) => metadata[contactId].required
-  )
+  const requiredFieldsIds: string[] = metadataFields.filter((contactId) => {
+    const contactField = metadata[contactId]
+    const userRoles = me?.roles || []
+    return (
+      contactField.required ||
+      fp.hasIntersection(contactField.requiredForRoles, userRoles)
+    )
+  })
 
   const [selectedFieldIds, setSelectedFieldIds] =
     React.useState<string[]>(requiredFieldsIds)
@@ -410,7 +468,7 @@ const Contacts: React.FC<{
                   }
                   label={x.label}
                   containerClassName="w-full mb-4"
-                  required={x.required}
+                  required={requiredFieldsIds.includes(x.id)}
                 />
               )
             })}
@@ -469,7 +527,7 @@ const Tags: React.FC<{
     React.useState<string[]>(presavedTagIds)
 
   const groupedTags = React.useMemo<GroupedTags>(() => {
-    const tagsByCategory = (tags || []).reduce(groupBy('category'), {})
+    const tagsByCategory = (tags || []).reduce(fp.groupBy('category'), {})
     return Object.keys(tagsByCategory).map((x) => ({
       category: x,
       tags: tagsByCategory[x],
@@ -500,7 +558,7 @@ const Tags: React.FC<{
   // DELETE: ?
   React.useEffect(() => {
     if (userTags.length) {
-      setSelectedTagIds(userTags.map(prop('id')))
+      setSelectedTagIds(userTags.map(fp.prop('id')))
     }
   }, [userTags])
 

@@ -52,9 +52,11 @@ export const officeAreaDesk = z
       y: z.number().min(0).max(100),
     }),
     allowMultipleBookings: z.boolean().default(false).optional(),
-    user: z.string().email().optional(),
+    fullAreaBooking: z.boolean().default(false),
+    permittedRoles: z.array(z.string()).default([]),
   })
   .and(
+    // TODO: delete `type` & `user` fields
     z.union([
       z.object({
         type: z.literal('personal'),
@@ -155,19 +157,38 @@ export const office = z
 export const companyConfig = z.object({
   name: z.string().nonempty(),
   offices: z.array(office).min(1),
-  departments: z.array(z.string()).min(1).optional(),
-  divisions: z.array(z.string()).min(1).optional(),
 })
 
-export const appRole = z.object({
+export const userRole = z.object({
   id: z.string(),
   name: z.string(),
-  permissions: z.array(z.string()),
+  permissions: z.array(z.string()).default([]),
   accessByDefault: z.boolean().default(false).optional(),
 })
 
+export const userRoleGroup = z.object({
+  id: z.string(),
+  name: z.string(),
+  rules: z
+    .object({
+      max: z.number().min(1).optional(),
+      unique: z.boolean().default(false),
+      editableByRoles: z.array(z.string()).default([]),
+    })
+    .superRefine((rules, ctx) => {
+      if (rules.unique && rules.editableByRoles.length) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Unique fields cannot be editable by users',
+        })
+      }
+    })
+    .default({ max: undefined, unique: false }),
+  roles: z.array(userRole).min(1),
+})
+
 export const permissionsConfig = z.object({
-  roles: z.array(appRole).min(1),
+  roleGroups: z.array(userRoleGroup).min(1),
   defaultRoleByEmailDomain: z
     .record(z.string())
     .and(z.object({ __default: z.string() })),

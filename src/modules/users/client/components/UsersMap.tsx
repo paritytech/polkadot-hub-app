@@ -46,10 +46,7 @@ const PersonRow: React.FC<{ person: UserMapPin }> = ({ person }) => (
       >
         {person.fullName}
       </a>
-      <p>
-        {person.jobTitle ?? ''} {person.team ? `@ ${person.team}` : ''}{' '}
-        {person.department ? `- ${person.department}` : ' '}
-      </p>
+      <p>{[person.jobTitle, person.team].filter(Boolean).join(' · ')}</p>
     </div>
   </div>
 )

@@ -16,7 +16,7 @@ import { PublicUserProfile, UserMe } from '#shared/types'
 import dayjs from 'dayjs'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import Permissions from '#shared/permissions'
-import { USER_ROLE_BY_ID } from '#client/constants'
+import { USER_ROLES } from '#client/constants'
 
 const ProfileRow = ({
   label,
@@ -53,8 +53,6 @@ export const Card = ({
   fullView?: boolean
   isMine?: boolean
 }) => {
-  const permissions = useStore(stores.permissions)
-
   const location = React.useMemo(() => {
     if (user && !user.geodata?.doNotShareLocation) {
       const city = user.city || ''
@@ -65,9 +63,11 @@ export const Card = ({
     return null
   }, [user])
 
-  const userRole = React.useMemo(() => {
-    const role = USER_ROLE_BY_ID[user.role]
-    return role?.name || user.role
+  const userRoles = React.useMemo<string[]>(() => {
+    return USER_ROLES.reduce<string[]>((acc, x) => {
+      if (!user.roles.includes(x.id)) return acc
+      return acc.concat(x.name)
+    }, [])
   }, [user])
 
   return (
@@ -85,20 +85,15 @@ export const Card = ({
           <P className="mb-0">{user.fullName}</P>
           <PermissionsValidator required={[Permissions.users.ListProfiles]}>
             <div className="text-text-tertiary text-base leading-6">
-              {[user.jobTitle, user.team, user.department]
-                .filter(Boolean)
-                .map((x, i) => (
-                  <span key={`${x}${i}`}>
-                    {!!i && <span> &#183; </span>}
-                    {x}
-                  </span>
-                ))}
+              {[user.jobTitle, user.team].filter(Boolean).join(' · ')}
             </div>
           </PermissionsValidator>
-          <div className="mt-3 mb-2">
-            <Tag size="small" color="yellow">
-              {userRole}
-            </Tag>
+          <div className="mt-3">
+            {userRoles.map((x) => (
+              <Tag key={x} size="small" color="gray" className="mr-1 mb-2">
+                {x}
+              </Tag>
+            ))}
           </div>
         </div>
         <PermissionsValidator required={[Permissions.users.ListProfiles]}>

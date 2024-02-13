@@ -63,7 +63,7 @@ export const _AdminNews = () => {
         Header: 'Creator',
         accessor: (one: any) => {
           const user = usersById[one.creatorUserId]
-          return <UserLabel user={user} hideRole />
+          return <UserLabel user={user} />
         },
       },
       {

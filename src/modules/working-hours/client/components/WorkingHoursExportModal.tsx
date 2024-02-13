@@ -6,26 +6,26 @@ import { DATE_FORMAT } from '#client/constants'
 
 export const WorkingHoursExportModal: React.FC<{
   onClose: () => void
-  divisions: string[]
+  roles: Array<{ id: string; name: string }>
   defaultPeriod: [Dayjs, Dayjs]
-}> = ({ onClose, divisions, defaultPeriod }) => {
+}> = ({ onClose, roles, defaultPeriod }) => {
   const [period, setPeriod] = React.useState<{ from: Dayjs; to: Dayjs }>({
     from: defaultPeriod[0],
     to: defaultPeriod[1],
   })
-  const [division, setDivision] = React.useState<string>('')
+  const [role, setRole] = React.useState<string>('')
   const [roundUp, setRoundUp] = React.useState(false)
 
   const exportUrl = React.useMemo(() => {
     const url = new URL(config.appHost + '/admin-api/working-hours/export')
     url.searchParams.set('from', period.from.format(DATE_FORMAT))
     url.searchParams.set('to', period.to.format(DATE_FORMAT))
-    url.searchParams.set('division', division)
+    url.searchParams.set('role', role)
     if (roundUp) {
       url.searchParams.set('roundUp', '1')
     }
     return url.toString()
-  }, [period, division, roundUp])
+  }, [period, role, roundUp])
 
   const onPeriodChange = React.useCallback(
     (field: 'from' | 'to') => (date: string | boolean) => {
@@ -38,10 +38,10 @@ export const WorkingHoursExportModal: React.FC<{
   )
 
   React.useEffect(() => {
-    if (divisions.length) {
-      setDivision(divisions[0])
+    if (roles.length) {
+      setRole(roles[0].id)
     }
-  }, [divisions])
+  }, [roles])
 
   return (
     <Modal onClose={onClose} title="Export working hours">
@@ -64,11 +64,11 @@ export const WorkingHoursExportModal: React.FC<{
           </div>
         </div>
         <div>
-          <div className="text-text-tertiary mb-1">Division</div>
+          <div className="text-text-tertiary mb-1">Role</div>
           <Select
-            options={divisions.map((x) => ({ value: x, label: x }))}
-            value={division}
-            onChange={setDivision}
+            options={roles.map((x) => ({ value: x.id, label: x.name }))}
+            value={role}
+            onChange={setRole}
           />
         </div>
         <div>

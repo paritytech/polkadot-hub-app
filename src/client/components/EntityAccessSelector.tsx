@@ -1,8 +1,15 @@
 import { ENTITY_VISIBILITY_LABEL } from '#client/components/EntityVisibilityTag'
-import { CheckboxGroup, RadioGroup } from '#client/components/ui'
+import {
+  Button,
+  CheckboxGroup,
+  LabelWrapper,
+  Link,
+  RadioGroup,
+} from '#client/components/ui'
 import config from '#client/config'
 import { EntityVisibility } from '#shared/types'
 import { cn } from '#client/utils'
+import { USER_ROLES } from '#client/constants'
 import { prop } from '#shared/utils/fp'
 import React from 'react'
 
@@ -44,8 +51,11 @@ export const EntityAccessSelector: React.FC<Props> = ({
   visibilityTypes,
   ...props
 }) => {
+  const [showAllRoles, setShowAllRoles] = React.useState(
+    USER_ROLES.length <= 10
+  )
   const roleIds = React.useMemo(
-    () => config.roles.filter(prop('accessByDefault')).map(prop('id')),
+    () => USER_ROLES.filter(prop('accessByDefault')).map(prop('id')),
     []
   )
 
@@ -122,6 +132,22 @@ export const EntityAccessSelector: React.FC<Props> = ({
       ]
     )
 
+  const filteredRoles = React.useMemo<
+    Array<{ value: string; label: string }>
+  >(() => {
+    const availableRoles = USER_ROLES.map(prop('id'))
+    const unsupportedRoles = (props.value.allowedRoles || [])
+      .filter((x) => !availableRoles.includes(x))
+      .map((x) => ({ value: x, label: `${x} (UNSUPPORTED)` }))
+    const filteredRoles = USER_ROLES.filter(
+      (x) => showAllRoles || x.accessByDefault
+    ).map((x) => ({
+      value: x.id,
+      label: x.name,
+    }))
+    return unsupportedRoles.concat(filteredRoles)
+  }, [showAllRoles, props.value.allowedRoles])
+
   return (
     <div
       className={cn(
@@ -144,12 +170,14 @@ export const EntityAccessSelector: React.FC<Props> = ({
             name="roles"
             label="Allowed user roles"
             value={allowedRolesValue}
-            options={config.roles.map((x) => ({
-              value: x.id,
-              label: x.name,
-            }))}
+            options={filteredRoles}
             onChange={onChange('allowedRoles')}
           />
+          {!showAllRoles && (
+            <LabelWrapper label="">
+              <Link onClick={() => setShowAllRoles(true)}>Show all roles</Link>
+            </LabelWrapper>
+          )}
         </div>
       )}
       {showOfficesList && (

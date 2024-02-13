@@ -56,7 +56,7 @@ export const getFullBookableAreas = (
   areas
     .filter((a) => a.bookable)
     .map((a) => {
-      const desk = a.desks.find((d) => d.type === 'full_area')
+      const desk = a.desks.find((d) => d.fullAreaBooking)
       return desk ? { areaId: a.id, deskId: desk.id } : null
     })
     .filter(Boolean)

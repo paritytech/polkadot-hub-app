@@ -10,11 +10,17 @@ import { VisitsDailyStats } from '#shared/types'
 import { cn, toggleInArray } from '#client/utils'
 import { useVisitsStatsAdmin } from '../queries'
 
-export const VisitsStats = () => (
-  <PermissionsValidator required={[Permissions['office-visits'].AdminList]}>
-    <_VisitsStats />
-  </PermissionsValidator>
-)
+export const VisitsStats = () => {
+  const officeId = useStore(stores.officeId)
+  return (
+    <PermissionsValidator
+      officeId={officeId}
+      required={[Permissions['office-visits'].AdminList]}
+    >
+      <_VisitsStats />
+    </PermissionsValidator>
+  )
+}
 
 const _VisitsStats: React.FC = () => {
   const officeId = useStore(stores.officeId)
@@ -39,7 +45,7 @@ const _VisitsStats: React.FC = () => {
     { enabled: isShown && period.from.isValid() && period.to.isValid() }
   )
 
-  const onToggleDepartmentStats = React.useCallback(
+  const onToggleRolesStats = React.useCallback(
     (date: string) => (ev: React.MouseEvent) => {
       setExpandedDates((dates) => toggleInArray(dates, date))
     },
@@ -71,7 +77,7 @@ const _VisitsStats: React.FC = () => {
                     className="ml-2"
                     size="small"
                     kind="secondary"
-                    onClick={onToggleDepartmentStats(x.date)}
+                    onClick={onToggleRolesStats(x.date)}
                   >
                     {isExpanded ? 'Less' : 'More'} info
                   </Button>
@@ -79,10 +85,10 @@ const _VisitsStats: React.FC = () => {
               </div>
               {isExpanded && (
                 <div className="mt-2">
-                  {x.occupancyPercentByDepartment.map((d) => (
-                    <div key={d.department}>
-                      {d.department} –{' '}
-                      {Number((d.occupancyPercent * 100).toFixed(1))}%
+                  {x.occupancyPercentByRole.map((d) => (
+                    <div key={d.role}>
+                      {d.role} – {Number((d.occupancyPercent * 100).toFixed(1))}
+                      %
                     </div>
                   ))}
                   {!!x.guests.length && (

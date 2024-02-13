@@ -13,6 +13,7 @@ import {
   Tag,
   UserLabel,
   Filters,
+  UserRoleLabel,
 } from '#client/components/ui'
 import config from '#client/config'
 import { OFFICE_BY_ID, USER_ROLE_BY_ID } from '#client/constants'
@@ -141,7 +142,7 @@ export const AdminEvents = () => {
           Header: 'Creator',
           accessor: (event: EventAdminResponse) => {
             const user = usersById[event.creatorUserId]
-            return <UserLabel user={user} hideRole />
+            return <UserLabel user={user} />
           },
         },
         {
@@ -167,9 +168,7 @@ export const AdminEvents = () => {
           accessor: (event: EventAdminResponse) => (
             <span className="inline-block -mr-1">
               {event.allowedRoles.map((x) => (
-                <Tag key={x} color="gray" size="small" className="mr-1">
-                  {USER_ROLE_BY_ID[x]?.name || x}
-                </Tag>
+                <UserRoleLabel role={x} />
               ))}
             </span>
           ),

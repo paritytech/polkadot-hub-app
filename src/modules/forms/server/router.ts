@@ -10,6 +10,7 @@ import { Op, Filterable } from 'sequelize'
 import { appConfig } from '#server/app-config'
 import { getJSONdiff } from '#server/utils'
 import { EntityVisibility } from '#shared/types'
+import * as fp from '#shared/utils/fp'
 import { User } from '#modules/users/types'
 import { useRateLimit } from '#server/utils/rate-limit'
 import { Permissions } from '../permissions'
@@ -47,7 +48,7 @@ const publicRouter: FastifyPluginCallback = async (fastify, opts) => {
           return reply.throw.notFound()
         }
         if (form.visibility !== EntityVisibility.UrlPublic) {
-          if (!form.allowedRoles.includes(req.user.role)) {
+          if (!fp.hasIntersection(form.allowedRoles, req.user.roles)) {
             return reply.throw.notFound()
           }
         }
@@ -97,7 +98,7 @@ const publicRouter: FastifyPluginCallback = async (fastify, opts) => {
         return reply.throw.gone()
       }
       if (form.visibility !== EntityVisibility.UrlPublic) {
-        if (!form.allowedRoles.includes(req.user.role)) {
+        if (!fp.hasIntersection(form.allowedRoles, req.user.roles)) {
           return reply.throw.notFound()
         }
       }
@@ -383,7 +384,7 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
       Permissions.AdminReceiveNotifications
     )
     return fastify.db.User.findAllActive({
-      where: { role: { [Op.in]: roles } },
+      where: { roles: { [Op.overlap]: roles } },
     })
   })
 

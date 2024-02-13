@@ -32,7 +32,7 @@ type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> & {
 const labeledTypes = ['checkbox', 'radio']
 type LabelProps = {
   name?: string | undefined
-  label: string | undefined
+  label: string | React.ReactNode | undefined
   required?: boolean | undefined
   type?: string | undefined
   extraLabel?: string | null

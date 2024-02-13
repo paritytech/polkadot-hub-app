@@ -20,10 +20,10 @@ export class Integration {
     return { success: false, error: error as Error }
   }
 
-  success<T = void>(data?: T): SafeResponse<T> {
+  success<T>(data?: T): SafeResponse<T> {
     if (data !== undefined) {
       return { success: true, data: data } as SafeResponse<T>
     }
-    return { success: true }
+    return { success: true } as SafeResponse<T>
   }
 }

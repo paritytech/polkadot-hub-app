@@ -1,5 +1,3 @@
-import { OfficeRoom } from '#shared/types'
-
 export type RoomReservationStatus = 'pending' | 'confirmed' | 'cancelled'
 
 export type RoomReservation = {
@@ -46,12 +44,20 @@ export type RoomDisplayData = {
   usersById: Record<string, { fullName: string; avatar: string }>
 }
 
+// TODO: make it enum
 export const RoomBookingModes: Record<string, string> = {
   AnyRoom: 'Any Room Available',
   SpecificRoom: 'Specific Room',
 }
 
+// TODO: move it to client helpers/components
 export const RoomBookingTabHeaders = {
   [RoomBookingModes.AnyRoom]: ['Book Any Room Available', 'Any Room'],
   [RoomBookingModes.SpecificRoom]: ['Book Specific Room', 'Specific Room'],
+}
+
+export type OfficeRoomCompact = {
+  id: string
+  name: string
+  officeId: string
 }

@@ -23,6 +23,7 @@ import {
 import { isWithinWorkingHours } from '../shared-helpers'
 import { Permissions } from '../permissions'
 import {
+  OfficeRoomCompact,
   RoomDisplayData,
   RoomReservationRequest,
   RoomReservationStatus,
@@ -254,14 +255,14 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     '/time-slots/rooms',
     async (
       req: FastifyRequest<{
-        Querystring: { office: string; slot: string; date: string }
+        Querystring: { slot: string; date: string }
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
-      if (!req.query.office) {
+      if (!req.office) {
         return reply.throw.badParams('Invalid office ID')
       }
+      req.check(Permissions.Create, req.office.id)
       if (!req.query.slot) {
         return reply.throw.badParams('Specify time slot')
       }
@@ -269,15 +270,14 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (isWeekend(req.query.date) || isBeforeToday(req.query.date)) {
         return []
       }
-      const office = req.office!
       const { startT, endT } = parseTimeSlot(req.query.slot)
       const start = getDateTimeInTimezone(
-        office.timezone,
+        req.office.timezone,
         startT,
         req.query.date
       ).utc()
       const end = getDateTimeInTimezone(
-        office.timezone,
+        req.office.timezone,
         endT,
         req.query.date
       ).utc()
@@ -291,7 +291,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       const reservations = await fastify.db.RoomReservation.findAll({
         attributes: ['roomId', 'startDate', 'endDate'],
         where: {
-          office: office.id,
+          office: req.office.id,
           [Op.or]: [
             {
               startDate: isBetweenNotIncludingBounds,
@@ -332,14 +332,14 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     async (
       req: FastifyRequest<{
         Params: { roomId: string }
-        Querystring: { office: string; duration: number; date: string }
+        Querystring: { duration: number; date: string }
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
-      if (!req.query.office) {
+      if (!req.office) {
         return reply.throw.badParams('Invalid office ID')
       }
+      req.check(Permissions.Create, req.office.id)
       if (!req.params.roomId) {
         return reply.throw.badParams('Invalid room ID')
       }
@@ -351,7 +351,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         return []
       }
       const requestedDuration = req.query.duration ?? 30
-      const office = appConfig.getOfficeById(req.query.office)
+      const office = req.office
       const room = office.rooms!.find((room) => room.id === req.params.roomId)
       if (!room || !room.available) {
         return reply.throw.badParams('Invalid room ID')
@@ -422,15 +422,18 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 
   fastify.get(
-    '/placeholder-messages',
+    '/placeholder',
     async (
       req: FastifyRequest<{
-        Querystring: { office: string; duration?: number }
+        Querystring: { duration?: number }
       }>,
       reply
     ) => {
       req.check(Permissions.Create)
-      return req.office?.roomsPlaceholderMessage ?? ''
+      if (!req.office) {
+        return reply.throw.badParams('Invalid office ID')
+      }
+      return req.office.roomsPlaceholderMessage ?? ''
     }
   )
 
@@ -438,14 +441,14 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     '/time-slots',
     async (
       req: FastifyRequest<{
-        Querystring: { office: string; duration?: number; date: string }
+        Querystring: { duration?: number; date: string }
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
-      if (!req.query.office || !req.office) {
+      if (!req.office) {
         return reply.throw.badParams('Invalid office ID')
       }
+      req.check(Permissions.Create, req.office.id)
       if (!req.query.date) {
         return reply.throw.badParams('Missing date')
       }
@@ -589,10 +592,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
       if (!req.office) {
         return reply.throw.badParams('Invalid office ID')
       }
+      req.check(Permissions.Create, req.office.id)
       const room = req.office.rooms!.find((x) => x.id === req.params.roomId)
       if (!room || !room.available) {
         return reply.throw.badParams('Invalid room ID')
@@ -624,10 +627,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   fastify.post(
     '/room-reservations',
     async (req: FastifyRequest<{ Body: RoomReservationRequest }>, reply) => {
-      req.check(Permissions.Create)
       if (!req.office) {
         return reply.throw.badParams('Invalid office ID')
       }
+      req.check(Permissions.Create, req.office.id)
       const data = req.body
       const room = (req.office.rooms || []).find((x) => x.id === data.roomId)
       if (!room || !room.available) {
@@ -712,10 +715,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 
   fastify.get('/room-reservation', async (req, reply) => {
-    req.check(Permissions.Create)
     if (!req.office) {
       return reply.throw.badParams('Invalid office ID')
     }
+    req.check(Permissions.Create, req.office.id)
     const reservations = await fastify.db.RoomReservation.findAll({
       where: {
         office: req.office.id,
@@ -739,18 +742,18 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
       const id = req.params.reservationId
       const status = req.body.status
       const reservation = await fastify.db.RoomReservation.findOne({
         where: {
-          id: req.params.reservationId,
+          id,
           creatorUserId: req.user.id,
         },
       })
       if (!reservation) {
         return reply.throw.notFound()
       }
+      req.check(Permissions.Create, reservation.office)
 
       if (
         reservation.status !== 'confirmed' &&
@@ -800,6 +803,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       return reply.ok()
     }
   )
+
   fastify.get(
     '/room-reservation/:reservationId',
     async (
@@ -809,17 +813,22 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
-      const where: Filterable<RoomReservation>['where'] = {
-        id: req.params.reservationId,
-      }
-      if (!req.can(Permissions.AdminList)) {
-        where.creatorUserId = req.user.id
-      }
-      const reservation = await fastify.db.RoomReservation.findOne({ where })
+      const reservation = await fastify.db.RoomReservation.findByPk(
+        req.params.reservationId
+      )
       if (!reservation) {
         return reply.throw.notFound()
       }
+
+      if (
+        req.user.id !== reservation.creatorUserId &&
+        !req.can(Permissions.AdminList, reservation.office)
+      ) {
+        return reply.throw.accessDenied()
+      } else {
+        req.check(Permissions.Create, reservation.office)
+      }
+
       const office = appConfig.getOfficeById(reservation.office) || {}
       const roomDetail = office?.rooms!.find(
         (room) => room.id == reservation?.roomId
@@ -847,7 +856,9 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      req.check(Permissions.AdminManage)
+      if (!req.permissions.hasRoot(Permissions.AdminManage)) {
+        return reply.throw.accessDenied()
+      }
       const device = await fastify.db.RoomDisplayDevice.findByPk(
         req.params.deviceId
       )
@@ -877,10 +888,10 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 
   fastify.get('/room-reservation', async (req, reply) => {
-    req.check(Permissions.AdminList)
     if (!req.office) {
       return reply.throw.badParams('Invalid office ID')
     }
+    req.check(Permissions.AdminList, req.office.id)
     const reservations = await fastify.db.RoomReservation.findAll({
       where: {
         office: req.office.id,
@@ -899,19 +910,19 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      req.check(Permissions.AdminManage)
       const reservation = await fastify.db.RoomReservation.findByPk(
         req.params.reservationId
       )
       if (!reservation) {
         return reply.throw.notFound()
       }
+      req.check(Permissions.AdminManage, reservation.office)
       await reservation
         .set({
           status: req.body.status,
         })
         .save()
-      appEvents.useModule('admin').emit('update_counters')
+      // appEvents.useModule('admin').emit('update_counters')
       // Send user notification to the user via Matrix
       if (req.body.status === 'cancelled' && fastify.integrations.Matrix) {
         process.nextTick(async () => {
@@ -956,6 +967,26 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       return reply.ok()
     }
   )
+
+  fastify.get('/room', async (req, reply) => {
+    if (!req.permissions.hasRoot(Permissions.AdminManage)) {
+      return reply.throw.accessDenied()
+    }
+    const officeIds = req.permissions.extractOfficeIds(Permissions.AdminManage)
+    if (!officeIds) {
+      return reply.throw.accessDenied()
+    }
+    return appConfig.offices
+      .filter((x) => (officeIds.length ? officeIds.includes(x.id) : true))
+      .reduce<OfficeRoomCompact[]>((acc, x) => {
+        const rooms = (x.rooms || []).map((r) => ({
+          id: r.id,
+          name: r.name,
+          officeId: x.id,
+        }))
+        return [...acc, ...rooms]
+      }, [])
+  })
 }
 
 module.exports = {

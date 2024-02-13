@@ -2,11 +2,20 @@ export const ROBOT_USER_ID = '00000000-0000-0000-0000-000000000000'
 
 export const SESSION_TOKEN_COOKIE_NAME = 'hqappjwt'
 
+// TODO: implement shared constants and move it there
 export const DATE_FORMAT = 'YYYY-MM-DD'
 
 export const FRIENDLY_DATE_FORMAT = 'MMMM D YYYY'
 
 export const DATE_FORMAT_DAY_NAME = 'ddd, MMMM D'
+
+// TODO: implement shared constants and move it there
+export const ADMIN_ACCESS_PERMISSION_POSTFIX = '__admin'
+
+// TODO: implement shared constants and move it there
+export const ADMIN_ACCESS_PERMISSION_RE = new RegExp(
+  `^.*\.${ADMIN_ACCESS_PERMISSION_POSTFIX}`
+)
 
 export const COUNTRIES = [
   { name: 'Afghanistan', code: 'AF', emoji: '🇦🇫' },
