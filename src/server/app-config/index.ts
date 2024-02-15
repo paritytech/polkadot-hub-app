@@ -70,7 +70,7 @@ export class AppConfig {
       fp.prop('enabled')
     )
     const appModules: AppModule[] = enabledModules.map((module) => {
-      const modulePath = getModuleRelativePath(module.id)
+      const modulePath = this.getModuleRelativePath(module.id)
       if (!modulePath) {
         throw new AppError(
           `Can't find "${module.id}" module. Make sure it is represented in one of the following directories:`,
@@ -322,6 +322,18 @@ export class AppConfig {
     roles = roles.concat(editedRoles) // concat them with editable roles from the request
     return { success: true, data: this.sortRoles(roles) }
   }
+
+  getModuleRelativePath(moduleId: string): string | null {
+    if (fs.existsSync(getFilePath(`src/modules/${moduleId}/manifest.json`))) {
+      return `src/modules/${moduleId}`
+    }
+    if (
+      fs.existsSync(getFilePath(`config/modules/${moduleId}/manifest.json`))
+    ) {
+      return `config/modules/${moduleId}`
+    }
+    return null
+  }
 }
 
 export const appConfig = new AppConfig()
@@ -390,14 +402,4 @@ function sortTree(tree: Record<string, string[]>): string[] {
 
 function isFileExists(relativePath: string): boolean {
   return fs.existsSync(getFilePath(relativePath))
-}
-
-function getModuleRelativePath(moduleId: string): string | null {
-  if (fs.existsSync(getFilePath(`src/modules/${moduleId}/manifest.json`))) {
-    return `src/modules/${moduleId}`
-  }
-  if (fs.existsSync(getFilePath(`config/modules/${moduleId}/manifest.json`))) {
-    return `config/modules/${moduleId}`
-  }
-  return null
 }
