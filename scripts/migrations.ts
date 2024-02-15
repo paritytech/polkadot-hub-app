@@ -115,7 +115,11 @@ if (['-up', '-down'].includes(args[0])) {
 
 // Utils
 function getMigrationsPath(scope) {
-  return path.join(__dirname, `../src/modules/${scope}/server/migrations`)
+  const relativePath = appConfig.getModuleRelativePath(scope)
+  if (!relativePath) {
+    throw new Error(`Module "${scope}" was not found`)
+  }
+  return path.join(__dirname, '..', relativePath, `server/migrations`)
 }
 function generateMigration(filePath) {
   const content = `
