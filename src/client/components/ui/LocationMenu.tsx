@@ -62,7 +62,7 @@ export const LocationMenu: React.FC<{
     <div className="w-fit-content" ref={ref}>
       <div className="flex hover:cursor-pointer">
         <H1 className="mb-0 mr-1 leading-none flex items-center">
-          <a href="/">HQ</a>
+          <a href="/">{config.appLogoPrefix}</a>
         </H1>
         <div className="flex relative">
           <H1
