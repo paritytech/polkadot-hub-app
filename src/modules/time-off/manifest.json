@@ -4,5 +4,6 @@
   "dependencies": ["users"],
   "requiredIntegrations": [],
   "recommendedIntegrations": ["bamboohr"],
+  "availableCronJobs": ["fetch-time-off-requests"],
   "models": ["TimeOffRequest"]
 }

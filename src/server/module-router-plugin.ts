@@ -19,6 +19,8 @@ import {
 import { PermissionsSet } from '#shared/utils'
 import * as fp from '#shared/utils/fp'
 
+const PER_OFFICE_JOB_ID_RE = /^[a-zA-Z0-9_-]+:[a-zA-Z_-]+$/
+
 const safeRequireDist = (relativePath: string) =>
   safeRequire(getFilePath(`dist_server/${relativePath}`))
 
@@ -188,8 +190,9 @@ export const moduleRouterPlugin =
         }
 
         // register cron jobs
-        // TODO: define active jobs in the config/modules.json file
         if (!config.skipCronJobs && moduleCronJobs) {
+          const availableCronJobs = moduleManifest.availableCronJobs
+          const enabledCronJobs = module.enabledCronJobs
           const { moduleCronJobsFactory } = moduleCronJobs as {
             moduleCronJobsFactory: ModuleCronJobsFactory
           }
@@ -202,10 +205,26 @@ export const moduleRouterPlugin =
           }
           const moduleJobs = moduleCronJobsFactory(jobContext)
           moduleJobs.forEach((job) => {
-            fastify.log.info(
-              `Job "${job.name}" has been scheduled for "${job.cron}" ("${module.id}" module)`
+            const jobId = PER_OFFICE_JOB_ID_RE.test(job.name)
+              ? job.name.split(':')[0] + ':*'
+              : job.name
+            if (!availableCronJobs.includes(jobId)) {
+              fastify.log.warn(
+                `Unknown job "${job.name}" ("${module.id}" module). Skipped.`
+              )
+              return
+            }
+            const enabledCronJob = enabledCronJobs.find(
+              (x) => x[0] === job.name
             )
-            nodeCron.schedule(job.cron, () => {
+            if (!enabledCronJob) {
+              return
+            }
+            const cron = enabledCronJob[1] || job.cron
+            fastify.log.info(
+              `Job "${job.name}" has been scheduled for "${cron}" ("${module.id}" module)`
+            )
+            nodeCron.schedule(cron, () => {
               limiter.schedule(async () => {
                 try {
                   await fastify.log.info(`Job "${job.name}" started`)

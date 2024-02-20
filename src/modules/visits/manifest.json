@@ -4,6 +4,7 @@
   "dependencies": ["users"],
   "requiredIntegrations": [],
   "recommendedIntegrations": ["bamboohr", "matrix"],
+  "availableCronJobs": ["visit-delete-data", "visit-reminder:*"],
   "models": ["Visit", "VisitReminderJob"],
   "clientRouter": {
     "public": {},
