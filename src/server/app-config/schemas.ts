@@ -201,6 +201,9 @@ export const moduleConfig = z
     enabledIntegrations: z.array(z.string()).default([]),
     metadata: z.record(z.any()).optional(),
     portals: z.record(z.array(componentRef)).default({}),
+    enabledCronJobs: z
+      .array(z.tuple([z.string(), z.string().or(z.null())]))
+      .default([]),
   })
   .strict()
 
@@ -232,6 +235,7 @@ export const moduleManifest = z
     dependencies: z.array(z.string()),
     recommendedIntegrations: z.array(z.string()).default([]),
     requiredIntegrations: z.array(z.string()).default([]),
+    availableCronJobs: z.array(z.string()).default([]),
     models: z.array(z.string()).default([]),
     clientRouter: moduleClientRouter.optional(),
   })

@@ -4,6 +4,7 @@
   "dependencies": ["users"],
   "requiredIntegrations": [],
   "recommendedIntegrations": ["email-smtp", "matrix"],
+  "availableCronJobs": ["forms-delete-data"],
   "models": ["Form", "FormSubmission"],
   "clientRouter": {
     "public": {
