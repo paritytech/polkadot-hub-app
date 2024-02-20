@@ -92,6 +92,7 @@ export const officeRoom = z.object({
 export const officeArea = z
   .object({
     id: z.string(),
+    available: z.boolean().default(true),
     name: z.string(),
     capacity: z.number().min(1),
     map: z.string(),
