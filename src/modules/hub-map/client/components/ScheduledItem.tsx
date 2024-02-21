@@ -57,6 +57,10 @@ const DateHeader = ({ dateValue }: { dateValue: string | Date }) => {
   )
 }
 
+const Status = ({ status }: { status: string }) => (
+  <div className={cn('h-2 w-2 rounded-full ', StatusColor[status])}> </div>
+)
+
 export const ScheduledItem = ({
   sheduledItem,
   selected,
@@ -86,7 +90,7 @@ export const ScheduledItem = ({
         }}
         className={cn(
           'transition-all',
-          'w-[224px] h-[192px]  flex flex-col justify-between rounded-sm py-4 px-6 cursor-pointer',
+          ' w-full sm:w-[224px] sm:h-[192px]  flex flex-col justify-between rounded-sm px-4 py-4 sm:px-6 cursor-pointer',
           ColorsBg[sheduledItem.type],
           'border border-transparent',
           iAmSelected && ColorsBorder[sheduledItem.type],
@@ -95,25 +99,24 @@ export const ScheduledItem = ({
       >
         <div className="flex flex-col gap-2">
           <div className="overflow-hidden">
-            <DateHeader dateValue={sheduledItem.date} />
+            <div className="flex justify-between items-center">
+              <DateHeader dateValue={sheduledItem.date} />
+              {sheduledItem.status && <Status status={sheduledItem.status} />}
+            </div>
             <div className="flex justify-between items-center mt-2">
               <p className={cn('capitalize', iAmSelected && 'font-bold')}>
                 {sheduledItem.value.slice(0, 16)}
                 {sheduledItem.value.length > 16 && '...'}
+                <span className="sm:hidden text-text-tertiary text-sm break-all">
+                  {' '}
+                  {sheduledItem.description}
+                </span>
               </p>
-              {sheduledItem.status && (
-                <div
-                  className={cn(
-                    'h-2 w-2 rounded-full',
-                    StatusColor[sheduledItem.status]
-                  )}
-                ></div>
-              )}
             </div>
             <p className="text-text-secondary text-sm">
               {sheduledItem.dateTime ? sheduledItem.dateTime : ''}
             </p>
-            <p className="text-text-tertiary text-sm break-all">
+            <p className="hidden sm:block text-text-tertiary text-sm break-all">
               {sheduledItem.description}
             </p>
           </div>

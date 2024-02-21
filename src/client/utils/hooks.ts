@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import config from '#client/config'
@@ -172,6 +173,16 @@ export function usePanZoom(
     height: 0,
     width: 0,
   })
+  const [initialPinchDistance, setInitialPinchDistance] = useState(0)
+
+  const getDistanceBetweenTouches = (touches) => {
+    const touch1 = touches[0]
+    const touch2 = touches[1]
+    return Math.sqrt(
+      Math.pow(touch2.clientX - touch1.clientX, 2) +
+        Math.pow(touch2.clientY - touch1.clientY, 2)
+    )
+  }
 
   useEffect(() => {
     if (containerRef.current && imageRef.current) {
@@ -196,63 +207,95 @@ export function usePanZoom(
           y: touch.clientY,
         })
         setIsPanning(true)
+      } else if (event.touches.length === 2) {
+        const distance = getDistanceBetweenTouches(event.touches)
+        setInitialPinchDistance(distance)
       }
     },
     []
   )
 
   const updatePositionWithinBounds = (newX: number, newY: number) => {
-    const boundary = 100
-    const xBoundaryRight =
-      containerDimension.width -
-      boundary * (containerDimension.width / containerDimension.height)
-    const xBoundaryLeft = -imageDimensions.width + 50 * scale
-    const yBoundaryBottom =
-      containerDimension.height -
-      boundary * (containerDimension.height / containerDimension.width)
-    const yBoundaryTop = -imageDimensions.height + 50 * scale
+    const xBoundaryRight = containerDimension.width
+    const xBoundaryLeft = -imageDimensions.width
+    const yBoundaryBottom = containerDimension.height
+    const yBoundaryTop = -imageDimensions.height
+
+    const outOfViewX = newX > xBoundaryRight || newX < xBoundaryLeft
+    const outOfViewY = newY > yBoundaryBottom || newY < yBoundaryTop
+    const outOfView = outOfViewX || outOfViewY
+
+    const newPosition = outOfView
+      ? initialPosition
+      : {
+          x: Math.min(Math.max(newX, xBoundaryLeft), xBoundaryRight),
+          y: Math.min(Math.max(newY, yBoundaryTop), yBoundaryBottom),
+        }
+
     return {
-      x:
-        newX > 0
-          ? Math.min(newX, xBoundaryRight)
-          : Math.max(newX, xBoundaryLeft),
-      y:
-        newY > 0
-          ? Math.min(newY, yBoundaryBottom)
-          : Math.max(newY, yBoundaryTop),
+      newPosition: newPosition,
+      outOfView: outOfView,
     }
   }
 
   const resetScale = () => {
     setScale(1)
-    setPosition({ x: 0, y: 0 })
+    setPosition(initialPosition)
+    positionRef.current = initialPosition
   }
+  const positionRef = useRef(position)
 
   const handleTouchMove: React.TouchEventHandler<HTMLDivElement> = useCallback(
     (event) => {
       if (isPanning && event.touches.length === 1) {
+        event.preventDefault()
         const touch = event.touches[0]
         const deltaX = touch.clientX - touchStart.x
         const deltaY = touch.clientY - touchStart.y
 
-        setPosition((prevPosition) => {
-          const newX = prevPosition.x + deltaX
-          const newY = prevPosition.y + deltaY
-          return updatePositionWithinBounds(newX, newY)
-        })
-
-        setTouchStart({
+        const newTouchStart = {
           x: touch.clientX,
           y: touch.clientY,
+        }
+        setTouchStart(newTouchStart)
+
+        const newPosition = {
+          x: positionRef.current.x + deltaX,
+          y: positionRef.current.y + deltaY,
+        }
+        positionRef.current = newPosition
+
+        requestAnimationFrame(() => {
+          setPosition(newPosition)
         })
       }
+
+      if (event.touches.length === 2) {
+        event.preventDefault()
+        const distance = getDistanceBetweenTouches(event.touches)
+        if (initialPinchDistance != null) {
+          const scaleChange = distance / initialPinchDistance
+          setScale((prevScale) => {
+            const newScale = prevScale * scaleChange
+            return Math.max(1, newScale < MAX_ZOOM ? newScale : MAX_ZOOM)
+          })
+          setInitialPinchDistance(distance)
+        }
+      }
     },
-    [isPanning, touchStart]
+    [isPanning, touchStart, initialPinchDistance]
   )
 
-  const handleTouchEnd = useCallback(() => {
-    setIsPanning(false)
-  }, [])
+  const handleTouchEnd: React.TouchEventHandler<HTMLDivElement> =
+    useCallback(() => {
+      setIsPanning(false)
+
+      const newPosition = {
+        x: positionRef.current.x,
+        y: positionRef.current.y,
+      }
+      setPosition(newPosition)
+    }, [positionRef])
 
   const handleWheel: React.WheelEventHandler<HTMLDivElement> = useCallback(
     (event) => {

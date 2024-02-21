@@ -148,11 +148,11 @@ export const HubMap = () => {
                   value={area?.id}
                   onChange={onAreaChange}
                   placeholder={'Select area'}
-                  containerClassName="w-full sm:w-auto  mb-2"
+                  containerClassName="w-full sm:w-auto  mb-2 hidden sm:block"
                 />
               </div>
             </div>
-            <div className="flex flex-row gap-2 overflow-hidden mt-6 sm:mt-2 items-center flex-wrap">
+            <div className="flex flex-row gap-3 sm:gap-2 overflow-hidden mt-6 sm:mt-2 items-center flex-wrap">
               {!!visitors?.length &&
                 visitors.map((v) => {
                   return (
@@ -169,13 +169,24 @@ export const HubMap = () => {
                     </button>
                   )
                 })}
-              <div className="text-text-tertiary">
+              <div className="text-text-tertiary mb-4 sm:mb-0">
                 {userIsInOffce
                   ? `You and ${visitorsNumber - 1}`
                   : visitorsNumber}{' '}
                 people in the {office?.name} hub
               </div>
             </div>
+            <Select
+              label=""
+              options={areas.map((x) => ({
+                label: x.name,
+                value: x.id,
+              }))}
+              value={area?.id}
+              onChange={onAreaChange}
+              placeholder={'Select area'}
+              containerClassName="w-full sm:w-auto  mb-2 block sm:hidden"
+            />
             <div className="sm:max-w-[780px] h-[500px] sm:h-auto m-auto my-2 sm:my-10">
               <OfficeFloorMap
                 area={area}

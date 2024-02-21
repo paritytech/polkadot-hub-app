@@ -132,7 +132,7 @@ export const ScheduledItemsList: React.FC<{
           {office?.name}
         </p>
       )}
-      <div className="flex justify-start gap-4 overflow-x-auto max-w-[980px]">
+      <div className="flex justify-start flex-col sm:flex-row gap-2 sm:gap-4 overflow-x-auto max-w-[980px]">
         {!!scheduledItems?.length &&
           scheduledItems.map((item: ScheduledItemType, index) => (
             <ScheduledItem
