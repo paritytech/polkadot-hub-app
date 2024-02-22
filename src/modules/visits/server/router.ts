@@ -597,6 +597,8 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
           avatar: !isRobot ? u.avatar || '' : '',
           fullName: visit?.metadata.guestFullName || u?.fullName,
           areaName: visit?.areaName || 'UNKNOWN',
+          deskId: visit?.deskId,
+          areaId: visit?.areaId,
         }
         return result
       })

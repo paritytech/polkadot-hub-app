@@ -81,6 +81,10 @@
       "enabled": true
     },
     {
+      "id": "hub-map",
+      "enabled": true
+    },
+    {
       "id": "profile-questions",
       "enabled": true,
       "metadata": {

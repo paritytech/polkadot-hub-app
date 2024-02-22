@@ -52,6 +52,7 @@ export const RoomReservationRequest = () => {
 const _RoomReservationRequest: React.FC = () => {
   const officeId = useStore(stores.officeId)
   const [showModal, setShowModal] = useState(false)
+  const roomRefs = React.useRef<Record<string, HTMLDivElement>>({})
   const [timeDuration, setTimeDuration] = useState(
     dayjs.duration(30, 'minutes')
   )
@@ -61,6 +62,38 @@ const _RoomReservationRequest: React.FC = () => {
     date: dayjs().format(DATE_FORMAT),
     timeSlot: '',
   })
+
+  React.useEffect(() => {
+    const url = new URL(document.location.href)
+    const room = url.searchParams.get('roomId')
+    const date = url.searchParams.get('date')
+    if (!!room && !!date) {
+      setMode(RoomBookingModes.SpecificRoom)
+      setRequest({
+        ...request,
+        roomId: room,
+        date: date,
+      })
+      if (room) {
+        history.pushState(
+          '',
+          document.title,
+          window.location.pathname + window.location.search
+        )
+        setTimeout(scrollToRoom, 500, room)
+      }
+    }
+  }, [])
+
+  const scrollToRoom = React.useCallback((roomId: string) => {
+    const selected = roomRefs.current[roomId]
+    if (selected) {
+      window.scrollTo({
+        top: selected.offsetTop - 200,
+        behavior: 'smooth',
+      })
+    }
+  }, [])
 
   const [mode, setMode] = useState(RoomBookingModes.AnyRoom)
   const [timeSlots, setTimeSlots] = useState<Array<string>>([])
@@ -154,6 +187,7 @@ const _RoomReservationRequest: React.FC = () => {
         </div>
       </>
     ),
+
     [RoomBookingModes.SpecificRoom]: (
       <RoomListing
         chosenRoom={request.roomId}
@@ -161,7 +195,14 @@ const _RoomReservationRequest: React.FC = () => {
         buttonTitle="Select room"
         onRoomSelect={(roomId: string) => updateRequest('roomId', roomId)}
       >
-        <div className="mt-4">
+        <div
+          className="mt-4"
+          ref={(el) => {
+            if (el && roomRefs?.current) {
+              roomRefs.current[request.roomId] = el
+            }
+          }}
+        >
           <SelectSlot
             timeDuration={timeDuration}
             areAvailableSlots={!!timeSlots?.length}

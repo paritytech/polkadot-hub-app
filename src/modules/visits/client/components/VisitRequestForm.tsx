@@ -49,6 +49,11 @@ export const _VisitRequestForm: React.FC = () => {
 
   const { data: visitNotice } = useVisitNotice(officeId)
   const [step, setStep] = React.useState<VisitRequestStep>()
+  const [preselected, setPreselected] = React.useState({
+    deskId: '',
+    areaId: '',
+    date: '',
+  })
 
   const { mutate: createVisit, error } = useCreateVisit(() => {
     setStep(
@@ -74,6 +79,15 @@ export const _VisitRequestForm: React.FC = () => {
     request.current.visits = visits
     request.current.status = 'confirmed'
     createVisit(request.current)
+  }, [])
+
+  React.useEffect(() => {
+    const url = new URL(document.location.href)
+    setPreselected({
+      deskId: url.searchParams.get('deskId') || '',
+      areaId: url.searchParams.get('areaId') || '',
+      date: url.searchParams.get('date') || '',
+    })
   }, [])
 
   React.useEffect(() => {
@@ -120,6 +134,9 @@ export const _VisitRequestForm: React.FC = () => {
       <DateDeskPicker
         officeId={request.current.officeId}
         onSubmit={onDateDeskSubmit}
+        deskId={preselected.deskId}
+        areaIdProp={preselected.areaId}
+        date={preselected.date}
       />
     )
   }

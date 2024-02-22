@@ -27,6 +27,8 @@ import {
 import { getApplicationMessage, getApplicationUpdateMessage } from './helpers'
 import { isEventApplicationUncompleted } from './helpers/checklists'
 import { Metadata } from '../metadata-schema'
+import { boolean } from 'zod'
+import { EventCheckmark } from './models'
 
 const mId = 'events'
 
@@ -437,70 +439,152 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     }
   )
 
-  fastify.get('/event', async (req, reply) => {
-    if (!req.office) {
-      return reply.throw.badParams('Invalid office ID')
-    }
-    const events = await fastify.db.Event.findAll({
-      where: {
-        endDate: {
-          [Op.gte]: new Date(),
+  fastify.get(
+    '/event',
+    async (
+      req: FastifyRequest<{
+        Querystring: { sortBy?: string }
+      }>,
+      reply
+    ) => {
+      if (!req.office) {
+        return reply.throw.badParams('Invalid office ID')
+      }
+      const events = await fastify.db.Event.findAll({
+        include: {
+          model: fastify.db.EventApplication,
+          as: 'applications',
+          where: {
+            userId: req.user.id,
+          },
+          required: false,
         },
-        visibility: EntityVisibility.Visible,
-        allowedRoles: { [Op.overlap]: req.user.roles },
-        offices: { [Op.contains]: [req.office.id] },
-      },
-      order: ['startDate'],
-    })
-
-    const applications = await fastify.db.EventApplication.findAll({
-      where: {
-        userId: req.user.id,
-        eventId: {
-          [Op.in]: events.map((x: Event) => x.id),
+        where: {
+          endDate: {
+            [Op.gte]: new Date(),
+          },
+          visibility: EntityVisibility.Visible,
+          allowedRoles: { [Op.overlap]: req.user.roles },
+          offices: { [Op.contains]: [req.office.id] },
         },
-      },
-    })
+        order: ['startDate'],
+      })
 
-    return events.map((e) => {
-      const application = applications.find((a) => a.eventId === e.id)
-      return e.usePublicView(application || null, [], null)
-    })
-  })
+      if (!!req.query.sortBy && req.query.sortBy === 'time') {
+        const pastEvents = await fastify.db.Event.findAll({
+          where: {
+            endDate: {
+              [Op.lt]: new Date(),
+            },
+            visibility: EntityVisibility.Visible,
+            allowedRoles: { [Op.contains]: [req.user.role] },
+            offices: { [Op.contains]: [req.office.id] },
+          },
+          order: ['startDate'],
+        })
+        return {
+          upcoming: events,
+          past: pastEvents,
+        }
+      }
 
-  fastify.get('/event/me', async (req, reply) => {
-    if (!req.office) {
-      return reply.throw.badParams('Invalid office ID')
+      return events.map((e) => {
+        const application = !!e?.applications?.length ? e.applications[0] : null
+        return e.usePublicView(application, [], null)
+      })
     }
+  )
 
-    const applicationEventIds = await fastify.db.EventApplication.findAll({
-      where: {
-        status: {
-          [Op.in]: [
-            EventApplicationStatus.Opened,
-            EventApplicationStatus.Pending,
-            EventApplicationStatus.Confirmed,
+  fastify.get(
+    '/event/me',
+    async (
+      req: FastifyRequest<{
+        Querystring: { sortBy?: string }
+      }>,
+      reply
+    ) => {
+      if (!req.office) {
+        return reply.throw.badParams('Invalid office ID')
+      }
+
+      const eventApplications = await fastify.db.EventApplication.findAll({
+        include: {
+          model: fastify.db.Event,
+          as: 'event',
+          where: {
+            endDate: {
+              [Op.gte]: new Date(),
+            },
+            visibility: {
+              [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
+            },
+          },
+          attributes: [
+            'id',
+            'title',
+            'startDate',
+            'endDate',
+            'coverImageUrl',
+            'metadata',
+            'checklist',
           ],
+          required: true,
+          order: [['startDate', 'ASC']],
         },
-        userId: req.user.id,
-      },
-      attributes: ['eventId'],
-    }).then((xs) => xs.map((x) => x.eventId))
+        where: {
+          status: {
+            [Op.in]: [
+              EventApplicationStatus.Opened,
+              EventApplicationStatus.Pending,
+              EventApplicationStatus.Confirmed,
+            ],
+          },
+          userId: req.user.id,
+        },
+        attributes: ['eventId', 'status', 'id'],
+      })
 
-    const events = await fastify.db.Event.findAll({
-      where: {
-        id: { [Op.in]: applicationEventIds },
-        endDate: {
-          [Op.gte]: new Date(),
-        },
-        visibility: {
-          [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
-        },
-      },
-      order: [['startDate', 'ASC']],
-    })
-    return events
-  })
+      if (!!req.query.sortBy && req.query.sortBy === 'status') {
+        const result: Record<
+          EventApplicationStatus,
+          Array<Event & { applicationId: string }>
+        > = {
+          [EventApplicationStatus.Confirmed]: [],
+          [EventApplicationStatus.Pending]: [],
+          [EventApplicationStatus.Opened]: [],
+        }
+
+        for (const app of eventApplications) {
+          const event = app.event?.get({ plain: true })
+          const checklistLength = app?.event?.checklist?.length
+          let checkmarks = []
+
+          if (checklistLength) {
+            checkmarks = await EventCheckmark.findAll({
+              where: {
+                userId: req.user.id,
+                eventId: app.eventId,
+              },
+            })
+          }
+
+          const objectToAdd = {
+            ...event,
+            applicationId: app.id,
+            applicationComplete: checkmarks?.length == checklistLength,
+          }
+          if (app.status == EventApplicationStatus.Opened) {
+            result[EventApplicationStatus.Pending].push(objectToAdd)
+          } else {
+            result[app.status].push(objectToAdd)
+          }
+        }
+        return result
+      }
+
+      return eventApplications.map((e) => e.event)
+    }
+  )
 
   fastify.get('/event/uncompleted', async (req, reply) => {
     if (!req.office) {

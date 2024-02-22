@@ -17,11 +17,13 @@ import { propEq } from '#shared/utils'
 import React from 'react'
 import dayjs from 'dayjs'
 import { GuestInviteStatusTag } from './GuestInviteStatusTag'
-import { GuestInviteStatus } from '#shared/types'
+import { GuestInviteStatus, VisitType } from '#shared/types'
 import { DATE_FORMAT_DAY_NAME_FULL } from '#client/constants'
 import { useVisitsAreas } from '#modules/visits/client/queries'
 import { OfficeFloorMap } from '#client/components/OfficeFloorMap'
 import { useUserCompact } from '#modules/users/client/queries'
+//@todo better place for this function
+import { addParams } from '#modules/hub-map/client/helpers'
 
 export const GuestInviteDetail = () => (
   <PermissionsValidator
@@ -139,9 +141,16 @@ export const _GuestInviteDetail = () => {
               <div className="mt-6">
                 <OfficeFloorMap
                   area={area}
-                  availableDeskIds={[]}
-                  selectedDeskId={guestInivite.deskId}
-                  onToggleDesk={() => null}
+                  mappablePoints={[
+                    ...area?.desks.map((desk) => ({
+                      ...desk,
+                      areaId: area.id,
+                      kind: VisitType.Visit,
+                    })),
+                  ]}
+                  clickablePoints={[]}
+                  selectedPointId={guestInivite.deskId}
+                  onToggle={() => null}
                 />
               </div>
             )}

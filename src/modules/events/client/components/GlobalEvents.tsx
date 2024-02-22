@@ -80,7 +80,7 @@ const _GlobalEvents: React.FC = () => {
               <FButton
                 className="text-sm col-span-5 sm:col-span-6 text-left"
                 kind="link"
-                href={`/event/${event.id}`}
+                href={`/events/${event.id}`}
               >
                 {event.title}{' '}
                 <span className="text-text-tertiary text-sm">
