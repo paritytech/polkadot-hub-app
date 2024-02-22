@@ -45,38 +45,40 @@ export const LatestNews = () => {
           <Placeholder />
         </div>
       ) : (
-        <div>
-          {filteredNews.map((x, i) => (
-            <div
-              key={x.id}
-              onClick={() => stores.goTo('newsPage', { newsId: x.id })}
-              className={
-                'flex flex-col gap-4 pl-4 pr-4 hover:bg-applied-hover hover:rounded-tiny cursor-pointer'
-              }
-            >
-              <div>
-                <P textType="additional" className="text-text-tertiary mb-1">
-                  {dayjs(x.publishedAt).format('D MMM')}
-                </P>
-                <div className="mb-2">{x.title}</div>
+        <div className="flex flex-col justify-between h-full pb-10">
+          <div>
+            {filteredNews.map((x, i) => (
+              <div
+                key={x.id}
+                onClick={() => stores.goTo('newsPage', { newsId: x.id })}
+                className={
+                  'flex flex-col gap-4 pl-4 pr-4 hover:bg-applied-hover hover:rounded-tiny cursor-pointer'
+                }
+              >
+                <div>
+                  <P textType="additional" className="text-text-tertiary mb-1">
+                    {dayjs(x.publishedAt).format('D MMM')}
+                  </P>
+                  <div className="mb-2">{x.title}</div>
+                </div>
+                {i + 1 === filteredNews.length &&
+                filteredNews.length <= MAX_NEWS_TO_SHOW ? (
+                  ''
+                ) : (
+                  <hr className="bg-applied-separator" />
+                )}
               </div>
-              {i + 1 === filteredNews.length &&
-              filteredNews.length <= MAX_NEWS_TO_SHOW ? (
-                ''
-              ) : (
-                <hr className="bg-applied-separator" />
-              )}
-            </div>
-          ))}
-          {!showAll && news.length > MAX_NEWS_TO_SHOW ? (
+            ))}
+          </div>
+          {filteredNews.length >= 3 && (
             <FButton
               kind="link"
-              className="mt-4 ml-2"
-              onClick={() => setShowAll(true)}
+              className="w-auto self-start"
+              onClick={() => stores.goTo('newsList')}
             >
               Show more
             </FButton>
-          ) : null}
+          )}
         </div>
       )}
     </WidgetWrapper>

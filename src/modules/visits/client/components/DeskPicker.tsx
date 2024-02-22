@@ -3,6 +3,7 @@ import React from 'react'
 import { useAvailableDesks, useVisitsAreas } from '../queries'
 import { OfficeFloorMap } from '#client/components/OfficeFloorMap'
 import { prop, propNotIn } from '#shared/utils/fp'
+import { VisitType } from '#shared/types'
 
 type Props = {
   officeId: string
@@ -144,9 +145,16 @@ export const DeskPicker: React.FC<Props> = ({
         <div className="mt-4">
           <OfficeFloorMap
             area={area}
-            availableDeskIds={availableAreaDeskIds}
-            selectedDeskId={selectedDeskId}
-            onToggleDesk={onToggleDesk}
+            mappablePoints={[
+              ...area?.desks.map((desk) => ({
+                ...desk,
+                areaId: area.id,
+                kind: VisitType.Visit,
+              })),
+            ]}
+            clickablePoints={availableAreaDeskIds}
+            selectedPointId={selectedDeskId}
+            onToggle={onToggleDesk}
           />
         </div>
       )}

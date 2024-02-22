@@ -41,10 +41,19 @@ type Result = {
 
 type Props = {
   officeId: string
+  deskId?: string
+  areaIdProp?: string
   onSubmit: (request: VisitRequest[]) => void
+  date: string
 }
 
-export const DateDeskPicker: React.FC<Props> = ({ officeId, onSubmit }) => {
+export const DateDeskPicker: React.FC<Props> = ({
+  officeId,
+  onSubmit,
+  deskId,
+  areaIdProp,
+  date,
+}) => {
   const permissions = useStore(stores.permissions)
   const [selectedDates, setSelectedDates] = React.useState<string[]>([])
   const onToggleDate = React.useCallback(
@@ -66,15 +75,20 @@ export const DateDeskPicker: React.FC<Props> = ({ officeId, onSubmit }) => {
   }, [upcomingVisits, permissions])
 
   const [selectedDeskId, setSelectedDeskId] = React.useState<string | null>(
-    null
+    deskId ?? null
   )
   const onToggleDesk = React.useCallback((desk: string) => {
     setSelectedDeskId((value) => (value === desk ? null : desk))
   }, [])
 
-  const [areaId, setAreaId] = React.useState<string | null>(null)
+  const [areaId, setAreaId] = React.useState<string | null>(areaIdProp ?? null)
 
   const [pendingResult, setPendingResult] = React.useState<Result | null>(null)
+  React.useEffect(() => {
+    if (!!date) {
+      selectedDates.push(date)
+    }
+  }, [])
   React.useEffect(() => {
     if (areaId && selectedDates.length && selectedDeskId) {
       setPendingResult({

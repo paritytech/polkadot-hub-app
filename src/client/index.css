@@ -286,3 +286,18 @@ button.mapboxgl-popup-close-button {
     );
   }
 }
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-left {
+  @apply animate-[fadeInLeft_1s_ease-in-out];
+}

@@ -153,11 +153,13 @@ export const RoundButton = ({
   icon,
   className,
   disabled = false,
+  size = 'small',
 }: {
   onClick: (ev: React.MouseEvent) => void
   icon: Icon
   className?: string
   disabled?: boolean
+  size?: ButtonSize
 }) => {
   let IconComponent = Icons[icon]
   if (!IconComponent) {
@@ -166,11 +168,13 @@ export const RoundButton = ({
   }
   return (
     <Button
-      size="small"
+      size={size}
       kind="secondary"
       onClick={onClick}
       className={cn(
-        'rounded-full h-9 w-9 flex justify-center items-center',
+        'rounded-full flex justify-center items-center',
+        size === 'small' && ' h-9 w-9',
+        size === 'normal' && ' h-14 w-14',
         className
       )}
       disabled={disabled}
@@ -215,12 +219,16 @@ export const MoreButton: React.FC<MoreButtonProps> = ({
   )
 }
 
-export const BackButton: React.FC<{ className?: string }> = ({ className }) => (
+export const BackButton: React.FC<{
+  className?: string
+  onClick?: () => void
+  text?: string
+}> = ({ className, onClick, text = 'Back' }) => (
   <FButton
     kind="link"
-    onClick={() => window.history.back()}
+    onClick={() => (!!onClick ? onClick() : window.history.back())}
     className={cn('mb-4 ml-[-8px] text-text-tertiary', className)}
   >
-    Back
+    {text}
   </FButton>
 )

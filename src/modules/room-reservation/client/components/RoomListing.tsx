@@ -39,7 +39,7 @@ export const RoomListing: React.FC<{
         rooms.map((room: OfficeRoom) => {
           const iAmChosen = chosenRoom === room.id
           return (
-            <div key={room.id}>
+            <div key={room.id} id={room.id}>
               <div
                 className={cn(
                   !iAmChosen && 'hover:bg-fill-6',

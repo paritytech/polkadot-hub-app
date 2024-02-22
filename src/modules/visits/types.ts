@@ -51,6 +51,8 @@ export type OfficeVisitor = {
   fullName: string
   avatar: string
   areaName: string
+  areaId: string
+  deskId: string
 }
 
 export type VisitReminderJob = {
