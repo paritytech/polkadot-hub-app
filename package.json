@@ -65,6 +65,7 @@
     "pino-pretty": "^8.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-easy-panzoom": "^0.4.4",
     "react-query": "^3.39.1",
     "react-table": "^7.8.0",
     "sequelize": "^6.29.0",

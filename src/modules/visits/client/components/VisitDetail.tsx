@@ -11,7 +11,7 @@ import { showNotification } from '#client/components/ui/Notifications'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import config from '#client/config'
 import * as stores from '#client/stores'
-import { VisitStatus } from '#shared/types'
+import { VisitStatus, VisitType } from '#shared/types'
 import { propEq } from '#shared/utils/fp'
 import { useStore } from '@nanostores/react'
 import dayjs from 'dayjs'
@@ -124,9 +124,16 @@ export const _VisitDetail = () => {
                 <div className="">
                   <OfficeFloorMap
                     area={area}
-                    availableDeskIds={[]}
-                    selectedDeskId={visit.deskId}
-                    onToggleDesk={() => null}
+                    mappablePoints={[
+                      ...area?.desks.map((desk) => ({
+                        ...desk,
+                        areaId: area.id,
+                        kind: VisitType.Visit,
+                      })),
+                    ]}
+                    clickablePoints={[]}
+                    selectedPointId={visit.deskId}
+                    onToggle={() => null}
                   />
                 </div>
               )}

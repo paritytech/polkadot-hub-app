@@ -185,7 +185,7 @@ export const EventPage = () => {
             <LoginButton
               size="small"
               label="Sign in"
-              callbackPath={`/event/${eventId}`}
+              callbackPath={`/events/${eventId}`}
             />
           </>
         ) : null}
@@ -386,7 +386,7 @@ export const EventPage = () => {
                     size="small"
                     label="Sign in to apply for the event"
                     className="w-full h-full"
-                    callbackPath={`/event/${eventId}`}
+                    callbackPath={`/events/${eventId}`}
                   />
                 )}
                 {providers.includes('polkadot') && (
@@ -398,7 +398,7 @@ export const EventPage = () => {
                       className="bg-black hover:opacity-80 hover:bg-black w-full"
                       provider="polkadot"
                       currentState={'Login'}
-                      callbackPath={`/event/${eventId}`}
+                      callbackPath={`/events/${eventId}`}
                     />
                   </div>
                 )}

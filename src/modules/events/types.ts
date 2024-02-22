@@ -29,6 +29,7 @@ export interface Event {
   notificationRule: EventNotificationRule
   metadata: Record<string, any>
   responsibleUserIds: string[]
+  applications?: EventApplication[]
 }
 
 export type EventMetadata = {
@@ -73,6 +74,7 @@ export interface EventApplication {
   creatorUserId: string
   formId: string | null
   formSubmissionId: string | null
+  event?: Event
 }
 
 export enum EventApplicationStatus {
@@ -127,3 +129,16 @@ export interface GlobalEvent {
 export type EventParticipant = Pick<User, 'id' | 'fullName' | 'avatar' | 'team'>
 
 export type EventPreview = Pick<Event, 'id' | 'title' | 'formId'>
+
+export interface MyEventsStatusMap {
+  [EventApplicationStatus.Confirmed]: Array<Event>
+  [EventApplicationStatus.Pending]: Array<Event>
+  [EventApplicationStatus.Opened]: Array<Event>
+  [EventApplicationStatus.CancelledAdmin]: Array<Event>
+  [EventApplicationStatus.CancelledUser]: Array<Event>
+}
+
+export interface EventTimeMap {
+  past: Array<Event>
+  upcoming: Array<Event>
+}

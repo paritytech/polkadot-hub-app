@@ -13,7 +13,7 @@
   "clientRouter": {
     "public": {
       "eventPage": {
-        "path": "/event/:eventId",
+        "path": "/events/:eventId",
         "componentId": "EventPage",
         "fullScreen": true
       },
@@ -23,7 +23,13 @@
         "fullScreen": true
       }
     },
-    "user": {},
+    "user": {
+      "events": {
+        "path": "/events",
+        "componentId": "EventsPage",
+        "fullScreen": true
+      }
+    },
     "admin": {
       "adminEvents": {
         "path": "/admin/events",

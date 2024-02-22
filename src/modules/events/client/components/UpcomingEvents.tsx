@@ -12,16 +12,14 @@ const pageSize = 3
 export const UpcomingEvents: React.FC = () => {
   const officeId = useStore(stores.officeId)
   const { data: events, isFetched } = useUpcomingEvents(officeId)
-  const [noMoreData, setNoMoreData] = useState(false)
   const [page, setPage] = useState(1)
   const [eventData, setEventData] = useState<Array<EventPublicResponse>>([])
 
   useEffect(() => {
-    if (events?.length && isFetched) {
+    if (!!events?.length && isFetched) {
       let limit = page === 1 ? pageSize : page * pageSize
       const result = paginateArray(events, 1, limit)
       setEventData(result)
-      setNoMoreData(events.length <= limit)
     }
   }, [events, officeId, page])
 
@@ -46,15 +44,13 @@ export const UpcomingEvents: React.FC = () => {
           ))}
         </div>
       )}
-      {!noMoreData && (
-        <FButton
-          kind="link"
-          className="w-auto mt-6"
-          onClick={() => setPage(page + 1)}
-        >
-          Show more
-        </FButton>
-      )}
+      <FButton
+        kind="link"
+        className="w-auto mt-6"
+        onClick={() => stores.goTo('events')}
+      >
+        Show more
+      </FButton>
     </WidgetWrapper>
   ) : null
 }
