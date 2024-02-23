@@ -187,7 +187,7 @@ export const HubMap = () => {
               placeholder={'Select area'}
               containerClassName="w-full sm:w-auto  mb-2 block sm:hidden"
             />
-            <div className="sm:max-w-[780px] h-[500px] sm:h-auto m-auto my-2 sm:my-10">
+            <div className="sm:max-w-[780px] h-[400px] sm:h-auto m-auto my-auto sm:my-10">
               <OfficeFloorMap
                 area={area}
                 mappablePoints={mappablePoints}
