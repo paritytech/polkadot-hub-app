@@ -82,7 +82,7 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
   onToggle,
 }) => {
   const me = useStore(stores.me)
-  const initialStartingPosition = selectedPointId
+  const initialStartPosition = selectedPointId
     ? mappablePoints?.find(
         (point: ScheduledItemType) => point.id === selectedPointId
       )
@@ -192,6 +192,9 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
           alt={`${area.name} floor plan`}
           className="block w-full opacity-60 object-contain overflow-hidden rounded-sm"
           imageOverlayMappingFn={(scale: number) => mapObjects(scale)}
+          initialStartPosition={
+            initialStartPosition ? initialStartPosition.position : undefined
+          }
         />
       </div>
     </div>
