@@ -56,15 +56,17 @@ export const ImageWithPanZoom = ({
         onStateChange={(data: OnStateChangeData) => setImgScale(data.scale)}
         ref={panZoomRef}
       >
-        <img
-          ref={imageRef}
-          src={src}
-          alt={alt}
-          className={cn('max-w-none h-auto', className)}
-        />
-        <div className="absolute top-0 left-0 w-full h-full">
-          {/*  passing scale so we can do reverse scaling on the mapped points */}
-          {imageOverlayMappingFn(imgScale)}
+        <div className="relative touch-none">
+          <img
+            ref={imageRef}
+            src={src}
+            alt={alt}
+            className={cn('max-w-none h-auto', className)}
+          />
+          <div className="absolute top-0 left-0 w-full h-full">
+            {/*  passing scale so we can do reverse scaling on the mapped points */}
+            {imageOverlayMappingFn(imgScale)}
+          </div>
         </div>
       </PanZoom>
     </div>
