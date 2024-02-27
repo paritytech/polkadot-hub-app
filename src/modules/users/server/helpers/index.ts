@@ -5,7 +5,7 @@ import { GeoData } from '../../types'
 import { parseGmtOffset } from '../../shared-helpers'
 import { sequelize } from '#server/db'
 import { AuthAddressPair } from '#shared/types'
-import { Op } from 'sequelize'
+import { User } from '../models'
 
 export const getDefaultLocation = (
   city: string | null,
@@ -59,26 +59,29 @@ export const getGeoDataInfo = async (
     doNotShareLocation,
   }
 }
-export const getUserProviderQuery = (
-  provider: string,
-  extension: string,
-  address: string
-) => {
-  const providerEsc = sequelize.escape(provider)
-  const extensionEsc = sequelize.escape(extension)
-  const addressEsc = sequelize.escape(address)
-  return {
-    authIds: {
-      [Op.and]: [
-        { [Op.not]: '{}' },
-        sequelize.literal(`jsonb_exists("User"."authIds", ${providerEsc})`),
-        sequelize.literal(`exists(
-              select 1 from jsonb_array_elements("User"."authIds"->${providerEsc}->${extensionEsc}) as elem
-              where elem->>'address' = ${addressEsc}
-            )`),
-      ],
-    },
-  }
+
+export const getUserProvider = async (provider: string, address: string) => {
+  const users = await sequelize.query(
+    `
+    SELECT * FROM "users" AS "User"
+    WHERE "User"."authIds" != '{}' AND
+    EXISTS (
+      SELECT 1
+      FROM jsonb_each("User"."authIds" -> :provider) AS extensions
+      WHERE EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(extensions.value) AS elem
+        WHERE elem ->> 'address' = :address
+      )
+    )
+  `,
+    {
+      model: User,
+      mapToModel: true, // Maps the results to the model, so instances of User are returned
+      replacements: { provider, address },
+    }
+  )
+  return users
 }
 
 export const removeAuthId = (
