@@ -14,7 +14,7 @@ export const jobFactory = (office: Office): CronJob => {
     ? getUtcHourForTimezone(REMINDER_HOUR_LOCAL, office.timezone)
     : REMINDER_HOUR_LOCAL
   return {
-    name: `visit-reminder-${office.id}`,
+    name: `visit-reminder:${office.id}`,
     cron: `*/10 ${jobReminderHour} * * *`, // every 10th minute past hour `REMINDER_HOUR_LOCAL` (local time)
     fn: async (ctx: CronJobContext) => {
       const officeId = office.id

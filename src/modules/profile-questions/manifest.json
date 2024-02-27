@@ -4,6 +4,7 @@
   "dependencies": ["users"],
   "requiredIntegrations": [],
   "recommendedIntegrations": [],
+  "availableCronJobs": ["checklist-answer-delete-user-data"],
   "models": ["ProfileQuestionAnswer"],
   "clientRouter": {
     "user": {

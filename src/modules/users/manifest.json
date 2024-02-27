@@ -4,6 +4,7 @@
   "dependencies": [],
   "requiredIntegrations": [],
   "recommendedIntegrations": ["bamboohr", "matrix", "mapbox"],
+  "availableCronJobs": ["users-delete-users-data"],
   "models": ["User", "Session", "City", "Tag", "UserTag"],
   "clientRouter": {
     "public": {},

@@ -4,6 +4,11 @@
   "dependencies": ["users", "forms"],
   "requiredIntegrations": [],
   "recommendedIntegrations": ["matrix", "notion", "email-smtp"],
+  "availableCronJobs": [
+    "event-delete-data",
+    "event-checklist-reminder",
+    "update-notion-events"
+  ],
   "models": [
     "Event",
     "EventApplication",

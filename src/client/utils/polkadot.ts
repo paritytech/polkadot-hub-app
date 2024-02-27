@@ -3,11 +3,7 @@ import type {
   InjectedAccountWithMeta,
   InjectedExtension,
 } from '@polkadot/extension-inject/types'
-import {
-  web3Accounts,
-  web3Enable,
-  web3FromSource,
-} from '@polkadot/extension-dapp'
+import { web3Accounts, web3Enable } from '@polkadot/extension-dapp'
 import config from '#client/config'
 import { stringToU8a } from '@polkadot/util'
 import { signatureVerify } from '@polkadot/util-crypto'
@@ -60,7 +56,7 @@ export const verify = (address: string, signature: string) => {
   }
 }
 
-export const sign = async (selectedAccount: InjectedAccountWithMeta) => {
+export const sign = async (address: string, signer) => {
   try {
     if (!config.authMessageToSign) {
       console.log(
@@ -68,24 +64,13 @@ export const sign = async (selectedAccount: InjectedAccountWithMeta) => {
       )
       return null
     }
-    // to be able to retrieve the signer interface from this account
-    // we can use web3FromSource which will return an InjectedExtension type
-    const injector = await web3FromSource(selectedAccount.meta.source)
-
-    // this injector object has a signer and a signRaw method
-    // to be able to sign raw bytes
-    const signRaw = injector?.signer?.signRaw
-
-    if (!!signRaw) {
-      // after making sure that signRaw is defined
-      // we can use it to sign our message
-      const { signature } = await signRaw({
-        address: selectedAccount.address,
-        data: config.authMessageToSign,
-        type: 'bytes',
-      })
-      return signature
-    }
+    const signRaw = await signer.signRaw
+    const { signature } = await signRaw({
+      address: address,
+      data: config.authMessageToSign,
+      type: 'bytes',
+    })
+    return signature
   } catch (e) {
     console.error(e)
   }

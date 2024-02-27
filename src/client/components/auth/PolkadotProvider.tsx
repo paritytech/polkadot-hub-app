@@ -1,39 +1,91 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
-  BackButton,
   FButton,
+  H3,
   Icons,
   Input,
-  Link,
+  LoadingPolkadot,
+  Modal,
   P,
   Select,
-  Warning,
 } from '#client/components/ui'
 import config from '#client/config'
 import { CopyToClipboard } from '#client/components/ui'
 import { api } from '#client/utils/api'
-import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
+import { WalletAggregator, WalletType } from '@polkadot-onboard/core'
+import { InjectedWalletProvider } from '@polkadot-onboard/injected-wallets'
+import { WalletConnectProvider } from '@polkadot-onboard/wallet-connect/packages/wallet-connect/src'
+
+const DAPP_NAME = config.appName
+
 import {
   AuthSteps,
   Errors,
   ErrorComponent,
   GENERIC_ERROR,
-  LoadingPolkadot,
   StepWrapper,
   WhiteWindow,
   providerUrls,
+  WalletTab,
 } from './helper'
-import { WsProvider } from '@polkadot/api'
-import {
-  connectToPolkadot,
-  enablePolkadotExtension,
-  getAccountsList,
-  sign,
-  verify,
-} from '#client/utils/polkadot'
+import { sign, verify } from '#client/utils/polkadot'
+import { extensionConfig, walletConnectConfig } from './config'
+import { cn } from '#client/utils'
+
+type ModalProps = {
+  onConfirm: () => void
+  onCancel: () => void
+  className?: string
+}
+
+export const ConfirmationModal: React.FC<ModalProps> = ({
+  onConfirm,
+  onCancel,
+  className,
+}) => {
+  return (
+    <Modal
+      onClose={onCancel}
+      title="Important information"
+      className={className}
+    >
+      <div className="flex flex-col gap-4">
+        <div>
+          <P className="font-bold mb-0">Please be patient</P>
+          <p className="mt-0 text-text-secondary">
+            Signature/sign requests to your wallet might take a while to
+            propagate (2-5 seconds).
+          </p>
+        </div>
+
+        <div>
+          <P className="font-bold mb-0">No redirect back from wallet</P>
+          <p className="text-text-secondary">
+            After your sign the request in you wallet, you will need to manually
+            return back to the browser to continue.
+          </p>
+        </div>
+        <FButton onClick={onConfirm} className="w-full rounded-sm">
+          Noted
+        </FButton>
+      </div>
+    </Modal>
+  )
+}
+
+const LoaderWithText = ({ text = 'Connecting' }: { text?: string }) => (
+  <div className="flex flex-col justify-center items-center">
+    <H3>{text}</H3>
+    <LoadingPolkadot />
+  </div>
+)
 
 export const PolkadotProvider: React.FC = () => {
-  const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([])
+  const [wallets, setWallets] = useState<any>([])
+  const [chosenWallet, setChosenWallet] = useState<any>()
+  const [accounts, setAccounts] = useState<
+    Array<{ address: string; name: string; source: string }>
+  >([])
   const [selectedAddress, setSelectedAddress] = useState('')
   const [isValidSignature, setIsValidSignature] = useState(false)
   const [userSignature, setUserSignature] = useState<string | null>(null)
@@ -41,7 +93,13 @@ export const PolkadotProvider: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(AuthSteps.Connecting)
   const [userDetails, setUserDetails] = useState({ fullName: '', email: '' })
+  const [walletConnect, setWalletConnect] = useState<any>(null)
+  const [showModal, setShowModal] = useState<any>(false)
+  const [showTryAgain, setShowTryAgain] = useState<any>(false)
+  const [loaderText, setLoaderText] = useState<string>('Connecting')
+  const [modalShown, setModalShown] = useState(false)
 
+  const isWalletConnect = (w) => w.type === WalletType.WALLET_CONNECT
   const selectedAccount = useMemo(
     () => accounts.find((a) => a.address === selectedAddress),
     [selectedAddress]
@@ -55,7 +113,14 @@ export const PolkadotProvider: React.FC = () => {
   const googleUrl = useMemo(() => {
     const url = new URL(providerUrls.google)
     url.searchParams.append('callbackPath', '/settings')
-    url.searchParams.append('account', JSON.stringify(selectedAccount))
+    url.searchParams.append(
+      'account',
+      JSON.stringify({
+        address: selectedAccount?.address,
+        name: selectedAccount?.name,
+        source: selectedAccount?.source,
+      })
+    )
     if (userSignature) {
       url.searchParams.append('signature', userSignature)
     }
@@ -65,44 +130,127 @@ export const PolkadotProvider: React.FC = () => {
   const polkadotUrl = (path: string) =>
     new URL(`${config.appHost}/auth/polkadot/${path}`).toString()
 
-  useEffect(() => {
-    let socket: WsProvider
-    connectToPolkadot()
-      .then((sock) => {
-        socket = sock
-        return enablePolkadotExtension()
-      })
-      .then((extensions) => {
-        if (!extensions.length) {
-          throw new Error(Errors.NoExtensionError)
-        }
-        return getAccountsList()
-      })
-      .then((accounts) => {
-        if (!accounts.length) {
-          throw new Error(Errors.NoAccountsError)
-        }
+  const ButtonWrapper = ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode
+    className?: string
+  }) => (
+    <div
+      className={cn(
+        'flex flex-col gap-4 sm:flex-row justify-between w-full mt-6',
+        className
+      )}
+    >
+      {children}
+    </div>
+  )
+
+  const onConnected = {
+    [WalletType.WALLET_CONNECT]: async (walletInfo) => {
+      try {
+        setLoading(true)
+        setChosenWallet(walletInfo)
+        let accounts = await walletInfo.getAccounts()
+        accounts = Array.from(
+          new Set(
+            accounts
+              .filter((a) => a.address.startsWith('1'))
+              .map((a) => a.address)
+          )
+        )
+        accounts = accounts.map((addr) => {
+          return {
+            name: '...' + addr.slice(addr.length - 12, addr.length),
+            address: addr,
+            source: walletInfo.session.peer.metadata.name,
+            wallet: walletInfo,
+          }
+        })
+
         setAccounts(accounts)
         setStep(AuthSteps.ChooseAccount)
-      })
-      .catch((e) => {
-        console.error(e)
-        switch (e.message) {
-          case Errors.NoExtensionError:
-            setError(ErrorComponent[Errors.NoExtensionError])
-            break
-          case Errors.NoAccountsError:
-            setError(ErrorComponent[Errors.NoAccountsError])
-            break
-          default:
-            setError(GENERIC_ERROR)
-            break
+        setLoading(false)
+      } catch (e) {
+        setLoading(false)
+        console.log(e)
+      }
+    },
+    [WalletType.INJECTED]: async (walletInfo) => {
+      try {
+        setLoading(true)
+        setChosenWallet(walletInfo)
+        let accounts = await walletInfo.getAccounts()
+        if (!accounts.length) {
+          setStep(AuthSteps.Error)
+          setError(ErrorComponent[Errors.NoAccountsError](walletInfo.metadata))
+          return
         }
-      })
-    return () => {
-      socket && socket.disconnect()
+        accounts = accounts.map((account) => ({
+          ...account,
+          source: walletInfo.metadata.id,
+          wallet: walletInfo,
+        }))
+        setAccounts(accounts)
+        setStep(AuthSteps.ChooseAccount)
+        setLoading(false)
+      } catch (e) {
+        setLoading(false)
+        console.log(e)
+      }
+    },
+  }
+
+  useEffect(() => {
+    if (step === AuthSteps.ReConnecting) {
+      setStep(AuthSteps.Connecting)
+      setError('')
     }
-  }, [])
+    if (step === AuthSteps.Connecting) {
+      let walletAggregator = new WalletAggregator([
+        new InjectedWalletProvider(extensionConfig, DAPP_NAME),
+        new WalletConnectProvider(walletConnectConfig, DAPP_NAME),
+      ])
+      setTimeout(async () => {
+        walletAggregator
+          .getWallets()
+          .then((wallets) => {
+            setWallets(wallets)
+            let confWallets = wallets.map((wallet) => {
+              if (isWalletConnect(wallet)) {
+                if (!walletConnect) {
+                  setWalletConnect(wallet)
+                }
+                wallet.walletConnectModal.setTheme({
+                  themeMode: 'dark',
+                  themeVariables: {
+                    '--wcm-font-family': 'Unbounded, sans-serif',
+                    '--wcm-accent-color': '#E6007A',
+                  },
+                })
+              }
+              return wallet
+            })
+            setWallets(confWallets)
+            setStep(AuthSteps.ChooseWallet)
+            setLoading(false)
+          })
+          .catch((e) => {
+            console.error(e)
+            switch (e.message) {
+              case Errors.NoAccountsError:
+                setError(ErrorComponent[Errors.NoAccountsError])
+                break
+              default:
+                console.error(e)
+                setError(GENERIC_ERROR)
+                break
+            }
+          })
+      }, 1000)
+    }
+  }, [step])
 
   useEffect(() => {
     if (isValidSignature && step === AuthSteps.Redirect) {
@@ -115,19 +263,35 @@ export const PolkadotProvider: React.FC = () => {
       if (!selectedAccount) {
         throw new Error('No account has been selected for login.')
       }
+      const account = {
+        address: selectedAccount?.address,
+        name: selectedAccount?.name,
+        source: selectedAccount?.source,
+      }
       const { data: response } = await api.post(`${polkadotUrl('users')}`, {
-        selectedAccount,
+        selectedAccount: account,
         signature,
       })
       if (!response.userRegistered) {
+        setLoading(false)
         setStep(AuthSteps.Warning)
         return
       }
-      await api.post(`${polkadotUrl('login')}`, {
-        selectedAccount,
-        signature,
-      })
+
+      console.log(selectedAccount)
+      console.log(account)
+      try {
+        await api.post(`${polkadotUrl('login')}`, {
+          selectedAccount: account,
+          signature,
+        })
+      } catch (e) {
+        console.log(e)
+        setStep(AuthSteps.Warning)
+      }
+
       setIsValidSignature(true)
+      setLoading(false)
       if (callbackPath) {
         window.location.href = callbackPath
       } else {
@@ -146,7 +310,11 @@ export const PolkadotProvider: React.FC = () => {
         throw new Error('No account has been selected for user creation.')
       }
       await api.post(`${polkadotUrl('register')}`, {
-        selectedAccount,
+        selectedAccount: {
+          address: selectedAccount?.address,
+          name: selectedAccount?.name,
+          source: selectedAccount?.source,
+        },
         signature: userSignature,
       })
       setIsValidSignature(true)
@@ -164,7 +332,21 @@ export const PolkadotProvider: React.FC = () => {
         console.error('Invalid account.')
         return
       }
-      const signature = await sign(selectedAccount)
+      if (!isWalletConnect(chosenWallet)) {
+        setLoaderText('Please sign the request')
+      } else {
+        setLoaderText('Connecting to your wallet...')
+        // window.location.href = selectedAccount?.source + '://'
+        setTimeout(() => {
+          setLoaderText('Processing takes about 2-7 seconds')
+        }, 5000)
+        setTimeout(() => setShowTryAgain(true), 30000)
+      }
+      setLoading(true)
+      const signature = await sign(
+        selectedAccount.address,
+        selectedAccount.wallet.signer
+      )
       if (signature) {
         setUserSignature(signature)
         const isSignatureValid = verify(selectedAccount.address, signature)
@@ -198,104 +380,155 @@ export const PolkadotProvider: React.FC = () => {
     switch (currentStep) {
       case AuthSteps.Connecting:
         return (
-          <StepWrapper title="Connecting to Polkadot Extension...">
-            {!error && <LoadingPolkadot />}
-            {error && <div>{error}</div>}
+          <StepWrapper>
+            <LoaderWithText />
           </StepWrapper>
         )
+
+      case AuthSteps.ChooseWallet:
+        return (
+          <StepWrapper title="Choose Wallet">
+            {!error && (
+              <div className="flex flex-col gap-4">
+                {wallets.map((ext) => {
+                  return (
+                    <WalletTab
+                      key={ext.metadata.id}
+                      wallet={ext}
+                      name={
+                        isWalletConnect(ext)
+                          ? 'Wallet Connect'
+                          : ext.metadata.title
+                      }
+                      id={ext.metadata.id}
+                      onClickConnect={() => {
+                        setShowModal(true)
+                        setModalShown(true)
+                        onConnected[ext.type](ext)
+                      }}
+                    />
+                  )
+                })}
+              </div>
+            )}
+          </StepWrapper>
+        )
+
       case AuthSteps.ChooseAccount:
         return (
-          <div className="grid grid-cols-[1fr_2fr_1fr]">
+          <StepWrapper title="Choose account">
             <div>
-              <BackButton className="self-start" />
-            </div>
-            <StepWrapper
-              title="Choose your account"
-              subtitle={`Works with Polkadot Js and Talisman`}
-            >
-              <div>
-                <Select
-                  placeholder="select account"
-                  containerClassName="w-full mt-4 mb-2"
-                  value={selectedAddress}
-                  onChange={(v) => {
-                    setSelectedAddress(v)
-                    setError('')
-                  }}
-                  options={[{ label: 'select account', value: '' }].concat(
-                    accounts.map((account) => ({
-                      label: `${account.meta.name} (${account.meta.source})`,
-                      value: account.address,
-                    }))
-                  )}
-                ></Select>
-                <div className="flex align-middle justify-center gap-2 mb-14">
-                  <Icons.WarningIcon />
-                  <P
-                    textType="additional"
-                    className="text-text-secondary mt-0 max-w-[400px] text-left"
-                  >
-                    We strongly recommend to use a separate empty account as
-                    identity instead of your wallet with real funds.
-                  </P>
-                </div>
+              <Select
+                placeholder="select account"
+                containerClassName="w-full mb-4"
+                value={selectedAddress}
+                onChange={(v) => {
+                  setSelectedAddress(v)
+                  setError('')
+                }}
+                options={accounts.map((account) => ({
+                  label: `${account.name} (${account.source})`,
+                  value: account.address,
+                }))}
+              ></Select>
+              <div className="flex align-middle justify-center gap-2 mb-2">
+                <Icons.WarningIcon />
+                <P
+                  textType="additional"
+                  className="text-text-secondary mt-0 max-w-[400px] text-left"
+                >
+                  We strongly recommend to use a separate empty account as
+                  identity instead of your wallet with real funds.
+                </P>
               </div>
-              <FButton
-                className="w-full"
-                kind="primary"
-                size="small"
-                onClick={() => handleLogin()}
-              >
-                Continue
-              </FButton>
-              {error && <div className="text-accents-red">{error}</div>}
-            </StepWrapper>
-          </div>
+              <ButtonWrapper>
+                <FButton
+                  className="w-full sm:w-fit h-14 sm:h-full"
+                  kind="secondary"
+                  size="small"
+                  onClick={() => setStep(AuthSteps.ChooseWallet)}
+                >
+                  Back
+                </FButton>
+                <FButton
+                  className="w-full sm:w-fit h-14  sm:h-full"
+                  kind="primary"
+                  size="small"
+                  onClick={() => handleLogin()}
+                  disabled={!selectedAccount}
+                >
+                  Continue
+                </FButton>
+              </ButtonWrapper>
+            </div>
+
+            {isWalletConnect(chosenWallet) && (
+              <WalletTab
+                className="w-fit mt-4 mx-auto border-0"
+                key={walletConnect.metadata.id}
+                wallet={walletConnect}
+                name={'Wallet Connect'}
+                id={walletConnect.metadata.id}
+                onClickConnect={() => {
+                  if (!modalShown) {
+                    setShowModal(true)
+                  }
+                  onConnected[WalletType.WALLET_CONNECT](walletConnect)
+                }}
+                disconnect={true}
+              />
+            )}
+          </StepWrapper>
         )
       case AuthSteps.Warning:
         return (
           <div className="flex flex-col gap-4">
-            <StepWrapper title="New account?">
-              {loading && <LoadingPolkadot />}
-              {!loading && (
+            <StepWrapper title="New account">
+              <div className="mb-6">
                 <>
-                  <>
-                    <P className="text-center mb-0">
-                      This address is not linked to any account
-                    </P>
-                    <div className="flex items-center text-text-secondary justify-center">
-                      <P>{`${selectedAddress.slice(0, 24)}...`} </P>
-                      <CopyToClipboard text={selectedAddress} />
-                    </div>
-                  </>
-                  <div className="flex flex-col gap-4">
-                    <FButton onClick={createUser}>
-                      Yes, create a new account
-                    </FButton>
-                    <FButton
-                      kind="secondary"
-                      onClick={() => (window.location.href = googleUrl)}
-                    >
-                      No, link to my existing Google account.
-                    </FButton>
+                  <div className="flex items-center text-text-secondary justify-between opacity-50">
+                    <P>{`${selectedAddress.slice(0, 28)}...`} </P>
+                    <CopyToClipboard text={selectedAddress} />
                   </div>
+                  <P className="mb-6 mt-0 text-left">
+                    {' '}
+                    This address is not linked to any account.
+                    <br />
+                    Do you want to create a new account?
+                  </P>
                 </>
-              )}
+                <ButtonWrapper className="sm:flex-col">
+                  <FButton onClick={createUser}>
+                    Yes, create a new account
+                  </FButton>
+                  <FButton
+                    kind="secondary"
+                    onClick={() => (window.location.href = googleUrl)}
+                  >
+                    No, link to my existing Google account.
+                  </FButton>
+                </ButtonWrapper>
+              </div>
             </StepWrapper>
-            <Link className="text-text-secondary" href="/login">
+            <FButton
+              kind="link"
+              href="/login"
+              className="mt-4 w-fit m-auto text-text-secondary"
+            >
+              {' '}
               Go to Login
-            </Link>
+            </FButton>
           </div>
         )
       case AuthSteps.BasicSetting:
         return (
           <StepWrapper
-            title="Complete Setting Up Your Profile"
+            title="Set Up Your Profile"
             subtitle={
               'Let us know a few details about you so we know how to properly address you, and how to contact you.'
             }
           >
-            <form className="w-full" onSubmit={updateUser}>
+            <form className="w-5/6 mt-4" onSubmit={updateUser}>
               <Input
                 name="fullName"
                 type="text"
@@ -318,22 +551,61 @@ export const PolkadotProvider: React.FC = () => {
                 containerClassName="w-full"
                 className="mb-4"
               />
-              <FButton type="submit">Continue</FButton>
+              <FButton className="mt-4" type="submit">
+                Continue
+              </FButton>
             </form>
           </StepWrapper>
         )
+      case AuthSteps.Error:
+        return (
+          <StepWrapper title="Error">
+            {error}
+            <FButton
+              className="mt-4"
+              onClick={() => setStep(AuthSteps.ReConnecting)}
+            >
+              Try again
+            </FButton>
+          </StepWrapper>
+        )
       case AuthSteps.Redirect:
-        return <div></div>
+        return (
+          <div className="flex justify-center items-center">
+            <LoadingPolkadot />
+          </div>
+        )
       default:
-        return <div>Unknown state. Please contact administrator</div>
+        break
     }
   }
 
   return (
     <WhiteWindow>
-      <div className="flex flex-col items-center justify-center">
-        {getStep(step)}
-      </div>
+      {showModal && (
+        <ConfirmationModal
+          onConfirm={() => setShowModal(false)}
+          onCancel={() => setShowModal(false)}
+        />
+      )}
+      {!loading && getStep(step)}
+      {loading && (
+        <div>
+          <LoaderWithText text={loaderText} />
+          {showTryAgain && (
+            <FButton
+              kind="link"
+              className="mt-2"
+              onClick={() => {
+                setLoading(false)
+                setLoaderText('Connecting')
+              }}
+            >
+              Try again
+            </FButton>
+          )}
+        </div>
+      )}
     </WhiteWindow>
   )
 }

@@ -4,6 +4,10 @@
   "dependencies": ["users", "time-off"],
   "requiredIntegrations": [],
   "recommendedIntegrations": ["matrix", "bamboohr"],
+  "availableCronJobs": [
+    "working-hours-reminder",
+    "fetch-default-hours-reminder"
+  ],
   "models": [
     "WorkingHoursEntry",
     "DefaultWorkingHoursEntry",

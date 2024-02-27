@@ -4,6 +4,7 @@
   "dependencies": ["users"],
   "requiredIntegrations": [],
   "recommendedIntegrations": [],
+  "availableCronJobs": ["checklist-answer-delete-data"],
   "models": ["Checklist", "ChecklistAnswer"],
   "clientRouter": {
     "admin": {
