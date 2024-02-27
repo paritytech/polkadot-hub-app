@@ -26,7 +26,7 @@ import {
 import {
   getDefaultLocation,
   getGeoDataInfo,
-  getUserProviderQuery,
+  getUserProvider,
   removeAuthId,
 } from './helpers'
 
@@ -508,13 +508,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         }
       }
 
-      const otherUsers = await fastify.db.User.findAllActive({
-        where: getUserProviderQuery(
-          PROVIDER_NAME,
-          extensionName,
-          req.body.address
-        ),
-      })
+      const otherUsers = await getUserProvider(PROVIDER_NAME, req.body.address)
 
       if (!!otherUsers.length) {
         fastify.log.error(

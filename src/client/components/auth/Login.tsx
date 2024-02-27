@@ -1,4 +1,4 @@
-import { H1 } from '#client/components/ui'
+import { FButton, H1 } from '#client/components/ui'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import * as React from 'react'
@@ -17,7 +17,7 @@ export const Login: React.FC = () => {
 
   return (
     <WhiteWindow>
-      <div className="flex flex-col items-stretch w-full justify-between h-full">
+      <div className="flex flex-col items-stretch w-full gap-4">
         <H1>
           {currentState === 'Login'
             ? `Login to ${config.appName}`
@@ -31,8 +31,7 @@ export const Login: React.FC = () => {
             />
           )}
           {providers.includes('polkadot') && (
-            // @to-do not showing polkadot button on mobile or tablet as we cannot have browser extension on those
-            <div className="hidden md:block">
+            <div className="">
               <LoginButton
                 icon="polkadot"
                 label={`${currentState} with Polkadot`}
@@ -44,16 +43,19 @@ export const Login: React.FC = () => {
           )}
         </div>
 
-        {!!providers.length && <button
-          className="underline mt-4"
-          onClick={() =>
-            setCurrentState(currentState === 'Login' ? 'Register' : 'Login')
-          }
-        >
-          {currentState === 'Login'
-            ? 'I want to create a new account'
-            : 'I already have an account'}
-        </button>}
+        {!!providers.length && (
+          <FButton
+            kind="link"
+            className="mt-4 w-fit m-auto"
+            onClick={() =>
+              setCurrentState(currentState === 'Login' ? 'Register' : 'Login')
+            }
+          >
+            {currentState === 'Login'
+              ? 'I want to create a new account'
+              : 'I already have an account'}
+          </FButton>
+        )}
       </div>
     </WhiteWindow>
   )

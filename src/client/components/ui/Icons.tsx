@@ -307,22 +307,26 @@ const ArrowBack = ({ fillClassName = 'fill-text-tertiary', ...props }) => (
 )
 
 const WarningIcon = ({ fillClassName = '', ...props }) => (
-  <div className="bg-yellow-100 p-2 rounded-md w-10 h-10 flex justify-center items-center">
-    <svg
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-    >
-      <path
-        className={fillClassName}
-        d="M12 6.49L19.53 19.5H4.47L12 6.49ZM12 2.5L1 21.5H23L12 2.5ZM13 16.5H11V18.5H13V16.5ZM13 10.5H11V14.5H13V10.5Z"
-        fill="black"
-      />
-    </svg>
-  </div>
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 28 28"
+    fill="#ff9200"
+    xmlns="http://www.w3.org/2000/svg"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    stroke="#ff9200"
+    {...props}
+  >
+    <path
+      className={fillClassName}
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M14.8099 2.59164C14.635 2.26919 14.2976 2.06836 13.9308 2.06836C13.564 2.06836 13.2266 2.26919 13.0517 2.59164L1.12094 24.5916C0.952899 24.9015 0.960413 25.277 1.14072 25.5799C1.32103 25.8828 1.6475 26.0684 2 26.0684H25.8616C26.2141 26.0684 26.5406 25.8828 26.7209 25.5799C26.9012 25.277 26.9087 24.9015 26.7407 24.5916L14.8099 2.59164ZM13.9295 9.62269C14.4818 9.62196 14.9301 10.0691 14.9308 10.6214L14.9404 17.8355C14.9412 18.3878 14.494 18.8361 13.9418 18.8368C13.3895 18.8376 12.9412 18.3904 12.9404 17.8382L12.9308 10.624C12.9301 10.0717 13.3772 9.62343 13.9295 9.62269ZM14.6394 20.558C14.2489 20.1675 13.6157 20.1675 13.2252 20.558C12.8346 20.9486 12.8346 21.5817 13.2252 21.9722L13.2432 21.9903C13.6337 22.3808 14.2669 22.3808 14.6574 21.9903C15.0479 21.5998 15.0479 20.9666 14.6574 20.5761L14.6394 20.558Z"
+      stroke="none"
+    ></path>
+  </svg>
 )
 
 const Element = ({ fillClassName = 'fill-text-tertiary', ...props }) => (
@@ -558,6 +562,22 @@ const SimpleArrowButton = ({
     <path
       d="M48.7249 28.95L45.7582 26L29.2749 42.5L45.7749 59L48.7249 56.05L35.1749 42.5L48.7249 28.95Z"
       fill={strokeClassName}
+    />
+  </svg>
+)
+
+const SimpleArrow = ({ fillClassName = '#F0F0F0', ...props }) => (
+  <svg
+    width="85"
+    height="85"
+    viewBox="0 0 85 85"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M48.7249 28.95L45.7582 26L29.2749 42.5L45.7749 59L48.7249 56.05L35.1749 42.5L48.7249 28.95Z"
+      fill={fillClassName}
     />
   </svg>
 )
@@ -961,6 +981,7 @@ export const Icons = {
   MinusButton,
   PlusButton,
   SimpleArrowButton,
+  SimpleArrow,
   Polkadot,
   Gear,
   Gmail,

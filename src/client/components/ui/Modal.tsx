@@ -10,6 +10,7 @@ type ModalProps = {
   title?: string
   children: React.ReactNode
   onClose?: () => void
+  className?: string
   size?: 'small' | 'normal' | 'wide'
 }
 
