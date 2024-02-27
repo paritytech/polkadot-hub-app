@@ -3,9 +3,9 @@ import { u8aToHex } from '@polkadot/util'
 import { decodeAddress, signatureVerify } from '@polkadot/util-crypto'
 import { Op } from 'sequelize'
 import { jwt } from '#server/utils'
-import { sequelize } from '#server/db'
 import config from '#server/config'
-import { Session } from '#modules/users/server/models'
+import { Session, User } from '#modules/users/server/models'
+import { sequelize } from '#server/db'
 
 export const getSession = async (
   userId: string,
@@ -18,22 +18,27 @@ export const getSession = async (
   })
 }
 
-export const getUserProviderQuery = (
-  provider: string,
-  extension: string,
-  address: string
-) => ({
-  authIds: {
-    [Op.and]: [
-      { [Op.not]: '{}' }, // Filter fields that are not an empty object
-      sequelize.literal(`jsonb_exists("User"."authIds", '${provider}')`),
-      sequelize.literal(`exists(
-            select 1 from jsonb_array_elements("User"."authIds"->'${provider}'->'${extension}') as elem
-            where elem->>'address' = '${address}'
-          )`),
-    ],
-  },
-})
+export const getUserProvider = async (provider: string, address: string) =>
+  sequelize.query(
+    `
+    SELECT * FROM "users" AS "User"
+    WHERE "User"."authIds" != '{}' AND
+    EXISTS (
+      SELECT 1
+      FROM jsonb_each("User"."authIds" -> :provider) AS extensions
+      WHERE EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(extensions.value) AS elem
+        WHERE elem ->> 'address' = :address
+      )
+    )
+  `,
+    {
+      model: User,
+      mapToModel: true, // Maps the results to the model, so instances of User are returned
+      replacements: { provider, address },
+    }
+  )
 
 export const isValidSignature = (address: string, signature: string) => {
   try {

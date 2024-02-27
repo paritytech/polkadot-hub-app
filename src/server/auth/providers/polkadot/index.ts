@@ -2,7 +2,7 @@ import { appConfig } from '#server/app-config'
 import { AuthAddressPair, AuthIds, AuthProvider } from '#shared/types'
 import { FastifyInstance, FastifyPluginCallback, FastifyRequest } from 'fastify'
 import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
-import { getSession, getUserProviderQuery, isValidSignature } from '../helper'
+import { getSession, getUserProvider, isValidSignature } from '../helper'
 
 export const plugin: FastifyPluginCallback = async (
   fastify: FastifyInstance
@@ -23,14 +23,8 @@ export const plugin: FastifyPluginCallback = async (
       if (!isSignatureValid) {
         return reply.throw.accessDenied()
       }
-      const user = await fastify.db.User.findOneActive({
-        where: getUserProviderQuery(
-          AuthProvider.Polkadot,
-          body.meta.source,
-          body.address
-        ),
-      })
-      if (user) {
+      const user = await getUserProvider(AuthProvider.Polkadot, body.address)
+      if (!!user.length) {
         return { userRegistered: true }
       }
       return { userRegistered: false }
@@ -53,18 +47,13 @@ export const plugin: FastifyPluginCallback = async (
         return reply.throw.accessDenied()
       }
 
-      const user = await fastify.db.User.findOneActive({
-        where: getUserProviderQuery(
-          AuthProvider.Polkadot,
-          body.meta.source,
-          body.address
-        ),
-      })
-      if (!user) {
+      const user = await getUserProvider(AuthProvider.Polkadot, body.address)
+
+      if (!user.length) {
         return reply.throw.notFound('There is no account with this address')
       }
       // set cookies and login
-      const session = await getSession(user.id, fastify)
+      const session = await getSession(user[0].id, fastify)
       return reply.setSessionCookie(session.token).ok()
     }
   )
@@ -78,11 +67,18 @@ export const plugin: FastifyPluginCallback = async (
       reply
     ) => {
       const body: InjectedAccountWithMeta = req.body.selectedAccount
-
+      const source = body.source?.replaceAll(' ', '').toLowerCase()
       // @todo move to app config?
-      const allowedExtensions = ['polkadot-js', 'talisman']
-      const extensionName = body.meta.source
-      if (!allowedExtensions.includes(extensionName)) {
+      const allowedExtensions = [
+        'polkadot-js',
+        'talisman',
+        'subwallet-js',
+        'subwallet',
+        'novawallet',
+        'walletconnect',
+      ]
+
+      if (!allowedExtensions.includes(source)) {
         return reply.throw.conflict('Unsupported extension')
       }
 
@@ -94,22 +90,16 @@ export const plugin: FastifyPluginCallback = async (
         return reply.throw.accessDenied()
       }
 
-      const user = await fastify.db.User.findOneActive({
-        where: getUserProviderQuery(
-          AuthProvider.Polkadot,
-          body.meta.source,
-          body.address
-        ),
-      })
-      if (user) {
+      const user = await getUserProvider(AuthProvider.Polkadot, body.address)
+      if (!!user.length) {
         return reply.throw.conflict('User is already registered')
       }
 
       const authIds: Record<string, any> = {
         [AuthProvider.Polkadot]: {
-          [extensionName]: [
+          [source]: [
             {
-              name: body.meta.name ?? '',
+              name: body.name ?? '',
               address: body.address ?? '',
             } as AuthAddressPair,
           ],
