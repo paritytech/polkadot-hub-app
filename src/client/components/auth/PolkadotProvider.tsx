@@ -41,14 +41,9 @@ type ModalProps = {
 export const ConfirmationModal: React.FC<ModalProps> = ({
   onConfirm,
   onCancel,
-  className,
 }) => {
   return (
-    <Modal
-      onClose={onCancel}
-      title="Important information"
-      className={className}
-    >
+    <Modal onClose={onCancel} title="Important information">
       <div className="flex flex-col gap-4">
         <div>
           <P className="font-bold mb-0">Please be patient</P>
@@ -58,7 +53,7 @@ export const ConfirmationModal: React.FC<ModalProps> = ({
           </p>
         </div>
 
-        <div>
+        <div className="block sm:hidden">
           <P className="font-bold mb-0">No redirect back from wallet</P>
           <p className="text-text-secondary">
             After your sign the request in you wallet, you will need to manually
@@ -183,8 +178,9 @@ export const PolkadotProvider: React.FC = () => {
         setChosenWallet(walletInfo)
         let accounts = await walletInfo.getAccounts()
         if (!accounts.length) {
-          setStep(AuthSteps.Error)
+          setLoading(false)
           setError(ErrorComponent[Errors.NoAccountsError](walletInfo.metadata))
+          setStep(AuthSteps.Error)
           return
         }
         accounts = accounts.map((account) => ({
@@ -387,30 +383,51 @@ export const PolkadotProvider: React.FC = () => {
 
       case AuthSteps.ChooseWallet:
         return (
-          <StepWrapper title="Choose Wallet">
-            {!error && (
-              <div className="flex flex-col gap-4">
-                {wallets.map((ext) => {
-                  return (
-                    <WalletTab
-                      key={ext.metadata.id}
-                      wallet={ext}
-                      name={
-                        isWalletConnect(ext)
-                          ? 'Wallet Connect'
-                          : ext.metadata.title
-                      }
-                      id={ext.metadata.id}
-                      onClickConnect={() => {
-                        setShowModal(true)
-                        setModalShown(true)
-                        onConnected[ext.type](ext)
-                      }}
-                    />
-                  )
-                })}
+          <StepWrapper
+            title="Choose Wallet"
+            subtitle={
+              <div className="hidden sm:block mb-4">
+                {wallets.length === 1 && isWalletConnect(wallets[0]) && (
+                  <div>
+                    <div className="mb-2">Supported browser extensions</div>
+                    <div className="flex gap-2 justify-center">
+                      {extensionConfig.supported.map((extension) => (
+                        <a key={extension.id} href={extension.urls.main}>
+                          <img
+                            height="24"
+                            width="24"
+                            src={extension.image}
+                            className="hover:scale-110"
+                          ></img>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            }
+          >
+            <div className="flex flex-col gap-4">
+              {wallets.map((ext) => {
+                return (
+                  <WalletTab
+                    key={ext.metadata.id}
+                    wallet={ext}
+                    name={
+                      isWalletConnect(ext)
+                        ? 'Wallet Connect'
+                        : ext.metadata.title
+                    }
+                    id={ext.metadata.id}
+                    onClickConnect={() => {
+                      setShowModal(true)
+                      setModalShown(true)
+                      onConnected[ext.type](ext)
+                    }}
+                  />
+                )
+              })}
+            </div>
           </StepWrapper>
         )
 
@@ -562,7 +579,7 @@ export const PolkadotProvider: React.FC = () => {
           <StepWrapper title="Error">
             {error}
             <FButton
-              className="mt-4"
+              className="mt-10"
               onClick={() => setStep(AuthSteps.ReConnecting)}
             >
               Try again
