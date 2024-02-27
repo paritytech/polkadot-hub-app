@@ -7,14 +7,26 @@ export const api = axios.create({
   withCredentials: true,
 })
 
-api.interceptors.response.use((res) => res, (err: AxiosError<{ statusCode: number; message: string }>) => {
-  if (err.response?.data?.statusCode !== 401) {
-    if (err.code === 'ERR_NETWORK') {
-      showNotification('No internet connection.', 'warning')
+api.interceptors.response.use(
+  (res) => res,
+  (err: AxiosError<{ statusCode: number; message: string }>) => {
+    if (err.response?.status === 401) {
+      setTimeout(() => {
+        if (!['/login', '/polkadot'].includes(window.location.pathname)) {
+          showNotification('Your session has expired.', 'info', {
+            text: 'Login',
+            url: '/auth/logout',
+          })
+        }
+      }, 1e3)
     } else {
-      const message = err.response?.data?.message || 'Something went wrong.'
-      showNotification(message, 'error')
+      if (err.code === 'ERR_NETWORK') {
+        showNotification('No internet connection.', 'warning')
+      } else {
+        const message = err.response?.data?.message || 'Something went wrong.'
+        showNotification(message, 'error')
+      }
     }
+    throw err
   }
-  throw err
-})
+)

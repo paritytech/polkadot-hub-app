@@ -2,18 +2,27 @@ import { FastifyInstance } from 'fastify'
 import { u8aToHex } from '@polkadot/util'
 import { decodeAddress, signatureVerify } from '@polkadot/util-crypto'
 import { Op } from 'sequelize'
+import dayjs from 'dayjs'
 import { jwt } from '#server/utils'
 import { sequelize } from '#server/db'
 import config from '#server/config'
 import { Session } from '#modules/users/server/models'
 
+const TOKEN_EXPIRES_IN_DAYS = 20
+
 export const getSession = async (
   userId: string,
   fastify: FastifyInstance
 ): Promise<Session> => {
-  const jwtToken = await jwt.sign({ id: userId })
+  const now = dayjs()
+  const expiresAt = now.add(TOKEN_EXPIRES_IN_DAYS, 'day').endOf('day')
+  const expiresIn = expiresAt.diff(now, 'second')
+  const signRequest = await jwt.sign({ id: userId }, expiresIn)
+  if (!signRequest.success) {
+    throw new Error(signRequest.error.message)
+  }
   return await fastify.db.Session.create({
-    token: jwtToken,
+    token: signRequest.data,
     userId: userId,
   })
 }

@@ -1,19 +1,22 @@
 import React, { useEffect, useState } from 'react'
 import { cn } from '#client/utils'
+import { Button } from './Button'
 const DISPLAY_DURATION = 6000
 const EventKey = 'phq_notification'
 
 type NotificationKind = 'success' | 'warning' | 'error' | 'info'
 type Notification = {
-  kind: NotificationKind
   text: string
+  kind: NotificationKind
+  link?: { text: string; url: string }
 }
 
 export function showNotification(
-  text: string,
-  kind: NotificationKind = 'info'
+  text: Notification['text'],
+  kind: Notification['kind'] = 'info',
+  link?: Notification['link']
 ): void {
-  const notification: Notification = { text, kind }
+  const notification: Notification = { text, kind, link }
   const event = new CustomEvent(EventKey, { detail: notification })
   window.dispatchEvent(event)
 }
@@ -68,6 +71,21 @@ export const Notifications: React.FC = () => {
           )}
         >
           {notification.text}
+          {!!notification.link && (
+            <>
+              {' '}
+              <a
+                className={cn(
+                  getStylingClassNames(notification.kind),
+                  'underline hover:underline'
+                )}
+                href={notification.link.url}
+                rel="external"
+              >
+                {notification.link.text}
+              </a>
+            </>
+          )}
         </div>
       )}
     </div>

@@ -145,7 +145,6 @@ td:last-child {
   z-index: 40;
 }
 .phq_notifications-item {
-  display: flex;
   box-sizing: border-box;
   position: absolute;
   right: 0;
