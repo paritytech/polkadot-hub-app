@@ -4,30 +4,34 @@ export const extensionConfig = {
     {
       id: 'polkadot-js',
       title: 'polkadotJS',
-      description: 'Basic account injection and signer',
+      image: '/polkadot-js-icon.svg',
       urls: {
         main: 'https://polkadot.js.org/extension/',
-        browsers: {
-          chrome:
-            'https://chrome.google.com/webstore/detail/polkadot%7Bjs%7D-extension/mopnmbcafieddcagagdcbnhejhlodfdd',
-          firefox:
-            'https://addons.mozilla.org/en-US/firefox/addon/polkadot-js-extension/',
-        },
       },
     },
     {
       id: 'talisman',
       title: 'talisman',
-      description:
-        'Talisman is a Polkadot wallet that unlocks a new world of multichain web3 applications in the Paraverse',
+      image: '/talisman-icon.svg',
       urls: {
         main: 'https://www.talisman.xyz/wallet',
-        browsers: {
-          chrome:
-            'https://chrome.google.com/webstore/detail/talisman-wallet/fijngjgcjhjmmpcmkeiomlglpeiijkld',
-          firefox:
-            'https://addons.mozilla.org/en-US/firefox/addon/talisman-wallet-extension/',
-        },
+      },
+    },
+    {
+      id: 'subwallet',
+      title: 'Subwallet',
+      image: '/subwallet-js-icon.svg',
+      urls: {
+        main: 'https://www.subwallet.app/',
+      },
+    },
+    {
+      id: 'enkrypt',
+      title: 'Enkrypt',
+      image: '/enkrypt-icon.svg',
+      urls: {
+        main: 'https://www.enkrypt.com/',
+        reference: 'https://blog.enkrypt.com/use-enkrypt-with-polkadot/',
       },
     },
   ],
