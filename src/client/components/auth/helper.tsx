@@ -23,20 +23,22 @@ export const ErrorComponent = {
   [Errors.NoAccountsError]: (metadata: {
     id: string
     title: string
-    urls: { main: string }
+    urls: { main: string; reference: string }
   }) => (
     <div className="flex flex-col justify-start">
       <P className="text-accents-red text-left">No accounts found.</P>
       <P className="mt-0 text-accents-red">
         {`Please add at least one account to ${metadata.title}.`}
       </P>
-      <Link
-        target="_blank"
-        className="text-text-secondary text-left"
-        href={metadata.urls.main}
-      >
-        Check Reference here
-      </Link>
+      {!!metadata.urls && !!metadata.urls.main && (
+        <Link
+          target="_blank"
+          className="text-text-secondary text-left"
+          href={metadata?.urls?.reference ?? metadata.urls.main}
+        >
+          Check Reference here
+        </Link>
+      )}
     </div>
   ),
 }
@@ -142,12 +144,9 @@ export const StepWrapper: React.FC<{
         <H1 className={cn(subtitle ? 'mb-2' : 'mb-8', 'mt-0')}>{title}</H1>
       )}
       {subtitle && (
-        <P
-          textType="additional"
-          className="text-text-tertiary text-center max-w-[400px] mt-0 mx-auto"
-        >
+        <div className="text-text-tertiary text-center max-w-[400px] mt-0 mx-auto">
           {subtitle}
-        </P>
+        </div>
       )}
     </div>
     {children}
