@@ -1,4 +1,4 @@
-import { BackButton, showNotification } from '#client/components/ui'
+import { BackButton, Icons, showNotification } from '#client/components/ui'
 import { useOffice } from '#client/utils/hooks'
 import { useUpdateVisit } from '#modules/visits/client/queries'
 import { useStore } from '@nanostores/react'
@@ -118,21 +118,23 @@ export const ScheduledItemsList: React.FC<{
 
   return (
     <div className={className}>
-      {!!selected ? (
+      {!!selected && (
         <div className="">
           <BackButton
             text="Back to List"
-            className="mt-[-8px]"
+            className="block sm:hidden mt-[-8px]"
             onClick={() => resetView()}
           />
         </div>
-      ) : (
-        <p className="mb-4 pb-2">
-          <span className="text-text-tertiary">Location: </span>
-          {office?.name}
-        </p>
       )}
       <div className="flex justify-start flex-col sm:flex-row gap-2 sm:gap-4 overflow-x-auto max-w-[980px]">
+        {!!selected && (
+          <div onClick={() => resetView()}>
+            <div className="hidden sm:block">
+              <Icons.ArrowBack height="24" width="24" />
+            </div>
+          </div>
+        )}
         {!!scheduledItems?.length &&
           scheduledItems.map((item: ScheduledItemType, index) => (
             <ScheduledItem

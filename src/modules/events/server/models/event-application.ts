@@ -32,7 +32,7 @@ export class EventApplication
   declare creatorUserId: string
   declare formId: string | null
   declare formSubmissionId: string | null
-  declare event: Event
+  declare event?: Event
 
   static async countByEventId(): Promise<Record<string, number>> {
     const entries = (await this.findAll({

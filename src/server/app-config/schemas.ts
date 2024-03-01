@@ -8,7 +8,6 @@ const componentRef: z.ZodTypeAny = z.lazy(() =>
       z.string(),
       z.object({ offices: z.array(z.string()).optional() }),
     ]),
-    z.array(componentRef),
   ])
 )
 
@@ -21,7 +20,12 @@ export const layout = z.object({
   }),
   desktop: z.object({
     sidebar: z.array(componentRef),
-    main: z.array(z.array(componentRef)),
+    main: z.array(
+      z.union([
+        z.array(componentRef).length(1),
+        z.array(componentRef).length(2),
+      ])
+    ),
   }),
 })
 
@@ -89,18 +93,16 @@ export const officeRoom = z.object({
   autoConfirm: z.boolean(),
 })
 
-export const officeArea = z
-  .object({
-    id: z.string(),
-    available: z.boolean().default(true),
-    name: z.string(),
-    capacity: z.number().min(1),
-    map: z.string(),
-    bookable: z.boolean().default(false),
-    desks: z.array(officeAreaDesk).min(1),
-    meetingRooms: z.array(officeRoom).min(1).optional(),
-  })
-  .superRefine((office, ctx) => {})
+export const officeArea = z.object({
+  id: z.string(),
+  available: z.boolean().default(true),
+  name: z.string(),
+  capacity: z.number().min(1),
+  map: z.string(),
+  bookable: z.boolean().default(false),
+  desks: z.array(officeAreaDesk).min(1),
+  meetingRooms: z.array(officeRoom).min(1).optional(),
+})
 export const office = z
   .object({
     id: z.string(),

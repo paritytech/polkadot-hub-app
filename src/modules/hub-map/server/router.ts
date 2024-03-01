@@ -18,7 +18,8 @@ import {
 } from './helpers'
 import { getDate } from '#modules/office-visits/server/helpers'
 import { Op } from 'sequelize'
-import { Event, EventCheckmark } from '#modules/events/server/models'
+import { Event } from '#modules/events/server/models'
+import * as fp from '#shared/utils/fp'
 
 const publicRouter: FastifyPluginCallback = async function (fastify, opts) {}
 
@@ -90,15 +91,21 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       )
 
       let dailyEventsVisits = []
+      const userIds = Array.from(new Set(visits.map(fp.prop('userId'))))
+      const users = await fastify.db.User.findAll({
+        where: { id: { [Op.in]: userIds } },
+        raw: true,
+      })
+      const usersById = users.reduce(fp.by('id'), {})
+
       for (const [idx, v] of visits.entries()) {
         const item = formatVisit(v)
         if (!idx) {
           upcomingItems.push(item)
         }
-        const user = await User.findByPk(v.userId)
         addToUpcomingByDate(
           upcomingByDate,
-          formatVisit(v, user),
+          formatVisit(v, usersById[v.userId]),
           v.date,
           VisitType.Visit
         )
@@ -145,7 +152,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           let checkmarks = []
 
           if (checklistLength) {
-            checkmarks = await EventCheckmark.findAll({
+            checkmarks = await fastify.db.EventCheckmark.findAll({
               where: {
                 userId: req.user.id,
                 eventId: application.eventId,

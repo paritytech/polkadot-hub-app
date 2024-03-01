@@ -1,16 +1,8 @@
 import { useStore } from '@nanostores/react'
 import * as React from 'react'
-import { Header } from '#client/components/Header'
-import {
-  BackButton,
-  Background,
-  ComponentWrapper,
-  H1,
-  H2,
-  HR,
-} from '#client/components/ui'
+import { BackButton, ComponentWrapper, H1, H2 } from '#client/components/ui'
 import * as stores from '#client/stores'
-import { useMyEvents, useUpcomingEvents } from '../queries'
+import { useMyEventsView, useEventsView } from '../queries'
 import { EventApplicationStatus } from '#shared/types'
 import { EventBadge } from './EventBadge'
 import { cn } from '#client/utils'
@@ -23,6 +15,9 @@ const Sections = {
   optedOut: 'opted out',
   upcoming: 'upcoming',
 }
+
+import { EventTimeCategory, Event } from '#shared/types'
+
 const TitleStatus = {
   [Sections.waiting]: EventApplicationStatus.Pending,
   [Sections.confirmed]: EventApplicationStatus.Confirmed,
@@ -35,13 +30,7 @@ const EventsBg = {
   [Sections.past]: 'bg-gray-100',
 }
 
-const EventsList = ({
-  events,
-  title,
-}: {
-  title: string
-  events: Array<Event>
-}) => (
+const EventsList = ({ events, title }: { title: string; events: Event[] }) => (
   <div>
     <H2 className="mt-10 mb-4 capitalize">{title}</H2>
     <div className="flex flex-col gap-2">
@@ -71,45 +60,68 @@ const EventsList = ({
 
 export const EventsPage = () => {
   const officeId = useStore(stores.officeId)
-  const { data: events, isFetched } = useUpcomingEvents(officeId, 'time')
-  const { data: myEvents, isFetched: isMineFetched } = useMyEvents(
+  const { data: events, isFetched } = useEventsView(officeId, 'time')
+  const { data: myEvents, isFetched: isMineFetched } = useMyEventsView(
     officeId,
     'status'
   )
+  const [uniqueUpcoming, setUniqueUpcoming] = React.useState<Event[]>([])
+
+  React.useEffect(() => {
+    if (!!events && !!myEvents && !myEvents.pending.length) {
+      return
+    } else if (!!events && !!myEvents) {
+      const upcomingEventIds = new Set(myEvents.pending.map((e) => e.id))
+      const uniqueEvents = events[EventTimeCategory.upcoming].filter(
+        (e) => !upcomingEventIds.has(e.id)
+      )
+      if (!!uniqueEvents.length) {
+        setUniqueUpcoming(uniqueEvents)
+      }
+    }
+  }, [myEvents, events])
   if (!isFetched && !isMineFetched) {
     return null
   }
 
-  if (!events || !(Sections.past in events && Sections.upcoming in events)) {
+  if (!events || !Object.keys(events).length) {
     return (
-      <div className="text-gray-400 text-center">No upcoming events yet</div>
+      <ComponentWrapper>
+        <H1 className="my-10 text-center">Events</H1>
+        <div className="text-gray-400 text-center">No events to show yet</div>
+      </ComponentWrapper>
     )
   }
 
   return (
-    <Background>
-      <Header />
-      <ComponentWrapper>
-        <BackButton />
-        <H1 className="my-10 text-center">Events</H1>
-        {!!myEvents && (
-          <div>
-            {Object.values(Sections).map((title) => {
-              // @ts-ignore
-              const evs = myEvents[TitleStatus[title] as EventApplicationStatus]
-              if (!!evs?.length) {
-                return <EventsList title={title} events={evs} />
-              }
-            })}
-          </div>
-        )}
-        {[Sections.upcoming, Sections.past].map((timeTitle) => {
-          const evs = events[timeTitle]
-          if (evs?.length) {
-            return <EventsList title={timeTitle} events={evs} />
-          }
-        })}
-      </ComponentWrapper>
-    </Background>
+    <ComponentWrapper>
+      <BackButton />
+      <H1 className="my-10 text-center">Events</H1>
+      {!!myEvents && (
+        <div>
+          {Object.values(Sections).map((title) => {
+            // @ts-ignore
+            const evs = myEvents[TitleStatus[title] as EventApplicationStatus]
+            if (!!evs?.length) {
+              return <EventsList key={title} title={title} events={evs} />
+            }
+          })}
+        </div>
+      )}
+      {!!uniqueUpcoming?.length && (
+        <EventsList
+          key={Sections.upcoming}
+          title={Sections.upcoming}
+          events={uniqueUpcoming}
+        />
+      )}
+      {!!events?.past && (
+        <EventsList
+          key={Sections.past}
+          title={Sections.past}
+          events={events[EventTimeCategory.past]}
+        />
+      )}
+    </ComponentWrapper>
   )
 }

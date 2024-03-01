@@ -32,45 +32,42 @@ export const NewsListPage = () => {
   }, [news, officeId, page])
 
   return (
-    <Background>
-      <Header />
-      <ComponentWrapper>
-        <BackButton />
-        <H1 className="my-10 text-center">News</H1>
-        <div>
-          {!!newsData &&
-            newsData.map((x, i) => (
-              <div
-                key={x.id}
-                onClick={() => stores.goTo('newsPage', { newsId: x.id })}
-                className={
-                  'flex flex-col gap-4 pl-4 pr-4 hover:bg-applied-hover hover:rounded-tiny cursor-pointer'
-                }
-              >
-                <div>
-                  <P textType="additional" className="text-text-tertiary mb-1">
-                    {dayjs(x.publishedAt).format('D MMM')}
-                  </P>
-                  <div className="mb-2">{x.title}</div>
-                </div>
-                {i + 1 === news?.length && news?.length <= pageSize ? (
-                  ''
-                ) : (
-                  <hr className="bg-applied-separator" />
-                )}
-              </div>
-            ))}
-          {!!news && news.length !== newsData.length ? (
-            <FButton
-              kind="link"
-              className="mt-4 ml-2"
-              onClick={() => setPage((p) => p + 1)}
+    <ComponentWrapper>
+      <BackButton />
+      <H1 className="my-10 text-center">News</H1>
+      <div>
+        {!!newsData &&
+          newsData.map((x, i) => (
+            <div
+              key={x.id}
+              onClick={() => stores.goTo('newsPage', { newsId: x.id })}
+              className={
+                'flex flex-col gap-4 pl-4 pr-4 hover:bg-applied-hover hover:rounded-tiny cursor-pointer'
+              }
             >
-              Show more
-            </FButton>
-          ) : null}
-        </div>
-      </ComponentWrapper>
-    </Background>
+              <div>
+                <P textType="additional" className="text-text-tertiary mb-1">
+                  {dayjs(x.publishedAt).format('D MMM')}
+                </P>
+                <div className="mb-2">{x.title}</div>
+              </div>
+              {i + 1 === news?.length && news?.length <= pageSize ? (
+                ''
+              ) : (
+                <hr className="bg-applied-separator" />
+              )}
+            </div>
+          ))}
+        {!!news && news.length !== newsData.length ? (
+          <FButton
+            kind="link"
+            className="mt-4 ml-2"
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Show more
+          </FButton>
+        ) : null}
+      </div>
+    </ComponentWrapper>
   )
 }

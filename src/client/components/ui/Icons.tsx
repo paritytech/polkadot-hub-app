@@ -301,8 +301,8 @@ const ArrowForward = ({ fillClassName = 'fill-text-tertiary', ...props }) => (
 const ArrowBack = ({ fillClassName = 'fill-text-tertiary', ...props }) => (
   <ArrowForward
     fillClassName={fillClassName}
-    props={props}
     className={'rotate-180'}
+    {...props}
   />
 )
 

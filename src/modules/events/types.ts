@@ -131,15 +131,19 @@ export type EventParticipant = Pick<User, 'id' | 'fullName' | 'avatar' | 'team'>
 
 export type EventPreview = Pick<Event, 'id' | 'title' | 'formId'>
 
-export interface MyEventsStatusMap {
-  [EventApplicationStatus.Confirmed]: Array<Event>
-  [EventApplicationStatus.Pending]: Array<Event>
-  [EventApplicationStatus.Opened]: Array<Event>
-  [EventApplicationStatus.CancelledAdmin]: Array<Event>
-  [EventApplicationStatus.CancelledUser]: Array<Event>
+export enum EventTimeCategory {
+  past = 'past',
+  upcoming = 'upcoming',
 }
+export type EventsByTimeCategory = Record<EventTimeCategory, Event[]>
 
-export interface EventTimeMap {
-  past: Array<Event>
-  upcoming: Array<Event>
-}
+export type EventStatusCategory =
+  | EventApplicationStatus.Opened
+  | EventApplicationStatus.Pending
+  | EventApplicationStatus.Confirmed
+
+export type EventsByStatusCategory = Record<EventStatusCategory, Event[]>
+
+export type EventWithApplications = Event & { applications: EventApplication[] }
+
+export type EventApplicationWithEvent = EventApplication & { event: Event }
