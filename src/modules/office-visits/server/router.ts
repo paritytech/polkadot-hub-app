@@ -6,8 +6,6 @@ import { Op } from 'sequelize'
 import { DATE_FORMAT } from '#server/constants'
 import {
   BUSINESS_DAYS_LIMIT,
-  formatRoomReservationsResult,
-  formatVisit,
   getBusinessDaysFromDate,
   getDate,
 } from './helpers'
@@ -16,22 +14,11 @@ import { Metadata } from '../metadata-schema'
 import { Visit, GenericVisit, VisitType, VisitsDailyStats } from '#shared/types'
 import * as fp from '#shared/utils'
 import { appConfig } from '#server/app-config'
+import { getRoom } from '#modules/room-reservation/shared-helpers'
 
 dayjs.extend(localizedFormat)
 
 const publicRouter: FastifyPluginCallback = async function (fastify, opts) {}
-
-const addToUpcomingByDate = (
-  upcomingByDate: Record<string, any>,
-  value: GenericVisit,
-  date: string,
-  type: string
-) => {
-  const dateKey = getDate(date)
-  upcomingByDate[dateKey] = upcomingByDate[dateKey] || {}
-  upcomingByDate[dateKey][type] = upcomingByDate[dateKey][type] || []
-  upcomingByDate[dateKey][type].push(value)
-}
 
 const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   fastify.get(
@@ -46,6 +33,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (!officeId) {
         return reply.throw.badParams('Missing office ID')
       }
+      const office = appConfig.getOfficeById(officeId)
       const nextBusinessDays = getBusinessDaysFromDate(
         date,
         BUSINESS_DAYS_LIMIT
@@ -53,6 +41,17 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       // @todo REwrite this using native SQL query using JOIN on dates
       // or rewrite by merging all the tables into one
       let result: Record<string, any> = {}
+
+      const addToResult = (value: GenericVisit, date: string, type: string) => {
+        if (!result[getDate(date, office.timezone)]) {
+          result[getDate(date, office.timezone)] = {}
+        }
+        if (!result[getDate(date, office.timezone)][type]) {
+          result[getDate(date, office.timezone)][type] = [value]
+        } else {
+          result[getDate(date, office.timezone)][type].push(value)
+        }
+      }
 
       const visits = await fastify.db.Visit.findAll({
         where: {
@@ -105,14 +104,25 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         },
       })
 
+      const getTime = (date: string | Date) =>
+        dayjs(date).tz(office.timezone).format('LT')
+
       // adding all the dates together
       visits.forEach((v) =>
-        addToUpcomingByDate(result, formatVisit(v), v.date, VisitType.Visit)
+        addToResult(
+          {
+            id: v.id,
+            value: `Desk ${v.deskName}`,
+            description: v.areaName,
+            type: VisitType.Visit,
+          },
+          v.date,
+          VisitType.Visit
+        )
       )
       guests.forEach((guest) => {
         guest.dates.forEach((date) =>
-          addToUpcomingByDate(
-            result,
+          addToResult(
             {
               value: guest.fullName,
               id: guest.id,
@@ -123,15 +133,19 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           )
         )
       })
-      const office = appConfig.getOfficeById(officeId)
       roomReservations.forEach((reservation) => {
-        const area = office?.areas?.find((area) =>
-          area.meetingRooms?.find((room) => room.id === reservation.roomId)
-        )
+        let officeRoom = getRoom(office, reservation.roomId)
 
-        return addToUpcomingByDate(
-          result,
-          formatRoomReservationsResult(reservation, officeId, area?.id ?? ''),
+        return addToResult(
+          {
+            id: reservation.id,
+            dateTime: `${getTime(reservation.startDate)} - ${getTime(
+              reservation.endDate
+            )}`,
+            value: officeRoom?.name ?? '',
+            description: officeRoom?.description,
+            type: VisitType.RoomReservation,
+          },
           dayjs(reservation.startDate).toString(),
           VisitType.RoomReservation
         )

@@ -13,10 +13,10 @@ import {
   formatEvent,
   formatRoomReservationsResult,
   formatVisit,
+  getDate,
   getRoomReservations,
   getVisits,
 } from './helpers'
-import { getDate } from '#modules/office-visits/server/helpers'
 import { Op } from 'sequelize'
 import { Event } from '#modules/events/server/models'
 import * as fp from '#shared/utils/fp'

@@ -1,8 +1,5 @@
 import dayjs from 'dayjs'
 import { DATE_FORMAT } from '#server/constants'
-import { RoomReservation } from '#modules/room-reservation/server/models'
-import { ScheduledItemType, User, Visit, VisitType } from '#shared/types'
-import { appConfig } from '#server/app-config'
 
 export const BUSINESS_DAYS_LIMIT: number = 40
 
@@ -36,54 +33,4 @@ export const getBusinessDaysFromDate = (
   }
 
   return dates
-}
-
-export const formatRoomReservationsResult = (
-  reservation: RoomReservation,
-  officeId: string,
-  areaId: string
-): any => {
-  // @todo put this somewhere central
-  const office = appConfig.offices.find((o) => o.id === officeId)
-  const area = office?.areas?.find((a) => a.id === areaId)
-  const officeRoom = area?.meetingRooms?.find(
-    (m) => m.id === reservation.roomId
-  )
-  return {
-    id: reservation.id,
-    dateTime: `${getTime(reservation.startDate)} - ${getTime(
-      reservation.endDate
-    )}`,
-    objectId: reservation.roomId,
-    areaId,
-    date: dayjs(reservation.startDate).format('YYYY-MM-DD'),
-    value: 'Room ' + officeRoom?.name ?? '',
-    description: officeRoom?.description ?? '',
-    type: VisitType.RoomReservation,
-    status: reservation.status,
-  }
-}
-
-export const formatVisit = (
-  v: Visit,
-  user?: User | null
-): ScheduledItemType => {
-  return {
-    id: v.id,
-    value: `Desk ${v.deskName}`,
-    type: VisitType.Visit,
-    deskId: v.deskId,
-    objectId: v.deskId,
-    description: v.areaName,
-    areaId: v.areaId,
-    date: v.date,
-    status: v.status,
-    userId: v.userId,
-    user: user
-      ? {
-          id: user?.id,
-          avatar: user?.avatar,
-        }
-      : null,
-  }
 }

@@ -16,6 +16,8 @@ import { Filterable } from 'sequelize'
 
 export const getTime = (date: string | Date) => dayjs(date).format('LT')
 
+export const getDate = (d: string) => dayjs(d).format(DATE_FORMAT)
+
 export const formatRoomReservationsResult = (
   reservation: RoomReservation,
   officeId: string,
