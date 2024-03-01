@@ -35,6 +35,7 @@ export class Form
   declare metadataFields: FormModel['metadataFields']
   declare creatorUserId: FormModel['creatorUserId']
   declare responsibleUserIds: FormModel['responsibleUserIds']
+  declare purgeSubmissionsAfterDays: FormModel['purgeSubmissionsAfterDays']
   declare createdAt: CreationOptional<Date>
   declare updatedAt: CreationOptional<Date>
 
@@ -123,6 +124,7 @@ Form.init(
       type: DataTypes.ARRAY(DataTypes.UUID),
       defaultValue: [],
     },
+    purgeSubmissionsAfterDays: DataTypes.INTEGER,
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },

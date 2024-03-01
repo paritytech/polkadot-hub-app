@@ -126,6 +126,13 @@ export const AdminForms = () => {
             </Link>
           ),
         },
+        {
+          Header: 'Data retention',
+          accessor: (form: FormAdminResponse) =>
+            form.purgeSubmissionsAfterDays
+              ? `${form.purgeSubmissionsAfterDays} days`
+              : 'Forever',
+        },
         // {
         //   Header: 'Parent event',
         //   accessor: (form: FormAdminResponse) =>

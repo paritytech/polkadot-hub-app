@@ -836,13 +836,24 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         where,
         order: [['startDate', 'DESC']],
       })
+      const formIds = Array.from(
+        new Set(events.map(fp.prop('formId')).filter(Boolean))
+      ) as string[]
+      const forms = await fastify.db.Form.findAll({
+        where: { id: { [Op.in]: formIds } },
+      })
+      const formById = forms.reduce(fp.by('id'), {})
 
       const applicationsCountByEventId =
         await fastify.db.EventApplication.countByEventId()
-      const result: EventAdminResponse[] = events.map((x) => ({
-        ...x.toJSON(),
-        applicationsCount: applicationsCountByEventId[x.id] || 0,
-      }))
+      const result: EventAdminResponse[] = events.map((x) => {
+        const form = x.formId ? formById[x.formId] : null
+        return {
+          ...x.toJSON(),
+          applicationsCount: applicationsCountByEventId[x.id] || 0,
+          purgeSubmissionsAfterDays: form?.purgeSubmissionsAfterDays ?? null,
+        }
+      })
       return result
     }
   )

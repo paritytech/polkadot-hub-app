@@ -15,7 +15,7 @@ export interface Form {
   metadataFields: FormMetadataField[]
   creatorUserId: string
   responsibleUserIds: string[]
-
+  purgeSubmissionsAfterDays: number | null
   createdAt: Date
   updatedAt: Date
 }
@@ -128,6 +128,7 @@ export type FormCreationRequest = Pick<
   | 'content'
   | 'metadataFields'
   | 'responsibleUserIds'
+  | 'purgeSubmissionsAfterDays'
 >
 export type FormData = Record<string, string | string[]>
 
