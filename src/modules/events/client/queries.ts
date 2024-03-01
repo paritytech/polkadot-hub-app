@@ -12,11 +12,11 @@ import {
   EventParticipant,
   EventPreview,
   EventPublicResponse,
-  EventTimeMap,
   EventToogleCheckboxRequest,
+  EventsByStatusCategory,
+  EventsByTimeCategory,
   FormSubmissionRequest,
   GlobalEvent,
-  MyEventsStatusMap,
   PublicForm,
   User,
 } from '#shared/types'
@@ -41,10 +41,10 @@ export const useEventsAdmin = (
   )
 }
 
-export const useUpcomingEvents = (officeId: string | null, sortBy?: string) => {
+export const useUpcomingEvents = (officeId: string | null) => {
   const path = '/user-api/events/event'
-  return useQuery<EventPublicResponse[] | EventTimeMap, AxiosError>(
-    [path, { office: officeId, sortBy }],
+  return useQuery<EventPublicResponse[], AxiosError>(
+    [path, { office: officeId }],
     async ({ queryKey }) =>
       (await api.get<EventPublicResponse[]>(path, { params: queryKey[1] }))
         .data,
@@ -52,12 +52,33 @@ export const useUpcomingEvents = (officeId: string | null, sortBy?: string) => {
   )
 }
 
+export const useEventsView = (officeId: string | null, sortBy?: string) => {
+  const path = '/user-api/events/event/view'
+  return useQuery<EventsByTimeCategory, AxiosError>(
+    [path, { office: officeId, sortBy }],
+    async ({ queryKey }) =>
+      (await api.get<EventsByTimeCategory>(path, { params: queryKey[1] })).data,
+    { enabled: !!officeId }
+  )
+}
+
 export const useMyEvents = (officeId: string | null, sortBy?: string) => {
   const path = '/user-api/events/event/me'
-  return useQuery<Event[] | MyEventsStatusMap, AxiosError>(
+  return useQuery<Event[], AxiosError>(
     [path, { office: officeId, sortBy }],
     async ({ queryKey }) =>
       (await api.get<Event[]>(path, { params: queryKey[1] })).data,
+    { enabled: !!officeId }
+  )
+}
+
+export const useMyEventsView = (officeId: string | null, sortBy?: string) => {
+  const path = '/user-api/events/event/me/view'
+  return useQuery<EventsByStatusCategory, AxiosError>(
+    [path, { office: officeId, sortBy }],
+    async ({ queryKey }) =>
+      (await api.get<EventsByStatusCategory>(path, { params: queryKey[1] }))
+        .data,
     { enabled: !!officeId }
   )
 }

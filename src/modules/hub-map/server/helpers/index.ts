@@ -4,6 +4,7 @@ import {
   Event,
   EventApplicationStatus,
   RoomReservation,
+  ScheduledItemType,
   User,
   Visit,
   VisitType,
@@ -11,6 +12,7 @@ import {
 import dayjs from 'dayjs'
 import { FastifyInstance } from 'fastify'
 import { Op } from 'sequelize'
+import { Filterable } from 'sequelize'
 
 export const getTime = (date: string | Date) => dayjs(date).format('LT')
 
@@ -40,7 +42,10 @@ export const formatRoomReservationsResult = (
   }
 }
 
-export const formatVisit = (v: Visit, user?: User | null): any => {
+export const formatVisit = (
+  v: Visit,
+  user?: User | null
+): ScheduledItemType & (User | { id: string; avatar: string | null }) => {
   return {
     id: v.id,
     value: `Desk ${v.deskName}`,
@@ -98,7 +103,7 @@ export const getVisits = async (
   date: string,
   userId: string
 ) => {
-  const q = {
+  const where: Filterable<Visit>['where'] = {
     officeId,
     status: {
       [Op.in]: ['confirmed', 'pending'],
@@ -108,10 +113,10 @@ export const getVisits = async (
     },
   }
   if (userId) {
-    q['userId'] = userId
+    where['userId'] = userId
   }
   return fastify.db.Visit.findAll({
-    where: q,
+    where,
     order: ['date'],
   })
 }

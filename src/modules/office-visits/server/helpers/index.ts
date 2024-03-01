@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import { DATE_FORMAT } from '#server/constants'
 import { RoomReservation } from '#modules/room-reservation/server/models'
-import { User, Visit, VisitType } from '#shared/types'
+import { ScheduledItemType, User, Visit, VisitType } from '#shared/types'
 import { appConfig } from '#server/app-config'
 
 export const BUSINESS_DAYS_LIMIT: number = 40
@@ -64,7 +64,10 @@ export const formatRoomReservationsResult = (
   }
 }
 
-export const formatVisit = (v: Visit, user?: User | null): any => {
+export const formatVisit = (
+  v: Visit,
+  user?: User | null
+): ScheduledItemType => {
   return {
     id: v.id,
     value: `Desk ${v.deskName}`,

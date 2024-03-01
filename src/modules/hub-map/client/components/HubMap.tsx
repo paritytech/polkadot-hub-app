@@ -17,8 +17,15 @@ import { propEq } from '#shared/utils'
 import { getPoints, goToMeetings, goToVisits } from '../helpers'
 import { VisitType } from '#shared/types'
 import { useUpcoming } from '../queries'
+import { PermissionsValidator } from '#client/components/PermissionsValidator'
 
-export const HubMap = () => {
+export const HubMap = () => (
+  <PermissionsValidator required={['visits.create', 'room-reservation.create']}>
+    <_HubMap />
+  </PermissionsValidator>
+)
+
+export const _HubMap = () => {
   const officeId = useStore(stores.officeId)
   const office = useOffice(officeId)
   const me = useStore(stores.me)
@@ -111,7 +118,7 @@ export const HubMap = () => {
     return <></>
   }
   return (
-    <WidgetWrapper className="transition-all delay-100" title={`Hub Map`}>
+    <WidgetWrapper className="transition-all delay-100">
       <div className="overflow-none">
         <ScheduledItemsList
           onChooseCard={(id, areaId, chosenDate) => {
