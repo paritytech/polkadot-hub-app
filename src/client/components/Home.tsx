@@ -98,7 +98,7 @@ const Tabs: React.FC<{
     []
   )
   return (
-    <div className="bg-bg-primary flex rounded-b-sm px-4 mb-1 md:mb-2">
+    <div className="bg-bg-primary flex rounded-sm px-4 mb-1 md:mb-2">
       {TABS.map((tab) => {
         const IconComponent = Icons[tab.icon as Icon]
         return (
