@@ -18,9 +18,15 @@ import { getPoints, goToMeetings, goToVisits } from '../helpers'
 import { VisitType } from '#shared/types'
 import { useUpcoming } from '../queries'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
+import Permissions from '#shared/permissions'
 
 export const HubMap = () => (
-  <PermissionsValidator required={['visits.create', 'room-reservation.create']}>
+  <PermissionsValidator
+    required={[
+      Permissions.visits.Create,
+      Permissions['room-reservation'].Create,
+    ]}
+  >
     <_HubMap />
   </PermissionsValidator>
 )

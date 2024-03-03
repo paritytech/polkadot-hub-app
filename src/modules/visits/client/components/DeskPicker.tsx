@@ -82,7 +82,7 @@ export const DeskPicker: React.FC<Props> = ({
   )
 
   return (
-    <WidgetWrapper>
+    <div>
       {unavailableDeskNames.length ? (
         <>
           <p className="mb-5">
@@ -158,6 +158,6 @@ export const DeskPicker: React.FC<Props> = ({
           />
         </div>
       )}
-    </WidgetWrapper>
+    </div>
   )
 }
