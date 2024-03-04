@@ -33,12 +33,14 @@ const PointComponent: Record<
       disabled={!isAvailable}
       color={isSelected ? 'purple' : 'default'}
       className={cn(
+        pointCommonStyle,
         isSelected
           ? 'border-pink-600 bg-accents-pink'
           : 'bg-violet-300 border-violet-300',
-        'hover:bg-cta-purple hover:border-cta-hover-purpleNoOpacity hover:text-white',
-        'min-h-[32px] min-w-[32px]',
-        pointCommonStyle
+        isAvailable
+          ? 'hover:bg-cta-purple hover:border-cta-hover-purpleNoOpacity hover:text-white'
+          : 'hover:scale-100 hover:bg-violet-300',
+        'min-h-[32px] min-w-[32px]'
       )}
       onClick={onClick(item.id, VisitType.Visit)}
     >
