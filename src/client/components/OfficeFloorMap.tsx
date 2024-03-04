@@ -51,9 +51,9 @@ const PointComponent: Record<
       kind={isSelected ? 'primary' : 'secondary'}
       disabled={!isAvailable}
       className={cn(
-        isSelected && 'border-pink-600 hover:text-white hover:bg-accents-pink',
-        'text-black bg-green-200 border-green-200',
-        'hover:bg-cta-jade hover:border-cta-hover-jadeNoOpacity hover:text-white',
+        isSelected
+          ? 'border-pink-600 hover:text-white bg-accents-pink hover:bg-accents-pinkDark'
+          : 'text-black bg-green-200 border-green-200 hover:bg-cta-jade hover:border-cta-hover-jadeNoOpacity hover:text-white',
         'sm:p-4',
         pointCommonStyle
       )}
