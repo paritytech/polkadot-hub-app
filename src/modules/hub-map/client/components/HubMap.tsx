@@ -165,29 +165,33 @@ export const _HubMap = () => {
                 />
               </div>
             </div>
-            <div className="flex flex-row gap-3 sm:gap-2 overflow-hidden mt-6 sm:mt-2 items-center flex-wrap">
-              {!!visitors?.length &&
-                visitors.map((v) => {
-                  return (
-                    <button
-                      key={v.userId}
-                      className="hover:opacity-80 transition-all delay-100"
-                      onClick={() => {
-                        setSelectedDailyEvent(v.deskId)
-                        setAreaId(v.areaId)
-                        resetOfficeVisits()
-                      }}
-                    >
-                      <Avatar size="medium" src={v.avatar} userId={v.userId} />
-                    </button>
-                  )
-                })}
-              <div className="text-text-tertiary mb-4 sm:mb-0">
-                {userIsInOffce
-                  ? `You and ${visitorsNumber - 1}`
-                  : visitorsNumber}{' '}
-                people in the {office?.name} hub
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 mt-6 sm:mt-2 items-start sm:items-center overflow-x-auto">
+              <div className="flex flex-nowrap gap-4 overflow-x-auto">
+                {!!visitors?.length &&
+                  visitors.map((v) => {
+                    return (
+                      <button
+                        key={v.userId}
+                        className="hover:opacity-80 transition-all delay-100 w-8 h-8 shrink-0"
+                        onClick={() => {
+                          setSelectedDailyEvent(v.deskId)
+                          setAreaId(v.areaId)
+                          resetOfficeVisits()
+                        }}
+                      >
+                        <Avatar
+                          size="medium"
+                          src={v.avatar}
+                          userId={v.userId}
+                        />
+                      </button>
+                    )
+                  })}
               </div>
+            </div>
+            <div className="mt-2 text-text-tertiary mb-4 sm:mb-0">
+              {userIsInOffce ? `You and ${visitorsNumber - 1}` : visitorsNumber}{' '}
+              people in the {office?.name} hub
             </div>
             <Select
               label=""
