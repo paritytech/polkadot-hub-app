@@ -73,7 +73,7 @@ export const formatEvent = (
   applicationStatus: EventApplicationStatus,
   complete: boolean
 ) => {
-  const url = `/events/${event.id}`
+  const url = `/event/${event.id}`
   const now = dayjs()
   const start = dayjs(event.startDate)
   const end = dayjs(event.endDate)

@@ -18,7 +18,7 @@ export const EventBadge: React.FC<Props> = ({
   withApplyButton = false,
   requiresAction = false,
 }) => {
-  const url = React.useMemo(() => `/events/${event.id}`, [event])
+  const url = React.useMemo(() => `/event/${event.id}`, [event])
   const now = dayjs()
   const [startDate, endDate] = [event.startDate, event.endDate].map(dayjs)
   const isToday = now >= startDate && now <= endDate
