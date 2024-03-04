@@ -753,12 +753,11 @@ const Community = ({ ...props }) => (
     width="24"
     height="24"
     viewBox="0 0 29 29"
-    fill="#e6007a"
+    fill="gray"
     xmlns="http://www.w3.org/2000/svg"
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    stroke="#e6007a"
     {...props}
   >
     <g>
