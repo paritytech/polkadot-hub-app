@@ -1,5 +1,11 @@
 import * as React from 'react'
-import { Avatar, Input, Select, WidgetWrapper } from '#client/components/ui'
+import {
+  Avatar,
+  Input,
+  Select,
+  StealthMode,
+  WidgetWrapper,
+} from '#client/components/ui'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import { useOffice } from '#client/utils/hooks'
@@ -11,6 +17,7 @@ import { ScheduledItemsList } from './ScheduledItemsList'
 import {
   useAvailableDesks,
   useOfficeVisitors,
+  useToggleStealthMode,
   useVisitsAreas,
 } from '#modules/visits/client/queries'
 import { propEq } from '#shared/utils'
@@ -51,6 +58,14 @@ export const _HubMap = () => {
     dayjs().toString()
   )
 
+  const { mutate: toggleStealthMode } = useToggleStealthMode(() => {
+    refetchVisits()
+    refetchVisitors()
+  })
+  const onToggleStealthMode = React.useCallback((value: boolean) => {
+    toggleStealthMode({ stealthMode: value })
+  }, [])
+
   React.useEffect(() => {
     setOfficeVisits(upcomingVisitsAll?.byDate[date.format(DATE_FORMAT)])
   }, [upcomingVisitsAll?.byDate, date])
@@ -74,7 +89,7 @@ export const _HubMap = () => {
     []
   )
 
-  const { data: visitors } = useOfficeVisitors(
+  const { data: visitors, refetch: refetchVisitors } = useOfficeVisitors(
     officeId,
     dayjs(date).format(DATE_FORMAT)
   )
@@ -224,6 +239,13 @@ export const _HubMap = () => {
                       return
                   }
                 }}
+              />
+            </div>
+            <div className="mt-10">
+              <StealthMode
+                originalValue={me?.stealthMode || false}
+                onToggle={onToggleStealthMode}
+                subtitle="Do not show me on this map"
               />
             </div>
           </div>

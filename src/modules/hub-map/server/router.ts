@@ -93,7 +93,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       let dailyEventsVisits = []
       const userIds = Array.from(new Set(visits.map(fp.prop('userId'))))
       const users = await fastify.db.User.findAll({
-        where: { id: { [Op.in]: userIds } },
+        where: { id: { [Op.in]: userIds }, stealthMode: false },
         raw: true,
       })
       const usersById = users.reduce(fp.by('id'), {})
