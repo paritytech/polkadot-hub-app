@@ -33,7 +33,10 @@ const PointComponent: Record<
       disabled={!isAvailable}
       color={isSelected ? 'purple' : 'default'}
       className={cn(
-        isSelected ? 'border-pink-600 bg-accents-pink' : 'bg-gray-100',
+        isSelected
+          ? 'border-pink-600 bg-accents-pink'
+          : 'bg-violet-300 border-violet-300',
+        'hover:bg-cta-purple hover:border-cta-hover-purpleNoOpacity hover:text-white',
         'min-h-[32px] min-w-[32px]',
         pointCommonStyle
       )}
@@ -49,7 +52,8 @@ const PointComponent: Record<
       disabled={!isAvailable}
       className={cn(
         isSelected && 'border-pink-600 hover:text-white hover:bg-accents-pink',
-        'text-black bg-gray-100',
+        'text-black bg-green-200 border-green-200',
+        'hover:bg-cta-jade hover:border-cta-hover-jadeNoOpacity hover:text-white',
         'sm:p-4',
         pointCommonStyle
       )}
