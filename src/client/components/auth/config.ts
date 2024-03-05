@@ -48,7 +48,6 @@ export const extensionConfig = {
 }
 
 export const walletConnectConfig = {
-  // @todo add to vars
   projectId: config.walletConnectProjectId,
   relayUrl: 'wss://relay.walletconnect.com',
   chainIds: [
@@ -69,7 +68,6 @@ export const walletConnectConfig = {
     url: process.env.APP_HOST,
     icons: ['https://i.ibb.co/YDzD5S8/apple-touch-icon-1.png'],
   },
-  // @todo be able to pass this and any other configuration for the modal
   walletConnectConfig: {
     explorerRecommendedWalletIds: [
       //  nova wallet
@@ -77,7 +75,6 @@ export const walletConnectConfig = {
       // subwallet
       '9ce87712b99b3eb57396cc8621db8900ac983c712236f48fb70ad28760be3f6a',
     ],
-    // enableExplorer: false,
   },
   onSessionDelete: () => {
     console.log('session was deleted')
