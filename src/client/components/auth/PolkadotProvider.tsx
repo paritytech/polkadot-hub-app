@@ -12,9 +12,17 @@ import {
 import config from '#client/config'
 import { CopyToClipboard } from '#client/components/ui'
 import { api } from '#client/utils/api'
-import { WalletAggregator, WalletType } from '@polkadot-onboard/core'
+import {
+  WalletAggregator,
+  WalletType,
+  BaseWallet,
+  Account,
+} from '@polkadot-onboard/core'
 import { InjectedWalletProvider } from '@polkadot-onboard/injected-wallets'
-import { WalletConnectProvider } from '@polkadot-onboard/wallet-connect/packages/wallet-connect/src'
+import {
+  WalletConnectProvider,
+  WalletConnectConfiguration,
+} from '@polkadot-onboard/wallet-connect/packages/wallet-connect/src'
 
 const DAPP_NAME = config.appName
 
@@ -27,9 +35,11 @@ import {
   WhiteWindow,
   providerUrls,
   WalletTab,
+  ExtendedMetadata,
+  ExtensionAccount,
 } from './helper'
 import { sign, verify } from '#client/utils/polkadot'
-import { extensionConfig, walletConnectConfig } from './config'
+import { extensionConfig, themeConfig, walletConnectConfig } from './config'
 import { cn } from '#client/utils'
 
 type ModalProps = {
@@ -78,21 +88,21 @@ const LoaderWithText = ({ text = 'Connecting' }: { text?: string }) => (
 export const PolkadotProvider: React.FC = () => {
   const [wallets, setWallets] = useState<any>([])
   const [chosenWallet, setChosenWallet] = useState<any>()
-  const [accounts, setAccounts] = useState<
-    Array<{ address: string; name: string; source: string }>
-  >([])
+  const [accounts, setAccounts] = useState<Array<ExtensionAccount>>([])
   const [selectedAddress, setSelectedAddress] = useState('')
   const [isValidSignature, setIsValidSignature] = useState(false)
   const [userSignature, setUserSignature] = useState<string | null>(null)
-  const [error, setError] = useState<JSX.Element | string>()
-  const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(AuthSteps.Connecting)
+
   const [userDetails, setUserDetails] = useState({ fullName: '', email: '' })
-  const [walletConnect, setWalletConnect] = useState<any>(null)
+
   const [showModal, setShowModal] = useState<any>(false)
   const [showTryAgain, setShowTryAgain] = useState<any>(false)
-  const [loaderText, setLoaderText] = useState<string>('Connecting')
   const [modalShown, setModalShown] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const [loaderText, setLoaderText] = useState<string>('Connecting')
+  const [error, setError] = useState<JSX.Element | string>()
 
   const isWalletConnect = (w) => w.type === WalletType.WALLET_CONNECT
   const selectedAccount = useMemo(
@@ -142,29 +152,38 @@ export const PolkadotProvider: React.FC = () => {
     </div>
   )
 
-  const onConnected = {
-    [WalletType.WALLET_CONNECT]: async (walletInfo) => {
+  type AddressAccount = { address: string }
+
+  const onConnected: Record<
+    WalletType.WALLET_CONNECT | WalletType.INJECTED,
+    (walletInfo: BaseWallet) => void
+  > = {
+    [WalletType.WALLET_CONNECT]: async (walletInfo: BaseWallet) => {
       try {
         setLoading(true)
         setChosenWallet(walletInfo)
         let accounts = await walletInfo.getAccounts()
-        accounts = Array.from(
+        // sometimes there are duplicate accounts returned
+        // issue in polkadot-onboard @fix-me
+        const uniqueAccounts: string[] = Array.from(
           new Set(
             accounts
-              .filter((a) => a.address.startsWith('1'))
-              .map((a) => a.address)
+              .filter((a: AddressAccount) => a.address.startsWith('1'))
+              .map((a: AddressAccount) => a.address)
           )
         )
-        accounts = accounts.map((addr) => {
-          return {
-            name: '...' + addr.slice(addr.length - 12, addr.length),
-            address: addr,
-            source: walletInfo.session.peer.metadata.name,
-            wallet: walletInfo,
-          }
-        })
 
-        setAccounts(accounts)
+        setAccounts(
+          uniqueAccounts.map((addr: string) => {
+            return {
+              name: '...' + addr.slice(addr.length - 12, addr.length),
+              address: addr,
+              // @ts-ignore // @fixme - define a type in wallet-connect.ts package in polkadot-onboard
+              source: walletInfo.session.peer.metadata.name,
+              wallet: walletInfo,
+            }
+          })
+        )
         setStep(AuthSteps.ChooseAccount)
         setLoading(false)
       } catch (e) {
@@ -172,23 +191,27 @@ export const PolkadotProvider: React.FC = () => {
         console.log(e)
       }
     },
-    [WalletType.INJECTED]: async (walletInfo) => {
+    [WalletType.INJECTED]: async (walletInfo: BaseWallet) => {
       try {
         setLoading(true)
         setChosenWallet(walletInfo)
-        let accounts = await walletInfo.getAccounts()
+        let accounts: Account[] = await walletInfo.getAccounts()
         if (!accounts.length) {
           setLoading(false)
-          setError(ErrorComponent[Errors.NoAccountsError](walletInfo.metadata))
+          setError(
+            ErrorComponent[Errors.NoAccountsError](
+              walletInfo.metadata as ExtendedMetadata
+            )
+          )
           setStep(AuthSteps.Error)
           return
         }
-        accounts = accounts.map((account) => ({
+        accounts = accounts.map((account: Account) => ({
           ...account,
           source: walletInfo.metadata.id,
           wallet: walletInfo,
         }))
-        setAccounts(accounts)
+        setAccounts(accounts as ExtensionAccount[])
         setStep(AuthSteps.ChooseAccount)
         setLoading(false)
       } catch (e) {
@@ -206,44 +229,39 @@ export const PolkadotProvider: React.FC = () => {
     if (step === AuthSteps.Connecting) {
       let walletAggregator = new WalletAggregator([
         new InjectedWalletProvider(extensionConfig, DAPP_NAME),
-        new WalletConnectProvider(walletConnectConfig, DAPP_NAME),
+        new WalletConnectProvider(
+          walletConnectConfig as WalletConnectConfiguration,
+          DAPP_NAME
+        ),
       ])
+      // the timeout here is to wait for polkadot-js to load after initializing
       setTimeout(async () => {
-        walletAggregator
-          .getWallets()
-          .then((wallets) => {
-            setWallets(wallets)
-            let confWallets = wallets.map((wallet) => {
-              if (isWalletConnect(wallet)) {
-                if (!walletConnect) {
-                  setWalletConnect(wallet)
-                }
-                wallet.walletConnectModal.setTheme({
-                  themeMode: 'dark',
-                  themeVariables: {
-                    '--wcm-font-family': 'Unbounded, sans-serif',
-                    '--wcm-accent-color': '#E6007A',
-                  },
-                })
-              }
-              return wallet
-            })
-            setWallets(confWallets)
-            setStep(AuthSteps.ChooseWallet)
-            setLoading(false)
-          })
-          .catch((e) => {
-            console.error(e)
-            switch (e.message) {
-              case Errors.NoAccountsError:
-                setError(ErrorComponent[Errors.NoAccountsError])
-                break
-              default:
-                console.error(e)
-                setError(GENERIC_ERROR)
-                break
+        try {
+          const wallets = await walletAggregator.getWallets()
+          let confWallets = wallets.map((wallet) => {
+            if (isWalletConnect(wallet)) {
+              // @ts-ignore @fixme export WalletConnectWallet from polkadot-onboard
+              wallet.walletConnectModal.setTheme(themeConfig)
             }
+            return wallet
           })
+          setWallets(confWallets)
+          setStep(AuthSteps.ChooseWallet)
+          setLoading(false)
+        } catch (e: any) {
+          console.error(e)
+          switch (e?.message) {
+            case Errors.NoAccountsError:
+              setError(
+                ErrorComponent[Errors.NoAccountsError](chosenWallet.metadata)
+              )
+              break
+            default:
+              console.error(e)
+              setError(GENERIC_ERROR)
+              break
+          }
+        }
       }, 1000)
     }
   }, [step])
@@ -273,9 +291,6 @@ export const PolkadotProvider: React.FC = () => {
         setStep(AuthSteps.Warning)
         return
       }
-
-      console.log(selectedAccount)
-      console.log(account)
       try {
         await api.post(`${polkadotUrl('login')}`, {
           selectedAccount: account,
@@ -408,7 +423,7 @@ export const PolkadotProvider: React.FC = () => {
             }
           >
             <div className="flex flex-col gap-4">
-              {wallets.map((ext) => {
+              {wallets.map((ext: BaseWallet) => {
                 return (
                   <WalletTab
                     key={ext.metadata.id}
@@ -422,7 +437,11 @@ export const PolkadotProvider: React.FC = () => {
                     onClickConnect={() => {
                       setShowModal(true)
                       setModalShown(true)
-                      onConnected[ext.type](ext)
+                      onConnected[
+                        ext.type as
+                          | WalletType.INJECTED
+                          | WalletType.WALLET_CONNECT
+                      ](ext)
                     }}
                   />
                 )
@@ -482,15 +501,15 @@ export const PolkadotProvider: React.FC = () => {
             {isWalletConnect(chosenWallet) && (
               <WalletTab
                 className="w-fit mt-4 mx-auto border-0"
-                key={walletConnect.metadata.id}
-                wallet={walletConnect}
+                key={chosenWallet.metadata.id}
+                wallet={chosenWallet}
                 name={'Wallet Connect'}
-                id={walletConnect.metadata.id}
+                id={chosenWallet.metadata.id}
                 onClickConnect={() => {
                   if (!modalShown) {
                     setShowModal(true)
                   }
-                  onConnected[WalletType.WALLET_CONNECT](walletConnect)
+                  onConnected[WalletType.WALLET_CONNECT](chosenWallet)
                 }}
                 disconnect={true}
               />
