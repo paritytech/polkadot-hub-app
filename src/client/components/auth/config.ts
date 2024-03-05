@@ -1,3 +1,13 @@
+import config from '#client/config'
+
+export const themeConfig = {
+  themeMode: 'dark',
+  themeVariables: {
+    '--wcm-font-family': 'Unbounded, sans-serif',
+    '--wcm-accent-color': '#E6007A',
+  },
+}
+
 export const extensionConfig = {
   disallowed: [],
   supported: [
@@ -39,14 +49,18 @@ export const extensionConfig = {
 
 export const walletConnectConfig = {
   // @todo add to vars
-  projectId: 'a7af023707d162a2fbe91a2a66ad9e2e',
+  projectId: config.walletConnectProjectId,
   relayUrl: 'wss://relay.walletconnect.com',
   chainIds: [
+    // polkadot
     'polkadot:e143f23803ac50e8f6f8e62695d1ce9e',
+    // polkadot
     'polkadot:91b171bb158e2d3848fa23a9f1c25182',
   ],
   optionalChainIds: [
+    // westend
     'polkadot:67f9723393ef76214df0118c34bbbd3d',
+    // rococo
     'polkadot:7c34d42fc815d392057c78b49f2755c7',
   ],
   metadata: {

@@ -2,6 +2,7 @@ import config from '#client/config'
 import { cn } from '#client/utils'
 import { useEffect, useState } from 'react'
 import { Background, H1, Icons, Link, P } from '../ui'
+import { BaseWallet } from '@polkadot-onboard/core'
 
 export const LoginIcons: Record<string, JSX.Element> = {
   google: <Icons.Gmail />,
@@ -19,12 +20,23 @@ export const Errors = {
 }
 // @todo export metadata from the library
 
+export type ExtendedMetadata = {
+  id: string
+  title: string
+  urls?: { main?: string; browsers?: Record<string, string> } & {
+    reference: string
+  }
+}
+
+export type ExtensionAccount = {
+  address: string
+  name: string
+  source: string
+  wallet: BaseWallet
+}
+
 export const ErrorComponent = {
-  [Errors.NoAccountsError]: (metadata: {
-    id: string
-    title: string
-    urls: { main: string; reference: string }
-  }) => (
+  [Errors.NoAccountsError]: (metadata: ExtendedMetadata) => (
     <div className="flex flex-col justify-start">
       <P className="text-accents-red text-left">No accounts found.</P>
       <P className="mt-0 text-accents-red">

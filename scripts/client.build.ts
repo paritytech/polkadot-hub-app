@@ -65,6 +65,9 @@ function getBuildConfig(): BuildOptions {
       'process.env.AUTH_MESSAGE_TO_SIGN': JSON.stringify(
         config.authMessageToSign
       ),
+      'process.env.WALLET_CONNECT_PROJECT_ID': JSON.stringify(
+        config.walletConnectProjectId
+      ),
       'process.env.ROLE_GROUPS': JSON.stringify(
         appConfig.config.permissions.roleGroups.map((x) => ({
           ...x,
