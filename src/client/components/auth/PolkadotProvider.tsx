@@ -347,11 +347,11 @@ export const PolkadotProvider: React.FC = () => {
         setLoaderText('Please sign the request')
       } else {
         setLoaderText('Connecting to your wallet...')
-        // window.location.href = selectedAccount?.source + '://'
-        setTimeout(() => {
-          setLoaderText('Processing takes about 2-7 seconds')
-        }, 5000)
-        setTimeout(() => setShowTryAgain(true), 30000)
+        setTimeout(
+          () => setLoaderText('Processing takes about 2-7 seconds'),
+          5000
+        )
+        setTimeout(() => setShowTryAgain(true), 15000)
       }
       setLoading(true)
       const signature = await sign(

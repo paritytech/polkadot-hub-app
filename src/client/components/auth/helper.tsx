@@ -18,7 +18,6 @@ export const Errors = {
   NoExtensionError: 'No extension is enabled',
   NoAccountsError: 'No accounts added',
 }
-// @todo export metadata from the library
 
 export type ExtendedMetadata = {
   id: string
