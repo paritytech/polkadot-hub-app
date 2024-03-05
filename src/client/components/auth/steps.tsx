@@ -266,7 +266,7 @@ const BasicSettingStep: React.FC<BasicSettingStepProps> = ({ onSubmit }) => {
 
 export const AuthStepsComponent: Record<
   string,
-  (props?: any) => React.ReactNode | JSX.Element
+  JSX.Element | { (props?: any): JSX.Element }
 > = {
   [AuthSteps.Connecting]: (
     <StepWrapper>
