@@ -2,7 +2,7 @@ import config from '#client/config'
 import { cn } from '#client/utils'
 import { useEffect, useState } from 'react'
 import { Background, H1, Icons, Link, P } from '../ui'
-import { BaseWallet } from '@polkadot-onboard/core'
+import { BaseWallet, WalletType } from '@polkadot-onboard/core'
 
 export const LoginIcons: Record<string, JSX.Element> = {
   google: <Icons.Gmail />,
@@ -83,6 +83,9 @@ export const AuthSteps = {
   Error: 'Error',
 }
 
+export const isWalletConnect = (w: BaseWallet) =>
+  w.type === WalletType.WALLET_CONNECT
+
 export const GENERIC_ERROR = 'There has been an error. Please try again later'
 const MAX_RECONNECT = 3
 
@@ -160,6 +163,23 @@ export const StepWrapper: React.FC<{
         </div>
       )}
     </div>
+    {children}
+  </div>
+)
+
+export const ButtonWrapper = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+}) => (
+  <div
+    className={cn(
+      'flex flex-col gap-4 sm:flex-row justify-between w-full mt-6',
+      className
+    )}
+  >
     {children}
   </div>
 )
