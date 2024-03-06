@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useDocumentTitle, useOffice } from '#client/utils/hooks'
 import {
-  Avatar,
   BackButton,
   Background,
   ComponentWrapper,
@@ -10,12 +9,9 @@ import {
   H2,
   HR,
   Icons,
-  Input,
-  Modal,
   P,
   showNotification,
 } from '#client/components/ui'
-import { Header } from '#client/components/Header'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import {
@@ -23,18 +19,8 @@ import {
   useUnlinkAccount,
   useUpdateLinkedAccounts,
 } from '../queries'
-import {
-  connectToPolkadot,
-  enablePolkadotExtension,
-  getAccountsList,
-  sign,
-  verify,
-} from '#client/utils/polkadot'
+import { sign, verify } from '#client/utils/polkadot'
 import { AuthAccountsLinkModal } from './AuthAccountsLinkModal'
-import type {
-  InjectedAccountWithMeta,
-  InjectedExtension,
-} from '@polkadot/extension-inject/types'
 import { AuthAccount } from './AuthAccount'
 import { AuthAddressPair, AuthExtension } from '#shared/types'
 import config from '#client/config'
@@ -42,6 +28,8 @@ import { filterOutForbiddenAuth } from '../helpers'
 import { DeleteUserModal } from './DeleteUserModal'
 import dayjs from 'dayjs'
 import { DATE_FORMAT_DAY_NAME } from '#client/constants'
+import { WalletType } from '@polkadot-onboard/core'
+import { getWallets } from '#client/components/auth/helper'
 
 export const MySettings: React.FC = () => {
   useDocumentTitle('Settings')
@@ -49,11 +37,11 @@ export const MySettings: React.FC = () => {
   const allowedWallets = ['polkadot-js', 'talisman']
   const me = useStore(stores.me)
   const [showModal, setShowModal] = useState(false)
-  const [accounts, setAccounts] = useState<InjectedAccountWithMeta[]>([])
-  const [extensions, setExtensions] = useState<InjectedExtension[]>([])
+  const [wallets, setWallets] = useState<any>([])
   const [linkedAccounts, setLinkedAccounts] = useState<
     Record<string, AuthAddressPair[]>
   >({})
+  const [loading, setLoading] = useState(false)
 
   const officeId = useStore(stores.officeId)
   const office = useOffice(officeId)
@@ -83,36 +71,23 @@ export const MySettings: React.FC = () => {
     }
   }, [me])
 
-  const authenticateWithPolkadot = async (
-    alreadyLinkedAccounts: Record<string, AuthAddressPair[]>
-  ) => {
-    return connectToPolkadot()
-      .then(() => enablePolkadotExtension())
-      .then((extensions: InjectedExtension[]) => {
-        setExtensions(extensions)
-        if (!!extensions.length) {
-          return getAccountsList()
-        }
-        return []
-      })
-      .then((resp) => {
-        if (resp.length) {
-          const linked = alreadyLinkedAccounts
-            ? Object.values(alreadyLinkedAccounts).reduce(
-                (acc: Array<string>, arr) => {
-                  arr.forEach((item: AuthAddressPair) => {
-                    acc.push(item.address)
-                  })
-                  return acc
-                },
-                []
-              )
-            : []
-          let addresses = resp.filter((a) => !linked.includes(a.address))
-          setAccounts(addresses)
-        }
-        setShowModal(true)
-      })
+  const authenticateWithPolkadot = async () => {
+    setLoading(true)
+    setShowModal(true)
+    setTimeout(async () => {
+      try {
+        const wallets = await getWallets()
+        setWallets(wallets)
+        setLoading(false)
+      } catch (e: any) {
+        console.error(e)
+        showNotification(
+          'There has been an error. Please try again later or contact the administrator',
+          'error'
+        )
+        console.error(e)
+      }
+    }, 1000)
   }
 
   const providerComponents: Record<string, JSX.Element> = {
@@ -141,7 +116,7 @@ export const MySettings: React.FC = () => {
         title="Polkadot"
         subtitle="Connect your polkadot wallet using browser extensions like: polkadot-js or talisman. You can connect as many wallets as you want."
         connected={false}
-        onConnect={() => authenticateWithPolkadot(linkedAccounts)}
+        onConnect={authenticateWithPolkadot}
       >
         {me?.authIds &&
           linkedAccounts &&
@@ -208,21 +183,41 @@ export const MySettings: React.FC = () => {
       )}
       {showModal && (
         <AuthAccountsLinkModal
-          accounts={accounts}
-          extensions={extensions}
-          onChoose={async (addr: InjectedAccountWithMeta) => {
-            const signature = await sign(addr)
-            if (signature) {
-              const verified = verify(addr.address, signature)
-              if (verified) {
-                setShowModal(false)
-                updateLinked({
-                  address: addr.address,
-                  name: addr.meta.name ?? '',
-                  extensionName: addr.meta.source as AuthExtension,
-                })
+          wallets={wallets}
+          loading={loading}
+          linkedAccounts={linkedAccounts}
+          onChoose={async (selectedAccount: any) => {
+            try {
+              if (!selectedAccount) {
+                console.error('Invalid account.')
+                return
+              }
+              setLoading(true)
+              const signature = await sign(
+                selectedAccount.address,
+                selectedAccount.wallet.signer
+              )
+              if (signature) {
+                const isSignatureValid = verify(
+                  selectedAccount.address,
+                  signature
+                )
+                if (isSignatureValid) {
+                  setShowModal(false)
+                  updateLinked({
+                    address: selectedAccount?.address,
+                    name: selectedAccount?.name,
+                    extensionName: selectedAccount?.source,
+                  })
+                } else {
+                  showNotification('error while linking account', 'error')
+                }
+              }
+            } catch (e: any) {
+              if (e?.message === 'Cancelled') {
+                console.error('The user cancelled signing process')
               } else {
-                showNotification('error while linking account', 'error')
+                console.error(e)
               }
             }
           }}

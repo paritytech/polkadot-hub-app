@@ -2,8 +2,18 @@ import config from '#client/config'
 import { cn } from '#client/utils'
 import { useEffect, useState } from 'react'
 import { Background, H1, Icons, Link, P } from '../ui'
-import { BaseWallet, WalletType } from '@polkadot-onboard/core'
-
+import {
+  BaseWallet,
+  WalletType,
+  Account,
+  WalletAggregator,
+} from '@polkadot-onboard/core'
+import {
+  WalletConnectProvider,
+  WalletConnectConfiguration,
+} from '@polkadot-onboard/wallet-connect/packages/wallet-connect/src'
+import { extensionConfig, walletConnectConfig, themeConfig } from './config'
+import { InjectedWalletProvider } from '@polkadot-onboard/injected-wallets'
 export const LoginIcons: Record<string, JSX.Element> = {
   google: <Icons.Gmail />,
   polkadot: <Icons.Polkadot />,
@@ -17,6 +27,7 @@ export const providerUrls: Record<string, string> = {
 export const Errors = {
   NoExtensionError: 'No extension is enabled',
   NoAccountsError: 'No accounts added',
+  NoLoginOptionsConfigured: 'No Login Options Configured',
 }
 
 export type ExtendedMetadata = {
@@ -33,6 +44,8 @@ export type ExtensionAccount = {
   source: string
   wallet: BaseWallet
 }
+
+type AddressAccount = { address: string }
 
 export const ErrorComponent = {
   [Errors.NoAccountsError]: (metadata: ExtendedMetadata) => (
@@ -84,7 +97,7 @@ export const AuthSteps = {
 }
 
 export const isWalletConnect = (w: BaseWallet) =>
-  w.type === WalletType.WALLET_CONNECT
+  w.type === WalletType.WALLET_CONNECT && !!config.walletConnectProjectId
 
 export const GENERIC_ERROR = 'There has been an error. Please try again later'
 const MAX_RECONNECT = 3
@@ -152,7 +165,7 @@ export const StepWrapper: React.FC<{
   subtitle?: string | React.ReactNode
   children: React.ReactNode
 }> = ({ title, subtitle, children }) => (
-  <div className="flex flex-col justify-center items-center px-8">
+  <div className="flex flex-col justify-center items-center">
     <div>
       {title && (
         <H1 className={cn(subtitle ? 'mb-2' : 'mb-8', 'mt-0')}>{title}</H1>
@@ -183,3 +196,72 @@ export const ButtonWrapper = ({
     {children}
   </div>
 )
+
+export const getAccountsByType: Record<
+  WalletType.WALLET_CONNECT | WalletType.INJECTED,
+  (walletInfo: BaseWallet) => Promise<ExtensionAccount[] | []>
+> = {
+  [WalletType.WALLET_CONNECT]: async (walletInfo: BaseWallet) => {
+    let accounts = await walletInfo.getAccounts()
+    // sometimes there are duplicate accounts returned
+    // issue in polkadot-onboard @fix-me
+    const uniqueAccounts: string[] = Array.from(
+      new Set(
+        accounts
+          .filter((a: AddressAccount) => a.address.startsWith('1'))
+          .map((a: AddressAccount) => a.address)
+      )
+    )
+
+    return uniqueAccounts.map((addr: string) => {
+      return {
+        name: '...' + addr.slice(addr.length - 12, addr.length),
+        address: addr,
+        // @ts-ignore // @fixme - define a type in wallet-connect.ts package in polkadot-onboard
+        source: walletInfo.session.peer.metadata.name,
+        wallet: walletInfo,
+      }
+    })
+  },
+  [WalletType.INJECTED]: async (walletInfo: BaseWallet) => {
+    let accounts: Account[] = await walletInfo.getAccounts()
+    if (!accounts.length) {
+      throw new Error(
+        'No accounts were injected: browser extension ' + walletInfo.metadata.id
+      )
+    }
+    return accounts.map((account: Account) => ({
+      ...account,
+      source: walletInfo.metadata.id,
+      wallet: walletInfo,
+    }))
+  },
+}
+
+export const getWallets = async () => {
+  const aggregatedProviders = []
+  aggregatedProviders.push(
+    new InjectedWalletProvider(extensionConfig, config.appName)
+  )
+
+  if (!!config.walletConnectProjectId) {
+    aggregatedProviders.push(
+      new WalletConnectProvider(
+        walletConnectConfig as WalletConnectConfiguration,
+        config.appName
+      )
+    )
+  }
+  const walletAggregator = new WalletAggregator(aggregatedProviders)
+  const wallets = await walletAggregator.getWallets()
+  if (!!wallets.length) {
+    return wallets.map((wallet) => {
+      if (isWalletConnect(wallet)) {
+        // @ts-ignore @fixme export WalletConnectWallet from polkadot-onboard
+        wallet.walletConnectModal.setTheme(themeConfig)
+      }
+      return wallet
+    })
+  }
+  return []
+}
