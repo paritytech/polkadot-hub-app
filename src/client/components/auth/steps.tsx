@@ -33,23 +33,34 @@ const ChooseWalletStep: React.FC<ChooseWalletProps> = ({
     title="Choose Wallet"
     subtitle={
       <div className="hidden sm:block mb-4">
-        {wallets.length === 1 && isWalletConnect(wallets[0]) && (
-          <div>
-            <div className="mb-2">Supported browser extensions</div>
-            <div className="flex gap-2 justify-center">
-              {extensionConfig.supported.map((extension) => (
-                <a key={extension.id} href={extension.urls.main}>
-                  <img
-                    height="24"
-                    width="24"
-                    src={extension.image}
-                    className="hover:scale-110"
-                  ></img>
-                </a>
-              ))}
-            </div>
-          </div>
+        {!wallets.length && (
+          <p className="text-black mb-2 hidden sm:block">
+            Please install a browser wallet to continue.
+          </p>
         )}
+        {!wallets.length && (
+          <p className="text-black mb-2 block sm:hidden">
+            Please contact administrator.
+          </p>
+        )}
+        {(wallets.length === 1 && isWalletConnect(wallets[0])) ||
+          (!wallets.length && (
+            <div>
+              <div className="mb-2">Supported browser extensions</div>
+              <div className="flex gap-2 justify-center">
+                {extensionConfig.supported.map((extension) => (
+                  <a key={extension.id} href={extension.urls.main}>
+                    <img
+                      height="24"
+                      width="24"
+                      src={extension.image}
+                      className="hover:scale-110"
+                    ></img>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
       </div>
     }
   >
@@ -200,14 +211,16 @@ const WarningStep: React.FC<WarningStepProps> = ({
 
 type ErrorStepProps = {
   error: string
-  onTryAgain: () => void
+  onTryAgain?: () => void
 }
 const ErrorStep: React.FC<ErrorStepProps> = ({ error, onTryAgain }) => (
   <StepWrapper title="Error">
     {error}
-    <FButton className="mt-10" onClick={onTryAgain}>
-      Try again
-    </FButton>
+    {!!onTryAgain && (
+      <FButton className="mt-10" onClick={onTryAgain}>
+        Try again
+      </FButton>
+    )}
   </StepWrapper>
 )
 
@@ -266,9 +279,9 @@ const BasicSettingStep: React.FC<BasicSettingStepProps> = ({ onSubmit }) => {
 
 export const AuthStepsComponent: Record<
   string,
-  JSX.Element | { (props?: any): JSX.Element }
+  { (props?: any): JSX.Element }
 > = {
-  [AuthSteps.Connecting]: (
+  [AuthSteps.Connecting]: () => (
     <StepWrapper>
       <LoadingPolkadotWithText />
     </StepWrapper>
@@ -280,7 +293,7 @@ export const AuthStepsComponent: Record<
     <ChooseAccountStep {...props} />
   ),
   [AuthSteps.Warning]: (props: WarningStepProps) => <WarningStep {...props} />,
-  [AuthSteps.Redirect]: (
+  [AuthSteps.Redirect]: () => (
     <div className="flex justify-center items-center">
       <LoadingPolkadot />
     </div>

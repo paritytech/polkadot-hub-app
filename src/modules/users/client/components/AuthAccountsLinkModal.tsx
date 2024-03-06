@@ -1,96 +1,107 @@
-import { FButton, H1, Link, Modal, P, Select } from '#client/components/ui'
-import React, { useState } from 'react'
-import type {
-  InjectedAccountWithMeta,
-  InjectedExtension,
-} from '@polkadot/extension-inject/types'
-
-const ExtensionError = () => (
-  <div>
-    <P className="text-accents-red">Error: No extension is enabled</P>
-    <P className="">
-      <Link
-        target="_blank"
-        className="text-text-secondary"
-        href="https://polkadot.js.org/extension/"
-      >
-        Download polkadot-js browser extension
-      </Link>
-    </P>
-  </div>
-)
-
-const AccountError = () => (
-  <div>
-    <P className="text-accents-red">Error: There are no accounts to connect.</P>
-    <P className="text-text-secondary mb-2 mt-0" textType="additional">
-      - All of your accounts are already connected or
-      <br /> - No accounts are added to your browser extension.
-    </P>
-  </div>
-)
+import { LoadingPolkadotWithText, Modal, P } from '#client/components/ui'
+import React, { useEffect, useMemo, useState } from 'react'
+import { AuthStepsComponent } from '#client/components/auth/steps'
+import {
+  AuthSteps,
+  ExtensionAccount,
+  GENERIC_ERROR,
+  getAccountsByType,
+} from '#client/components/auth/helper'
+import { BaseWallet, WalletType } from '@polkadot-onboard/core'
+import { AuthAddressPair } from '#shared/types'
 
 export const AuthAccountsLinkModal: React.FC<{
-  accounts: Array<InjectedAccountWithMeta>
-  extensions: Array<InjectedExtension>
-  onChoose: (addr: InjectedAccountWithMeta) => Promise<void>
+  wallets: any[]
+  onChoose: (addr: ExtensionAccount) => Promise<void>
   onCancel: () => void
-}> = ({ accounts, extensions, onChoose, onCancel }) => {
-  const [selectedAccount, setSelectedAccount] = useState('')
-  return (
-    <Modal onClose={onCancel}>
-      <div className="flex flex-col gap-4 justify-center">
-        <H1 className="text-center">Choose account</H1>
+  loading: boolean
+  linkedAccounts: Record<string, AuthAddressPair[]>
+}> = ({ wallets, onChoose, onCancel, loading, linkedAccounts }) => {
+  const [step, setStep] = useState('')
+  const [error, setError] = useState<JSX.Element | string>()
+  const [selectedAddress, setSelectedAddress] = useState('')
+  const [chosenWallet, setChosenWallet] = useState<BaseWallet>()
+  const [accounts, setAccounts] = useState<ExtensionAccount[]>([])
+  const selectedAccount = useMemo(
+    () => accounts.find((a) => a.address === selectedAddress),
+    [selectedAddress]
+  )
+  const getStep = (currentStep: string) => {
+    switch (currentStep) {
+      case AuthSteps.Connecting:
+        return AuthStepsComponent[AuthSteps.Connecting]
 
-        {!extensions.length ? (
-          <ExtensionError />
-        ) : !accounts.length ? (
-          <AccountError />
-        ) : (
-          <div className="flex flex-col gap-4">
-            <Select
-              placeholder="select account"
-              value={selectedAccount}
-              onChange={setSelectedAccount}
-              disabled={!accounts.length}
-              options={[
-                {
-                  label: !accounts.length
-                    ? 'nothing to select'
-                    : 'select account',
-                  value: '',
-                },
-              ].concat(
-                accounts.map((account: InjectedAccountWithMeta) => ({
-                  label: account.meta.name ?? '',
-                  value: account.address ?? '',
-                }))
-              )}
-            ></Select>
-            <div className="flex flex-col">
-              <FButton
-                disabled={!selectedAccount}
-                onClick={() => {
-                  const account = accounts.find(
-                    (a) => a.address === selectedAccount
-                  )
-                  if (account) {
-                    onChoose(account)
-                  }
-                }}
-              >
-                Link
-              </FButton>
-              <button
-                onClick={onCancel}
-                className="mt-4 hover:opacity-80 text-text-tertiary"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      case AuthSteps.ChooseWallet:
+        return AuthStepsComponent[AuthSteps.ChooseWallet]({
+          wallets,
+          onClickConnect: async (wallet: BaseWallet) => {
+            try {
+              const accounts = await getAccountsByType[
+                wallet.type as WalletType.INJECTED | WalletType.WALLET_CONNECT
+              ](wallet)
+              setChosenWallet(wallet)
+              console.log(accounts)
+              console.log(linkedAccounts)
+              setAccounts(accounts)
+              setStep(AuthSteps.ChooseAccount)
+            } catch (e) {
+              console.error(e)
+              setError(<p>{GENERIC_ERROR}</p>)
+              setStep(AuthSteps.Error)
+            }
+          },
+        })
+      case AuthSteps.ChooseAccount:
+        return AuthStepsComponent.ChooseAccount({
+          accounts,
+          chosenWallet,
+          onAddressSelect: (addr: string) => setSelectedAddress(addr),
+          onWalletConnectClick: async () => {
+            if (chosenWallet) {
+              const accounts = await getAccountsByType[
+                WalletType.WALLET_CONNECT
+              ](chosenWallet)
+              setAccounts(accounts)
+            }
+            // what if no chosen wallet?
+          },
+          onBack: () => setStep(AuthSteps.ChooseWallet),
+          onContinue: () => {
+            if (selectedAccount) {
+              onChoose(selectedAccount)
+            }
+            // what if no selected account?
+          },
+        })
+      case AuthSteps.Error:
+        return AuthStepsComponent.Error({
+          error,
+        })
+      case AuthSteps.Redirect:
+        return AuthStepsComponent.Redirect
+      default:
+        break
+    }
+  }
+  useEffect(() => {
+    if (!wallets.length) {
+      setError('Please contact administrator')
+      setStep(AuthSteps.Error)
+    }
+    if (!!wallets.length && step !== AuthSteps.ChooseWallet) {
+      setStep(AuthSteps.ChooseWallet)
+    }
+  }, [wallets])
+
+  return (
+    <Modal onClose={onCancel} title="Link Polkadot Account">
+      {loading ? (
+        <div className="flex flex-col gap-4 justify-center">
+          <LoadingPolkadotWithText text="Getting your data..." />
+        </div>
+      ) : (
+        (getStep(step) as React.ReactNode)
+      )}
     </Modal>
   )
 }

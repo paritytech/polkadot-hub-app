@@ -2,19 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { FButton, H3, LoadingPolkadot, Modal, P } from '#client/components/ui'
 import config from '#client/config'
 import { api } from '#client/utils/api'
-import {
-  WalletAggregator,
-  WalletType,
-  BaseWallet,
-  Account,
-} from '@polkadot-onboard/core'
-import { InjectedWalletProvider } from '@polkadot-onboard/injected-wallets'
-import {
-  WalletConnectProvider,
-  WalletConnectConfiguration,
-} from '@polkadot-onboard/wallet-connect/packages/wallet-connect/src'
-
-const DAPP_NAME = config.appName
+import { WalletType, BaseWallet } from '@polkadot-onboard/core'
 
 import {
   AuthSteps,
@@ -26,46 +14,13 @@ import {
   ExtendedMetadata,
   ExtensionAccount,
   isWalletConnect,
+  getAccountsByType,
+  getWallets,
 } from './helper'
 import { sign, verify } from '#client/utils/polkadot'
-import { extensionConfig, themeConfig, walletConnectConfig } from './config'
+import { themeConfig } from './config'
 import { AuthStepsComponent } from './steps'
-
-type ModalProps = {
-  onConfirm: () => void
-  onCancel: () => void
-  className?: string
-}
-
-export const ConfirmationModal: React.FC<ModalProps> = ({
-  onConfirm,
-  onCancel,
-}) => {
-  return (
-    <Modal onClose={onCancel} title="Important information">
-      <div className="flex flex-col gap-4">
-        <div>
-          <P className="font-bold mb-0">Please be patient</P>
-          <p className="mt-0 text-text-secondary">
-            Signature/sign requests to your wallet might take a while to
-            propagate (2-5 seconds).
-          </p>
-        </div>
-
-        <div className="block sm:hidden">
-          <P className="font-bold mb-0">No redirect back from wallet</P>
-          <p className="text-text-secondary">
-            After your sign the request in you wallet, you will need to manually
-            return back to the browser to continue.
-          </p>
-        </div>
-        <FButton onClick={onConfirm} className="w-full rounded-sm">
-          Noted
-        </FButton>
-      </div>
-    </Modal>
-  )
-}
+import { WarningModal } from './WarningModal'
 
 const LoaderWithText = ({ text = 'Connecting' }: { text?: string }) => (
   <div className="flex flex-col justify-center items-center">
@@ -95,6 +50,14 @@ export const PolkadotProvider: React.FC = () => {
     () => accounts.find((a) => a.address === selectedAddress),
     [selectedAddress]
   )
+  useEffect(() => {
+    console.log('walletConnectProjectId ', config.walletConnectProjectId)
+    if (!config.walletConnectProjectId) {
+      console.error(
+        ` ${config.appName}: Please specify WALLET_CONNECT_PROJECT_ID in .env file if you want WalletConnect to work.`
+      )
+    }
+  }, [])
 
   const callbackPath = useMemo(() => {
     const currentUrl = new URL(document.location.href)
@@ -121,100 +84,24 @@ export const PolkadotProvider: React.FC = () => {
   const polkadotUrl = (path: string) =>
     new URL(`${config.appHost}/auth/polkadot/${path}`).toString()
 
-  type AddressAccount = { address: string }
-
-  const onConnected: Record<
-    WalletType.WALLET_CONNECT | WalletType.INJECTED,
-    (walletInfo: BaseWallet) => void
-  > = {
-    [WalletType.WALLET_CONNECT]: async (walletInfo: BaseWallet) => {
-      try {
-        setLoading(true)
-        setChosenWallet(walletInfo)
-        let accounts = await walletInfo.getAccounts()
-        // sometimes there are duplicate accounts returned
-        // issue in polkadot-onboard @fix-me
-        const uniqueAccounts: string[] = Array.from(
-          new Set(
-            accounts
-              .filter((a: AddressAccount) => a.address.startsWith('1'))
-              .map((a: AddressAccount) => a.address)
-          )
-        )
-
-        setAccounts(
-          uniqueAccounts.map((addr: string) => {
-            return {
-              name: '...' + addr.slice(addr.length - 12, addr.length),
-              address: addr,
-              // @ts-ignore // @fixme - define a type in wallet-connect.ts package in polkadot-onboard
-              source: walletInfo.session.peer.metadata.name,
-              wallet: walletInfo,
-            }
-          })
-        )
-        setStep(AuthSteps.ChooseAccount)
-        setLoading(false)
-      } catch (e) {
-        setLoading(false)
-        console.log(e)
-      }
-    },
-    [WalletType.INJECTED]: async (walletInfo: BaseWallet) => {
-      try {
-        setLoading(true)
-        setChosenWallet(walletInfo)
-        let accounts: Account[] = await walletInfo.getAccounts()
-        if (!accounts.length) {
-          setLoading(false)
-          setError(
-            ErrorComponent[Errors.NoAccountsError](
-              walletInfo.metadata as ExtendedMetadata
-            )
-          )
-          setStep(AuthSteps.Error)
-          return
-        }
-        accounts = accounts.map((account: Account) => ({
-          ...account,
-          source: walletInfo.metadata.id,
-          wallet: walletInfo,
-        }))
-        setAccounts(accounts as ExtensionAccount[])
-        setStep(AuthSteps.ChooseAccount)
-        setLoading(false)
-      } catch (e) {
-        setLoading(false)
-        console.log(e)
-      }
-    },
-  }
-
   useEffect(() => {
     if (step === AuthSteps.ReConnecting) {
       setStep(AuthSteps.Connecting)
       setError('')
     }
     if (step === AuthSteps.Connecting) {
-      let walletAggregator = new WalletAggregator([
-        new InjectedWalletProvider(extensionConfig, DAPP_NAME),
-        new WalletConnectProvider(
-          walletConnectConfig as WalletConnectConfiguration,
-          DAPP_NAME
-        ),
-      ])
       // the timeout here is to wait for polkadot-js to load after initializing
       setTimeout(async () => {
         try {
-          const wallets = await walletAggregator.getWallets()
-          let confWallets = wallets.map((wallet) => {
-            if (isWalletConnect(wallet)) {
-              // @ts-ignore @fixme export WalletConnectWallet from polkadot-onboard
-              wallet.walletConnectModal.setTheme(themeConfig)
-            }
-            return wallet
-          })
-          setWallets(confWallets)
+          const wallets = await getWallets()
+          if (!wallets.length) {
+            // if no wallet connect is setup then there is no way to login on mobile
+            setError('Please contact administrator.')
+            console.error('No wallets were retrieved.')
+            setStep(AuthSteps.Error)
+            return
+          }
+          setWallets(wallets)
           setStep(AuthSteps.ChooseWallet)
           setLoading(false)
         } catch (e: any) {
@@ -358,17 +245,32 @@ export const PolkadotProvider: React.FC = () => {
   const getStep = (currentStep: string) => {
     switch (currentStep) {
       case AuthSteps.Connecting:
-        return AuthStepsComponent[AuthSteps.Connecting]
+        return AuthStepsComponent[AuthSteps.Connecting]()
 
       case AuthSteps.ChooseWallet:
         return AuthStepsComponent[AuthSteps.ChooseWallet]({
           wallets,
-          onClickConnect: (wallet: BaseWallet) => {
+          onClickConnect: async (wallet: BaseWallet) => {
             setShowModal(true)
             setModalShown(true)
-            onConnected[
+            setLoading(true)
+            setChosenWallet(wallet)
+            const accounts = await getAccountsByType[
               wallet.type as WalletType.INJECTED | WalletType.WALLET_CONNECT
             ](wallet)
+            // @fix-me fix the return type
+            if (!accounts.length) {
+              setLoading(false)
+              setError(
+                ErrorComponent[Errors.NoAccountsError](
+                  wallet.metadata as ExtendedMetadata
+                )
+              )
+              setStep(AuthSteps.Error)
+            }
+            setAccounts(accounts as ExtensionAccount[])
+            setStep(AuthSteps.ChooseAccount)
+            setLoading(false)
           },
         })
       case AuthSteps.ChooseAccount:
@@ -380,7 +282,7 @@ export const PolkadotProvider: React.FC = () => {
             if (!modalShown) {
               setShowModal(true)
             }
-            onConnected[WalletType.WALLET_CONNECT](chosenWallet)
+            getAccountsByType[WalletType.WALLET_CONNECT](chosenWallet)
           },
           onBack: () => setStep(AuthSteps.ChooseWallet),
           onContinue: () => handleLogin(),
@@ -402,7 +304,7 @@ export const PolkadotProvider: React.FC = () => {
           onTryAgain: () => setStep(AuthSteps.ReConnecting),
         })
       case AuthSteps.Redirect:
-        return AuthStepsComponent.Redirect
+        return AuthStepsComponent.Redirect()
       default:
         break
     }
@@ -411,7 +313,7 @@ export const PolkadotProvider: React.FC = () => {
   return (
     <WhiteWindow>
       {showModal && (
-        <ConfirmationModal
+        <WarningModal
           onConfirm={() => setShowModal(false)}
           onCancel={() => setShowModal(false)}
         />

@@ -30,8 +30,9 @@ export const Login: React.FC = () => {
               label={`${currentState} with Google`}
             />
           )}
+          {/*  browser */}
           {providers.includes('polkadot') && (
-            <div className="">
+            <div className="hidden sm:block">
               <LoginButton
                 icon="polkadot"
                 label={`${currentState} with Polkadot`}
@@ -41,6 +42,19 @@ export const Login: React.FC = () => {
               />
             </div>
           )}
+          {/*  mobile */}
+          {providers.includes('polkadot') &&
+            !!config.walletConnectProjectId && (
+              <div className="block sm:hidden">
+                <LoginButton
+                  icon="polkadot"
+                  label={`${currentState} with Polkadot`}
+                  className="bg-black hover:opacity-80 hover:bg-black w-full"
+                  provider="polkadot"
+                  currentState={currentState}
+                />
+              </div>
+            )}
         </div>
 
         {!!providers.length && (

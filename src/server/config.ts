@@ -16,6 +16,7 @@ type Config = {
   oauth2GoogleClientId: string
   oauth2GoogleClientSecret: string
   authMessageToSign: string | undefined
+  walletConnectProjectId: string | undefined
   superusers: string[]
   workingHoursTestGroup: string[]
 }
@@ -36,6 +37,7 @@ const config: Config = {
   workingHoursTestGroup: JSON.parse(
     process.env.WORKING_HOURS_TEST_GROUP || '[]'
   ),
+  walletConnectProjectId: process.env.WALLET_CONNECT_PROJECT_ID,
 }
 
 export default config
