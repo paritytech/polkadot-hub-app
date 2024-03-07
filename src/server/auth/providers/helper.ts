@@ -8,14 +8,12 @@ import { sequelize } from '#server/db'
 import config from '#server/config'
 import { Session } from '#modules/users/server/models'
 
-const TOKEN_EXPIRES_IN_DAYS = 20
-
 export const getSession = async (
   userId: string,
   fastify: FastifyInstance
 ): Promise<Session> => {
   const now = dayjs()
-  const expiresAt = now.add(TOKEN_EXPIRES_IN_DAYS, 'day').endOf('day')
+  const expiresAt = now.add(config.jwtExpiresInDays, 'day').endOf('day')
   const expiresIn = expiresAt.diff(now, 'second')
   const signRequest = await jwt.sign({ id: userId }, expiresIn)
   if (!signRequest.success) {
