@@ -52,6 +52,7 @@ export type EventExternalIds = {
 
 export interface EventAdminResponse extends Event {
   applicationsCount: number
+  purgeSubmissionsAfterDays: number | null
 }
 
 export interface EventPublicResponse extends Event {

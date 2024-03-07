@@ -22,6 +22,7 @@ import {
   CheckboxGroup,
   Breadcrumbs,
   LabelWrapper,
+  Select,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { EntityAccessSelector } from '#client/components/EntityAccessSelector'
@@ -37,8 +38,12 @@ import {
 const EmptyFormContent: FormStep[] = []
 const DefaultFormContent: FormStep[] = getPlaceholderFormContent()
 
-type FormFormData = Omit<FormCreationRequest, 'content'> & {
+type FormFormData = Omit<
+  FormCreationRequest,
+  'content' | 'purgeSubmissionsAfterDays'
+> & {
   contentHash?: number
+  purgeSubmissionsAfterDays: string
 }
 
 export const AdminFormEditor: React.FC = () => {
@@ -85,6 +90,9 @@ export const AdminFormEditor: React.FC = () => {
         responsibleUserIds: form.responsibleUserIds,
         visibility: form.visibility,
         allowedRoles: form.allowedRoles,
+        purgeSubmissionsAfterDays: String(
+          form.purgeSubmissionsAfterDays ?? 'none'
+        ),
       }))
       if (form.responsibleUserIds?.length) {
         setShowUsersList(true)
@@ -112,6 +120,7 @@ export const AdminFormEditor: React.FC = () => {
       contentHash: 0,
       visibility: EntityVisibility.None,
       allowedRoles: [],
+      purgeSubmissionsAfterDays: 'none',
     }
   }, [])
   const [formData, setFormData] = useState<FormFormData>(formInitialValue)
@@ -226,7 +235,21 @@ export const AdminFormEditor: React.FC = () => {
       const contentFallback = form ? form.content : []
       const formRequestData: FormCreationRequest = {
         ...values,
+        purgeSubmissionsAfterDays:
+          values.purgeSubmissionsAfterDays === 'none'
+            ? null
+            : Number(values.purgeSubmissionsAfterDays),
         content: formContentChanged || contentFallback,
+      }
+      if (
+        form &&
+        formRequestData.purgeSubmissionsAfterDays &&
+        !form.purgeSubmissionsAfterDays &&
+        !window.confirm(
+          `You are about to activate the auto-delete feature for all form submissions older than ${formRequestData.purgeSubmissionsAfterDays} days. This action will take effect soon and could impact previously collected submissions. Are you sure?`
+        )
+      ) {
+        return
       }
       return form ? updateForm(formRequestData) : createForm(formRequestData)
     },
@@ -385,6 +408,21 @@ export const AdminFormEditor: React.FC = () => {
                 </div>
               ))}
             </div>
+          </LabelWrapper>
+        </div>
+
+        <div className="my-6">
+          <LabelWrapper className="my-6 mt-2" label="Data retention">
+            <Select
+              options={[
+                { value: 'none', label: 'Keep forever' },
+                { value: '30', label: 'Delete after 30 days' },
+                { value: '90', label: 'Delete after 90 days' },
+                { value: '365', label: 'Delete after 365 days' },
+              ]}
+              value={formData.purgeSubmissionsAfterDays || 'none'}
+              onChange={onFormChange('purgeSubmissionsAfterDays')}
+            />
           </LabelWrapper>
         </div>
 

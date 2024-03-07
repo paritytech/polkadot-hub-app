@@ -9,6 +9,7 @@ import {
 import { appConfig } from '#server/app-config'
 import config from '#server/config'
 import { sequelize } from '#server/db'
+import { jwt } from '#server/utils'
 import { safeRequire, getFilePath } from '#server/utils'
 import {
   CronJobContext,
@@ -116,21 +117,24 @@ export const moduleRouterPlugin =
             req.permissions = new PermissionsSet([])
             const token = req.cookies[SESSION_TOKEN_COOKIE_NAME]
             if (token && fastify.db.Session && fastify.db.User) {
-              // const { id } = await jwt.verify(token)
-              const session = await fastify.db.Session.findOne({
-                where: { token },
-              })
-              if (session) {
-                const user = await fastify.db.User.findOneActive({
-                  where: { id: session.userId },
+              const verifyReq = await jwt.verify(token)
+              if (verifyReq.success) {
+                const userId = verifyReq.data.id
+                const session = await fastify.db.Session.findOne({
+                  where: { token, userId },
                 })
-                if (user) {
-                  req.user = user
-                  req.permissions = appConfig.getUserPermissions(
-                    user.email,
-                    user.getAuthAddresses(),
-                    user.roles
-                  )
+                if (session) {
+                  const user = await fastify.db.User.findOneActive({
+                    where: { id: session.userId },
+                  })
+                  if (user) {
+                    req.user = user
+                    req.permissions = appConfig.getUserPermissions(
+                      user.email,
+                      user.getAuthAddresses(),
+                      user.roles
+                    )
+                  }
                 }
               }
             }

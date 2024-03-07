@@ -63,18 +63,23 @@ export const getUserProviderQuery = (
   provider: string,
   extension: string,
   address: string
-) => ({
-  authIds: {
-    [Op.and]: [
-      { [Op.not]: '{}' },
-      sequelize.literal(`jsonb_exists("User"."authIds", '${provider}')`),
-      sequelize.literal(`exists(
-              select 1 from jsonb_array_elements("User"."authIds"->'${provider}'->'${extension}') as elem
-              where elem->>'address' = '${address}'
+) => {
+  const providerEsc = sequelize.escape(provider)
+  const extensionEsc = sequelize.escape(extension)
+  const addressEsc = sequelize.escape(address)
+  return {
+    authIds: {
+      [Op.and]: [
+        { [Op.not]: '{}' },
+        sequelize.literal(`jsonb_exists("User"."authIds", ${providerEsc})`),
+        sequelize.literal(`exists(
+              select 1 from jsonb_array_elements("User"."authIds"->${providerEsc}->${extensionEsc}) as elem
+              where elem->>'address' = ${addressEsc}
             )`),
-    ],
-  },
-})
+      ],
+    },
+  }
+}
 
 export const removeAuthId = (
   authIds: Record<string, AuthAddressPair[]>,

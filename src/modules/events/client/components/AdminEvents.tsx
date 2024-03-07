@@ -113,6 +113,13 @@ export const AdminEvents = () => {
           ),
         },
         {
+          Header: 'Data retention',
+          accessor: (event: EventAdminResponse) =>
+            event.purgeSubmissionsAfterDays
+              ? `${event.purgeSubmissionsAfterDays} days`
+              : 'Forever',
+        },
+        {
           Header: 'Form editor',
           accessor: (event: EventAdminResponse) =>
             event.formId ? (

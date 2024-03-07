@@ -13,6 +13,7 @@ type Config = {
   logDbQueries: boolean
   databaseUri: string
   jwtSecret: string
+  jwtExpiresInDays: number
   oauth2GoogleClientId: string
   oauth2GoogleClientSecret: string
   authMessageToSign: string | undefined
@@ -29,6 +30,7 @@ const config: Config = {
   logDbQueries: parseBoolean(process.env.LOG_DB_QUERIES, false),
   databaseUri: process.env.DATABASE_URI || '',
   jwtSecret: process.env.JWT_SECRET || '',
+  jwtExpiresInDays: parseInt(process.env.JWT_EXPIRES_IN_DAYS || '') || 20,
   oauth2GoogleClientId: process.env.OAUTH2_GOOGLE_CLIENT_ID || '',
   oauth2GoogleClientSecret: process.env.OAUTH2_GOOGLE_CLIENT_SECRET || '',
   superusers: JSON.parse(process.env.SUPERUSERS || '[]'),

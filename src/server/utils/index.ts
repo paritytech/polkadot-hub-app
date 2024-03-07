@@ -4,32 +4,29 @@ import dayjs from 'dayjs'
 import { diff } from 'json-diff'
 import jwtLib, { JwtPayload } from 'jsonwebtoken'
 import config from '#server/config'
+import { SafeResponse } from '#server/types'
 
 export const jwt = {
-  sign: (payload: JwtPayload): Promise<string> =>
-    new Promise((resolve, reject) => {
-      jwtLib.sign(
-        payload,
-        config.jwtSecret,
-        { expiresIn: 60 * 60 * 24 },
-        (err, token) => {
-          if (err) {
-            reject(err)
-          }
-          resolve(token as string)
+  sign(payload: JwtPayload, expiresIn: number): Promise<SafeResponse<string>> {
+    return new Promise((resolve) => {
+      jwtLib.sign(payload, config.jwtSecret, { expiresIn }, (error, token) => {
+        if (error) {
+          resolve({ success: false, error })
         }
-      )
-    }),
-
-  verify: (token: string): Promise<JwtPayload> =>
-    new Promise((resolve, reject) => {
-      jwtLib.verify(token, config.jwtSecret, (err, payload) => {
-        if (err) {
-          reject(err)
-        }
-        resolve(payload as JwtPayload)
+        resolve({ success: true, data: token! })
       })
-    }),
+    })
+  },
+  verify(token: string): Promise<SafeResponse<JwtPayload>> {
+    return new Promise((resolve) => {
+      jwtLib.verify(token, config.jwtSecret, (error, payload) => {
+        if (error) {
+          resolve({ success: false, error })
+        }
+        resolve({ success: true, data: payload as JwtPayload })
+      })
+    })
+  },
 }
 
 export const getTimezoneOffset = (timezone: string) => {

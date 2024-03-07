@@ -87,13 +87,6 @@ export class Event
     }
   }
 
-  useAdminView(applicationsCount: number): EventAdminResponse {
-    return {
-      ...this.toJSON(),
-      applicationsCount,
-    }
-  }
-
   usePreviewView(): EventPreview {
     return {
       id: this.id,
