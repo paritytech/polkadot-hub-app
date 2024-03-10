@@ -18,7 +18,6 @@ import {
   getWallets,
 } from './helper'
 import { sign, verify } from '#client/utils/polkadot'
-import { themeConfig } from './config'
 import { AuthStepsComponent } from './steps'
 import { WarningModal } from './WarningModal'
 
@@ -51,10 +50,9 @@ export const PolkadotProvider: React.FC = () => {
     [selectedAddress]
   )
   useEffect(() => {
-    console.log('walletConnectProjectId ', config.walletConnectProjectId)
     if (!config.walletConnectProjectId) {
       console.error(
-        ` ${config.appName}: Please specify WALLET_CONNECT_PROJECT_ID in .env file if you want WalletConnect to work.`
+        ` ${config.appName}: Incorrect WalletConnect configuration.`
       )
     }
   }, [])
@@ -250,7 +248,7 @@ export const PolkadotProvider: React.FC = () => {
       case AuthSteps.ChooseWallet:
         return AuthStepsComponent[AuthSteps.ChooseWallet]({
           wallets,
-          onClickConnect: async (wallet: BaseWallet) => {
+          onConnected: async (wallet: BaseWallet) => {
             setShowModal(true)
             setModalShown(true)
             setLoading(true)
@@ -278,11 +276,15 @@ export const PolkadotProvider: React.FC = () => {
           accounts,
           chosenWallet,
           onAddressSelect: (addr: string) => setSelectedAddress(addr),
-          onWalletConnectClick: () => {
+          onConnected: async () => {
+            setAccounts([])
             if (!modalShown) {
               setShowModal(true)
             }
-            getAccountsByType[WalletType.WALLET_CONNECT](chosenWallet)
+            const accounts = await getAccountsByType[WalletType.WALLET_CONNECT](
+              chosenWallet
+            )
+            setAccounts(accounts)
           },
           onBack: () => setStep(AuthSteps.ChooseWallet),
           onContinue: () => handleLogin(),

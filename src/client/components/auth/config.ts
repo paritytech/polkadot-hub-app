@@ -1,13 +1,5 @@
 import config from '#client/config'
 
-export const themeConfig = {
-  themeMode: 'dark',
-  themeVariables: {
-    '--wcm-font-family': 'Unbounded, sans-serif',
-    '--wcm-accent-color': '#E6007A',
-  },
-}
-
 export const extensionConfig = {
   disallowed: [],
   supported: [
@@ -68,15 +60,17 @@ export const walletConnectConfig = {
     url: process.env.APP_HOST,
     icons: ['https://i.ibb.co/YDzD5S8/apple-touch-icon-1.png'],
   },
-  walletConnectConfig: {
+  options: {
     explorerRecommendedWalletIds: [
       //  nova wallet
       '43fd1a0aeb90df53ade012cca36692a46d265f0b99b7561e645af42d752edb92',
       // subwallet
       '9ce87712b99b3eb57396cc8621db8900ac983c712236f48fb70ad28760be3f6a',
     ],
-  },
-  onSessionDelete: () => {
-    console.log('session was deleted')
+    themeMode: 'dark',
+    themeVariables: {
+      '--wcm-font-family': 'Unbounded, sans-serif',
+      '--wcm-accent-color': '#E6007A',
+    },
   },
 }

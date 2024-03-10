@@ -22,12 +22,12 @@ import { BaseWallet } from '@polkadot-onboard/core'
 
 type ChooseWalletProps = {
   wallets: BaseWallet[]
-  onClickConnect: (wallet: BaseWallet) => void
+  onConnected: (wallet: BaseWallet) => void
 }
 
 const ChooseWalletStep: React.FC<ChooseWalletProps> = ({
   wallets,
-  onClickConnect,
+  onConnected,
 }) => (
   <StepWrapper
     title="Choose Wallet"
@@ -74,7 +74,7 @@ const ChooseWalletStep: React.FC<ChooseWalletProps> = ({
               isWalletConnect(wallet) ? 'Wallet Connect' : wallet.metadata.title
             }
             id={wallet.metadata.id}
-            onClickConnect={() => onClickConnect(wallet)}
+            onConnected={() => onConnected(wallet)}
           />
         )
       })}
@@ -86,7 +86,7 @@ type ChooseAccountProps = {
   accounts: ExtensionAccount[]
   chosenWallet: BaseWallet
   onAddressSelect: (v: string) => void
-  onWalletConnectClick: () => void
+  onConnected: (wallet: BaseWallet) => void
   onBack: () => void
   onContinue: () => void
 }
@@ -96,9 +96,10 @@ const ChooseAccountStep: React.FC<ChooseAccountProps> = ({
   onAddressSelect,
   onBack,
   onContinue,
-  onWalletConnectClick,
+  onConnected,
 }) => {
   const [selectedAddress, setSelectedAddress] = useState('')
+  const [loading, setLoading] = useState(false)
   const selectedAccount = useMemo(
     () => accounts.find((a) => a.address === selectedAddress),
     [selectedAddress]
@@ -150,14 +151,19 @@ const ChooseAccountStep: React.FC<ChooseAccountProps> = ({
         </ButtonWrapper>
       </div>
 
-      {isWalletConnect(chosenWallet) && (
+      {isWalletConnect(chosenWallet) && loading && <LoadingPolkadot />}
+      {isWalletConnect(chosenWallet) && !loading && (
         <WalletTab
           className="w-fit mt-4 mx-auto border-0"
           key={chosenWallet.metadata.id}
           wallet={chosenWallet}
           name={'Wallet Connect'}
           id={chosenWallet.metadata.id}
-          onClickConnect={onWalletConnectClick}
+          onClick={() => setLoading(true)}
+          onConnected={(wallet: BaseWallet) => {
+            onConnected(wallet)
+            setLoading(false)
+          }}
           disconnect={true}
         />
       )}

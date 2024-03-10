@@ -12,7 +12,7 @@ import {
   WalletConnectProvider,
   WalletConnectConfiguration,
 } from '@polkadot-onboard/wallet-connect/packages/wallet-connect/src'
-import { extensionConfig, walletConnectConfig, themeConfig } from './config'
+import { extensionConfig, walletConnectConfig } from './config'
 import { InjectedWalletProvider } from '@polkadot-onboard/injected-wallets'
 export const LoginIcons: Record<string, JSX.Element> = {
   google: <Icons.Gmail />,
@@ -102,14 +102,27 @@ export const isWalletConnect = (w: BaseWallet) =>
 export const GENERIC_ERROR = 'There has been an error. Please try again later'
 const MAX_RECONNECT = 3
 
+function timeout(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 export const WalletTab: React.FC<{
-  wallet: any
+  wallet: BaseWallet
   name: string
   id: string
-  onClickConnect: (wallet: any) => void
+  onConnected: (wallet: BaseWallet) => void
+  onClick?: () => void
   disconnect?: boolean
   className?: string
-}> = ({ wallet, name, id, onClickConnect, disconnect = false, className }) => {
+}> = ({
+  wallet,
+  name,
+  id,
+  onConnected,
+  onClick,
+  disconnect = false,
+  className,
+}) => {
   const [connected, setConnected] = useState(false)
 
   const reConnect = async (attempts = 0) => {
@@ -122,11 +135,15 @@ export const WalletTab: React.FC<{
 
   const handleConnect = async () => {
     try {
+      onClick && onClick()
       if (disconnect) {
+        setConnected(false)
         await wallet.disconnect()
+        await timeout(1000)
       }
       await wallet.connect()
       setConnected(!!wallet.signer)
+      onConnected(wallet)
       if (!wallet.signer) {
         reConnect()
       }
@@ -134,12 +151,6 @@ export const WalletTab: React.FC<{
       console.error('Failed to connect', err)
     }
   }
-
-  useEffect(() => {
-    if (connected) {
-      onClickConnect(wallet)
-    }
-  }, [connected])
 
   return (
     <button
@@ -203,8 +214,6 @@ export const getAccountsByType: Record<
 > = {
   [WalletType.WALLET_CONNECT]: async (walletInfo: BaseWallet) => {
     let accounts = await walletInfo.getAccounts()
-    // sometimes there are duplicate accounts returned
-    // issue in polkadot-onboard @fix-me
     const uniqueAccounts: string[] = Array.from(
       new Set(
         accounts
@@ -253,15 +262,5 @@ export const getWallets = async () => {
     )
   }
   const walletAggregator = new WalletAggregator(aggregatedProviders)
-  const wallets = await walletAggregator.getWallets()
-  if (!!wallets.length) {
-    return wallets.map((wallet) => {
-      if (isWalletConnect(wallet)) {
-        // @ts-ignore @fixme export WalletConnectWallet from polkadot-onboard
-        wallet.walletConnectModal.setTheme(themeConfig)
-      }
-      return wallet
-    })
-  }
-  return []
+  return walletAggregator.getWallets()
 }

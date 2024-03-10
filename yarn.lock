@@ -473,9 +473,9 @@
     "@polkadot-onboard/core" "1.1.0"
     "@polkadot/extension-inject" "0.46.5"
 
-"@polkadot-onboard/wallet-connect@git+https://github.com/piggydoughnut/polkadot-onboard.git#feat/wc_config":
+"@polkadot-onboard/wallet-connect@git+https://github.com/piggydoughnut/polkadot-onboard.git#feat/wallet_connect_options":
   version "1.1.0"
-  resolved "git+https://github.com/piggydoughnut/polkadot-onboard.git#1b795b6d8a26dbccb96261734d0ae5b58c7764d3"
+  resolved "git+https://github.com/piggydoughnut/polkadot-onboard.git#e658fab49c16fc044f7cdc9e5604383b1d4dfc77"
 
 "@polkadot/api-augment@10.9.1":
   version "10.9.1"
