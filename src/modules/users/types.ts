@@ -32,6 +32,10 @@ export enum AuthProvider {
 export enum AuthExtension {
   PolkadotJs = 'polkadot-js',
   Talisman = 'talisman',
+  Nova = 'novawallet',
+  Subwallet = 'subwallet',
+  SubwalletJs = 'subwallet-js',
+  WalletConnect = 'walletConnect',
 }
 
 export type AuthIds = Record<

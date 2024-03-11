@@ -13,6 +13,7 @@ import { AuthAccount } from '#shared/types'
 import * as fp from '#shared/utils/fp'
 import { Permissions } from '../permissions'
 import {
+  AuthExtension,
   AuthProvider,
   GeoData,
   ImportedTag,
@@ -492,9 +493,11 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      const extensionName = req.body.extensionName
+      const source: AuthExtension = req.body.extensionName
+        .replaceAll(' ', '')
+        .toLowerCase()
       const providerAuthIds = req.user.authIds[AuthProvider.Polkadot] ?? []
-      const extensionIds = providerAuthIds[extensionName] ?? []
+      const extensionIds = providerAuthIds[source] ?? []
 
       if (!!Object.keys(providerAuthIds).length && extensionIds) {
         const alreadyLinked = extensionIds.find(
@@ -515,7 +518,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
       if (!!otherUsers.length) {
         fastify.log.error(
-          `The address  ${req.body.address} from provider ${PROVIDER_NAME}, extension: ${extensionName} has already been linked with user ${otherUsers[0].id}`
+          `The address  ${req.body.address} from provider ${PROVIDER_NAME}, extension: ${source} has already been linked with user ${otherUsers[0].id}`
         )
         return reply.throw.badParams(
           'This address has already been connected to another account.'
@@ -523,7 +526,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
 
       await req.user
-        .addAuthId(AuthProvider.Polkadot, extensionName, {
+        .addAuthId(AuthProvider.Polkadot, source, {
           name: req.body.name,
           address: req.body.address,
         })

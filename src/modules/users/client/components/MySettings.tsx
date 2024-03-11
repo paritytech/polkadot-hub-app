@@ -34,7 +34,14 @@ import { getWallets } from '#client/components/auth/helper'
 export const MySettings: React.FC = () => {
   useDocumentTitle('Settings')
   // @todo move to some config?
-  const allowedWallets = ['polkadot-js', 'talisman']
+  const allowedWallets = [
+    'polkadot-js',
+    'talisman',
+    'subwallet-js',
+    'subwallet',
+    'novawallet',
+    'walletconnect',
+  ]
   const me = useStore(stores.me)
   const [showModal, setShowModal] = useState(false)
   const [wallets, setWallets] = useState<any>([])
