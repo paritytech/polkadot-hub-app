@@ -9,6 +9,7 @@ import {
   OfficeArea,
   Office,
   OfficeVisitor,
+  VisitsAdminDashboardStats,
 } from '#shared/types'
 
 export const useVisits = (
@@ -150,5 +151,21 @@ export const useVisitNotice = (officeId: string) => {
     [path, { office: officeId }],
     async ({ queryKey }) =>
       (await api.get<string | null>(path, { params: queryKey[1] })).data
+  )
+}
+
+export const useAdminDashboardStats = (
+  startDate: string,
+  endDate: string,
+  officeId: string,
+  opts: { enabled: boolean } = { enabled: true }
+) => {
+  const path = '/admin-api/visits/admin-dashboard-stats'
+  return useQuery<VisitsAdminDashboardStats, AxiosError>(
+    [path, { startDate, endDate, office: officeId }],
+    async ({ queryKey }) =>
+      (await api.get<VisitsAdminDashboardStats>(path, { params: queryKey[1] }))
+        .data,
+    { enabled: opts.enabled }
   )
 }

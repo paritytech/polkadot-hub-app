@@ -8,6 +8,7 @@ import {
   GuestInviteRequest,
   GuestInviteStatus,
   GuestInviteUpdateRequest,
+  GuestInvitesAdminDashboardStats,
   PublicGuestInvite,
 } from '#shared/types'
 
@@ -126,3 +127,22 @@ export const useUpdateGuestInviteAdmin = (cb: () => void) =>
       onSuccess: cb,
     }
   )
+
+export const useAdminDashboardStats = (
+  startDate: string,
+  endDate: string,
+  officeId: string,
+  opts: { enabled: boolean } = { enabled: true }
+) => {
+  const path = '/admin-api/guest-invites/admin-dashboard-stats'
+  return useQuery<GuestInvitesAdminDashboardStats, AxiosError>(
+    [path, { startDate, endDate, office: officeId }],
+    async ({ queryKey }) =>
+      (
+        await api.get<GuestInvitesAdminDashboardStats>(path, {
+          params: queryKey[1],
+        })
+      ).data,
+    { enabled: opts.enabled }
+  )
+}

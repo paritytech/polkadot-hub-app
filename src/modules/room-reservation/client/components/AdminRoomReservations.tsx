@@ -5,7 +5,15 @@ import { useStore } from '@nanostores/react'
 import config from '#client/config'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import { showNotification } from '#client/components/ui/Notifications'
-import { Button, H1, Table, Tag, UserLabel } from '#client/components/ui'
+import {
+  Button,
+  H1,
+  Placeholder,
+  Table,
+  Tag,
+  UserLabel,
+  WidgetWrapper,
+} from '#client/components/ui'
 import Permissions from '#shared/permissions'
 import * as stores from '#client/stores'
 import { OfficeRoom, RoomReservation } from '#shared/types'
@@ -159,15 +167,19 @@ const _AdminRoomReservations: React.FC = () => {
   )
 
   return (
-    <div>
-      <H1>Room reservations</H1>
+    <WidgetWrapper>
+      <H1 className="mb-6">Room reservations</H1>
       {reservations?.length ? (
-        <div className="-mx-8">
-          <Table columns={columns} data={reservations} />
+        <div className="-mx-6">
+          <Table
+            columns={columns}
+            data={reservations}
+            paddingClassName="px-6"
+          />
         </div>
       ) : (
-        <div className="text-gray-400 text-center my-12">No data</div>
+        <Placeholder children="No data" />
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

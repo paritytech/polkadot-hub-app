@@ -16,6 +16,7 @@ import { getComponentInstance } from '#client/utils/portal'
 import { PermissionsSet } from '#shared/utils'
 import { PolkadotProvider } from '#client/components/auth/PolkadotProvider'
 import { Welcome } from '#modules/users/client/components'
+import { WidgetWrapper } from './components/ui'
 
 const routeGroups: Record<
   'admin' | 'public' | 'extra' | 'extraLayout',
@@ -160,7 +161,9 @@ export const App = () => {
     // @todo implement redirect to the latest opened and available module tab
     return (
       <Layout>
-        <AdminHome>Select a module to work with</AdminHome>
+        <AdminHome>
+          <WidgetWrapper>Select a module to work with</WidgetWrapper>
+        </AdminHome>
       </Layout>
     )
   }

@@ -22,6 +22,9 @@ import {
   Filters,
   LabelWrapper,
   Input,
+  ComponentWrapper,
+  WidgetWrapper,
+  Placeholder,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
@@ -50,7 +53,6 @@ export const AdminUsers: React.FC = () => {
     >
       <PermissionsValidator required={[Permissions.users.ManageProfile]}>
         <TagTable />
-        <HR className="my-10" />
       </PermissionsValidator>
       <UserTable />
     </PermissionsValidator>
@@ -230,7 +232,7 @@ export const UserTable: React.FC = () => {
   )
 
   return (
-    <div>
+    <WidgetWrapper>
       {showDeleteModal && userForDeletion && (
         <DeleteUserModal
           onClose={() => setShowDeleteModal(false)}
@@ -295,15 +297,19 @@ export const UserTable: React.FC = () => {
       </div>
 
       {!!users.length && (
-        <div className="-mx-8">
+        <div className="-mx-6">
           {filteredUsers.length ? (
-            <Table columns={columns} data={filteredUsers} />
+            <Table
+              columns={columns}
+              data={filteredUsers}
+              paddingClassName="px-6"
+            />
           ) : (
             <div className="text-center text-text-tertiary">No user found</div>
           )}
         </div>
       )}
-    </div>
+    </WidgetWrapper>
   )
 }
 
@@ -391,15 +397,17 @@ const TagTable: React.FC = () => {
   )
 
   return (
-    <div>
+    <WidgetWrapper>
       <H1>Tags</H1>
       {!tags.length ? (
-        <div className="height-32 flex items-center justify-center text-gray-500">
-          No data
-        </div>
+        <Placeholder children="No data" />
       ) : (
-        <div className="-mx-8">
-          <Table columns={columns} data={displayedTags || []} />
+        <div className="-mx-6">
+          <Table
+            columns={columns}
+            data={displayedTags || []}
+            paddingClassName="px-6"
+          />
         </div>
       )}
       <div className="mt-4">
@@ -440,6 +448,6 @@ const TagTable: React.FC = () => {
           </Button>
         </div>
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

@@ -1,7 +1,15 @@
 import React from 'react'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
-import { Button, H1, Link, Table, UserLabel } from '#client/components/ui'
+import {
+  Button,
+  H1,
+  Link,
+  Placeholder,
+  Table,
+  UserLabel,
+  WidgetWrapper,
+} from '#client/components/ui'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import { useUsersCompact } from '#modules/users/client/queries'
 import { trimString } from '#client/utils'
@@ -97,20 +105,20 @@ export const _AdminNews = () => {
     [usersById]
   )
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <H1>News</H1>
+    <WidgetWrapper>
+      <div className="flex justify-between items-center mb-6">
+        <H1 className="mb-0">News</H1>
         <PermissionsValidator required={[Permissions.news.AdminManage]}>
           <Button href="/admin/news/new">Create news</Button>
         </PermissionsValidator>
       </div>
       {news?.length ? (
-        <div className="-mx-8">
-          <Table columns={columns} data={news} />
+        <div className="-mx-6">
+          <Table columns={columns} data={news} paddingClassName="px-6" />
         </div>
       ) : (
-        <div className="text-gray-400 text-center my-12">No data</div>
+        <Placeholder children="No data" />
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

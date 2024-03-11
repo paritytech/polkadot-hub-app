@@ -8,6 +8,8 @@ import {
   Link,
   Breadcrumbs,
   UserLabel,
+  WidgetWrapper,
+  Placeholder,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import {
@@ -229,7 +231,7 @@ export const AdminEventApplications = () => {
   }
 
   return (
-    <div>
+    <WidgetWrapper>
       <Breadcrumbs
         items={[
           { label: 'Events', href: '/admin/events' },
@@ -249,12 +251,16 @@ export const AdminEventApplications = () => {
         )}
       </div>
       {applications?.length ? (
-        <div className="-mx-8">
-          <Table columns={columns} data={enhancedApplications} />
+        <div className="-mx-6">
+          <Table
+            columns={columns}
+            data={enhancedApplications}
+            paddingClassName="px-6"
+          />
         </div>
       ) : (
-        <div className="text-gray-400 text-center my-12">No data</div>
+        <Placeholder children="No data" />
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

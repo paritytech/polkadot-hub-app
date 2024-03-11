@@ -1,11 +1,10 @@
 import dayjs from 'dayjs'
 import timezone from 'dayjs/plugin/timezone'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
-import { Filterable, Op } from 'sequelize'
+import { Op, QueryTypes, cast, col, fn } from 'sequelize'
 import { appConfig } from '#server/app-config'
-import { DATE_FORMAT } from '#server/constants'
-import { appEvents } from '#server/utils/app-events'
-import { OfficeRoom } from '#shared/types'
+import { DATE_FORMAT, ROBOT_USER_ID } from '#server/constants'
+import * as fp from '#shared/utils/fp'
 import {
   compareTimes,
   getAvailableRanges,
@@ -25,11 +24,11 @@ import { Permissions } from '../permissions'
 import {
   OfficeRoomCompact,
   RoomDisplayData,
+  RoomReservationAdminDashboardStats,
   RoomReservationRequest,
   RoomReservationStatus,
   RoomReservationUpdateRequest,
 } from '../types'
-import { RoomReservation } from './models'
 
 dayjs.extend(timezone)
 
@@ -987,6 +986,173 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         return [...acc, ...rooms]
       }, [])
   })
+
+  fastify.get(
+    '/admin-dashboard-stats',
+    async (
+      req: FastifyRequest<{
+        Querystring: { startDate: string; endDate: string }
+      }>,
+      reply
+    ) => {
+      req.check(Permissions.AdminList)
+      const office = req.office
+      if (!office) {
+        return reply.throw.badParams('Missing office ID')
+      }
+      const { startDate, endDate } = req.query
+
+      const result: RoomReservationAdminDashboardStats = {
+        reservationsToday: 0,
+        reservationsTotal: 0,
+        anonymouseReservationsPercent: 0,
+        bookersToday: 0,
+        bookersTotal: 0,
+        topBookers: [],
+        reservationsByDate: [],
+      }
+
+      result.reservationsTotal = await fastify.db.RoomReservation.count({
+        where: {
+          office: office.id,
+          status: 'confirmed',
+          startDate: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+      })
+
+      result.bookersTotal = await fastify.db.RoomReservation.count({
+        distinct: true,
+        col: 'creatorUserId',
+        where: {
+          creatorUserId: { [Op.ne]: ROBOT_USER_ID },
+          office: office.id,
+          status: 'confirmed',
+          startDate: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+      })
+
+      result.bookersToday = await fastify.db.RoomReservation.count({
+        distinct: true,
+        col: 'creatorUserId',
+        where: {
+          creatorUserId: { [Op.ne]: ROBOT_USER_ID },
+          office: office.id,
+          status: 'confirmed',
+          startDate: {
+            [Op.gte]: dayjs().startOf('day').toDate(),
+            [Op.lte]: dayjs().endOf('day').toDate(),
+          },
+        },
+      })
+
+      const anonymousReservations = await fastify.db.RoomReservation.count({
+        where: {
+          creatorUserId: ROBOT_USER_ID,
+          office: office.id,
+          status: 'confirmed',
+          startDate: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+      })
+      result.anonymouseReservationsPercent = result.reservationsTotal
+        ? Number(
+            ((anonymousReservations / result.reservationsTotal) * 100).toFixed(
+              2
+            )
+          )
+        : 0
+
+      result.reservationsToday = await fastify.db.RoomReservation.count({
+        where: {
+          office: office.id,
+          status: 'confirmed',
+          startDate: {
+            [Op.gte]: dayjs().startOf('day').toDate(),
+            [Op.lte]: dayjs().endOf('day').toDate(),
+          },
+        },
+      })
+
+      result.topBookers = (await fastify.db.RoomReservation.findAll({
+        where: {
+          creatorUserId: { [Op.ne]: ROBOT_USER_ID },
+          office: office.id,
+          status: 'confirmed',
+          startDate: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+        attributes: [
+          ['creatorUserId', 'userId'],
+          [cast(fn('COUNT', col('creatorUserId')), 'integer'), 'reservations'],
+        ],
+        group: ['creatorUserId'],
+        order: [[fn('COUNT', col('creatorUserId')), 'DESC']],
+        limit: 10,
+        raw: true,
+      })) as unknown as RoomReservationAdminDashboardStats['topBookers']
+
+      const userIds = result.topBookers.map(fp.prop('userId'))
+      const uniqueUserIds = Array.from(new Set(userIds))
+      const users = await fastify.db.User.findAll({
+        where: {
+          id: { [Op.in]: uniqueUserIds },
+        },
+        attributes: ['id', 'fullName', 'avatar'],
+      })
+      const userById = users.reduce(fp.by('id'), {})
+
+      result.topBookers = result.topBookers.map((x) => {
+        const user = userById[x.userId]
+        return {
+          ...x,
+          fullName: user.fullName,
+          avatar: user.avatar,
+        }
+      })
+
+      const dateFormat =
+        dayjs(endDate, DATE_FORMAT).diff(
+          dayjs(startDate, DATE_FORMAT),
+          'days'
+        ) > 31
+          ? 'YYYY-MM'
+          : 'YYYY-MM-DD'
+
+      result.reservationsByDate = (await fastify.sequelize.query(
+        `
+          SELECT
+            to_char(r."startDate", :dateFormat) AS date,
+            cast(COUNT(*) as integer) AS total
+          FROM
+            room_reservations r
+          WHERE
+            1=1
+            AND r."office" = :officeId
+            AND r."startDate" BETWEEN :startDate AND :endDate
+          GROUP BY
+            to_char(r."startDate", :dateFormat)
+          ORDER BY
+            date ASC;
+        `,
+        {
+          replacements: { dateFormat, startDate, endDate, officeId: office.id },
+          type: QueryTypes.SELECT,
+        }
+      )) as unknown as RoomReservationAdminDashboardStats['reservationsByDate']
+
+      return result
+    }
+  )
 }
 
 module.exports = {

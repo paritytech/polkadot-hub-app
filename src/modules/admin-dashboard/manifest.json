@@ -1,0 +1,24 @@
+{
+  "id": "admin-dashboard",
+  "name": "Dashboard",
+  "dependencies": [],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": [],
+  "clientRouter": {
+    "public": {},
+    "user": {},
+    "admin": {
+      "adminDashboard": {
+        "path": "/admin/admin-dashboard",
+        "componentId": "AdminDashboard",
+        "availablePortals": [
+          "users-data",
+          "visits-data",
+          "guest-invites-data",
+          "room-reservation-data"
+        ]
+      }
+    }
+  }
+}

@@ -62,3 +62,32 @@ export type VisitReminderJob = {
   metadata: any
   createdAt: Date
 }
+
+export type VisitsAdminDashboardStats = {
+  visitsTotal: number
+  visitsToday: number
+  topVisitors: {
+    userId: string
+    fullName: string
+    avatar: string | null
+    visits: number
+  }[]
+  topDesks: {
+    areaId: string
+    deskId: string
+    areaName: string
+    deskName: string
+    visits: number
+  }[]
+  annualVisits: {
+    date: string
+    visits: number
+  }[]
+  areas: { id: string; name: string }[]
+  visitsByDate: Array<
+    {
+      date: string
+      total: number
+    } & { [key: string]: number }
+  >
+}

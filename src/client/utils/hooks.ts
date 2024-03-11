@@ -137,3 +137,67 @@ export function useIntersectionObserver(
   }, [threshold, root, rootMargin])
   return [ref, entry!]
 }
+
+const LOADED_SCRIPTS: Record<
+  string,
+  { loaded: boolean; subscribers: Function[] }
+> = {}
+
+function loadScript(src: string, callback: () => void) {
+  const entry = LOADED_SCRIPTS[src]
+  if (entry) {
+    if (entry.loaded) {
+      callback()
+    } else {
+      entry.subscribers.push(callback)
+    }
+  } else {
+    LOADED_SCRIPTS[src] = {
+      loaded: false,
+      subscribers: [callback],
+    }
+    const script = document.createElement('script')
+    script.src = src
+    script.async = true
+    script.onload = () => {
+      LOADED_SCRIPTS[src].loaded = true
+      LOADED_SCRIPTS[src].subscribers.forEach((cb) => cb())
+    }
+    document.body.appendChild(script)
+  }
+}
+
+export function useExternalScript(src: string, cb: () => void) {
+  const [loaded, setLoaded] = useState(LOADED_SCRIPTS[src]?.loaded || false)
+  useEffect(() => {
+    const callback = () => {
+      setLoaded(true)
+      cb()
+    }
+    loadScript(src, callback)
+    return () => {
+      const entry = LOADED_SCRIPTS[src]
+      if (entry) {
+        entry.subscribers = entry.subscribers.filter((cb) => cb !== callback)
+      }
+    }
+  }, [src, cb])
+  return loaded
+}
+
+export function useResizeObserver(
+  ref: React.RefObject<HTMLElement>,
+  cb: (entry: ResizeObserverEntry) => void
+) {
+  return React.useEffect(() => {
+    const observer = new ResizeObserver((entries: ResizeObserverEntry[]) => {
+      cb(entries[0])
+    })
+    if (ref.current) {
+      observer.observe(ref.current)
+    }
+    return () => {
+      observer.disconnect()
+    }
+  }, [ref, cb])
+}

@@ -12,6 +12,7 @@ type ClientModuleConfig = {
   name: string
   router: ModuleClientRouter
   portals: AppModule['portals']
+  adminLinkCounter: boolean
 }
 
 export type ClientOfficeConfig = Pick<

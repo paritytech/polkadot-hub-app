@@ -8,6 +8,8 @@ import {
   Link,
   Breadcrumbs,
   UserLabel,
+  WidgetWrapper,
+  Placeholder,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { useUsersCompact } from '#modules/users/client/queries'
@@ -197,7 +199,7 @@ export const AdminFormSubmissions: React.FC<RootComponentProps> = ({
   }, [form, formSubmissions, questions, usersById])
 
   return (
-    <div>
+    <WidgetWrapper>
       <Breadcrumbs
         items={[
           { label: 'Forms', href: '/admin/forms' },
@@ -221,12 +223,16 @@ export const AdminFormSubmissions: React.FC<RootComponentProps> = ({
         </Button>
       </div>
       {formSubmissions?.length ? (
-        <div className="-mx-8">
-          <Table columns={columns} data={formSubmissions} />
+        <div className="-mx-6">
+          <Table
+            columns={columns}
+            data={formSubmissions}
+            paddingClassName="px-6"
+          />
         </div>
       ) : (
-        <div className="text-gray-400 text-center my-12">No data</div>
+        <Placeholder children="No data" />
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

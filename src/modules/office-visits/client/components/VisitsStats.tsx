@@ -2,7 +2,7 @@ import { useStore } from '@nanostores/react'
 import dayjs, { Dayjs } from 'dayjs'
 import * as React from 'react'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
-import { Button, Input, Link, Table } from '#client/components/ui'
+import { Button, Input, Link, Placeholder, Table } from '#client/components/ui'
 import { DATE_FORMAT } from '#client/constants'
 import Permissions from '#shared/permissions'
 import * as stores from '#client/stores'
@@ -173,7 +173,7 @@ const _VisitsStats: React.FC = () => {
                 <Table columns={columns} data={data} />
               </div>
             ) : (
-              <div className="text-center my-6 text-gray-400">No data</div>
+              <Placeholder children="No data" />
             )}
           </div>
         </div>

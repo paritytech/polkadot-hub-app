@@ -1,4 +1,5 @@
 import {
+  UsersAdminDashboardStats,
   AuthAccount,
   CityPublic,
   CountryQueryResponse,
@@ -265,5 +266,20 @@ export const useMetadata = () => {
       refetchOnMount: false,
       refetchOnReconnect: false,
     }
+  )
+}
+
+export const useAdminDashboardStats = (
+  startDate: string,
+  endDate: string,
+  opts: { enabled: boolean } = { enabled: true }
+) => {
+  const path = '/admin-api/users/admin-dashboard-stats'
+  return useQuery<UsersAdminDashboardStats, AxiosError>(
+    [path, { startDate, endDate }],
+    async ({ queryKey }) =>
+      (await api.get<UsersAdminDashboardStats>(path, { params: queryKey[1] }))
+        .data,
+    { enabled: opts.enabled }
   )
 }

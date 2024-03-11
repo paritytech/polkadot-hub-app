@@ -1,6 +1,13 @@
 import dayjs from 'dayjs'
 import * as React from 'react'
-import { Button, H1, Link, Table, Tag } from '#client/components/ui'
+import {
+  Button,
+  H1,
+  Link,
+  Table,
+  Tag,
+  WidgetWrapper,
+} from '#client/components/ui'
 import { Checklist, ChecklistType } from '#shared/types'
 import { useDocumentTitle } from '#client/utils/hooks'
 import { useChecklists } from '../queries'
@@ -62,19 +69,19 @@ export const AdminChecklist = () => {
   )
 
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row justify-start sm:justify-between">
-        <H1>Checklists</H1>
+    <WidgetWrapper>
+      <div className="flex flex-col sm:flex-row justify-start sm:justify-between mb-6 items-center">
+        <H1 className="mb-0">Checklists</H1>
         <Button href="/admin/checklists/new" className="w-fit self-end">
           Create Checklist
         </Button>
       </div>
 
       {!!checklists?.length && (
-        <div className="-mx-8 mt-6">
-          <Table columns={columns} data={checklists} />
+        <div className="-mx-6">
+          <Table columns={columns} data={checklists} paddingClassName="px-6" />
         </div>
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

@@ -7,18 +7,10 @@ type Props = {
   className?: string
 }
 
-export const Background: React.FC<Props> = ({
-  color,
-  children,
-  className,
-}) => (
+export const Background: React.FC<Props> = ({ color, children, className }) => (
   <div
     style={color ? { backgroundColor: color } : {}}
-    className={cn(
-      'min-h-screen f-width',
-      !color && 'bg-bg-system',
-      className,
-    )}
+    className={cn('min-h-screen', !color && 'bg-bg-system', className)}
   >
     {children}
   </div>

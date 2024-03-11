@@ -14,6 +14,8 @@ import {
   Filters,
   LabelWrapper,
   UserRoleLabel,
+  WidgetWrapper,
+  Placeholder,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { USER_ROLE_BY_ID } from '#client/constants'
@@ -160,7 +162,7 @@ export const AdminForms = () => {
           accessor: (form: FormAdminResponse) => (
             <span className="inline-block -mr-1">
               {form.allowedRoles.map((x) => (
-                <UserRoleLabel role={x} />
+                <UserRoleLabel role={x} className="mr-1" />
               ))}
             </span>
           ),
@@ -191,9 +193,10 @@ export const AdminForms = () => {
       ].filter(Boolean),
     [usersById]
   )
+
   return (
-    <div>
-      <div className="flex items-center mb-5">
+    <WidgetWrapper>
+      <div className="flex items-center mb-6">
         <H1 className="flex-1 mb-0">Forms</H1>
         {permissions.has(Permissions.forms.AdminManage) && (
           <Button href="/admin/forms/new">Create form</Button>
@@ -225,12 +228,12 @@ export const AdminForms = () => {
       </LabelWrapper>
 
       {forms?.length ? (
-        <div className="-mx-8">
-          <Table columns={columns} data={forms} />
+        <div className="-mx-6">
+          <Table columns={columns} data={forms} paddingClassName="px-6" />
         </div>
       ) : (
-        <div className="text-gray-400 text-center my-12">No data</div>
+        <Placeholder children="No data" />
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

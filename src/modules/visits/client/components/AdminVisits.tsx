@@ -2,7 +2,14 @@ import { useStore } from '@nanostores/react'
 import dayjs from 'dayjs'
 import * as React from 'react'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
-import { Button, H1, P, Table, UserLabel } from '#client/components/ui'
+import {
+  Button,
+  H1,
+  P,
+  Table,
+  UserLabel,
+  WidgetWrapper,
+} from '#client/components/ui'
 import { DATE_FORMAT } from '#client/constants'
 import Permissions from '#shared/permissions'
 import * as stores from '#client/stores'
@@ -161,8 +168,8 @@ export const _AdminVisits: React.FC<RootComponentProps> = ({ portals }) => {
   )
 
   return (
-    <div>
-      <H1>Visits</H1>
+    <WidgetWrapper>
+      <H1 className="mb-6">Visits</H1>
 
       {portals['admin_visits_header']?.map(renderComponent())}
 
@@ -179,8 +186,13 @@ export const _AdminVisits: React.FC<RootComponentProps> = ({ portals }) => {
               ) : null}
             </div>
             {dayVisits.length ? (
-              <div className="-mx-8">
-                <Table columns={columns} data={dayVisits} hideHeader={!!i} />
+              <div className="-mx-6">
+                <Table
+                  columns={columns}
+                  data={dayVisits}
+                  hideHeader={!!i}
+                  paddingClassName="px-6"
+                />
               </div>
             ) : (
               <div className="text-center my-6 text-gray-400">No visits</div>
@@ -188,6 +200,6 @@ export const _AdminVisits: React.FC<RootComponentProps> = ({ portals }) => {
           </div>
         )
       })}
-    </div>
+    </WidgetWrapper>
   )
 }
