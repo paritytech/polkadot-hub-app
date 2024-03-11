@@ -157,7 +157,11 @@ const ChooseAccountStep: React.FC<ChooseAccountProps> = ({
         </ButtonWrapper>
       </div>
 
-      {isWalletConnect(chosenWallet) && loading && <LoadingPolkadot />}
+      {isWalletConnect(chosenWallet) && loading && (
+        <div className="mt-4 sm:mt-0">
+          <LoadingPolkadot />
+        </div>
+      )}
       {isWalletConnect(chosenWallet) && !loading && (
         <WalletTab
           className="w-fit mt-4 mx-auto border-0"
