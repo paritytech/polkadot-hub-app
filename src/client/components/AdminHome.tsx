@@ -7,11 +7,7 @@ import {
   ADMIN_ACCESS_PERMISSION_RE,
   ADMIN_ACCESS_PERMISSION_POSTFIX,
 } from '#client/constants'
-import {
-  Button,
-  ComponentWrapper,
-  WidgetWrapper,
-} from '#client/components/ui'
+import { WidgetWrapper } from '#client/components/ui'
 import Permissions from '#shared/permissions'
 import { PermissionsSet } from '#shared/utils'
 import { cn } from '#client/utils'
@@ -60,6 +56,7 @@ const _AdminHome: React.FC<Props> = ({ children }) => {
   const permissions = useStore(stores.permissions)
   const page = useStore(stores.router)
   const officeId = useStore(stores.officeId)
+  const layoutView = useStore(stores.layoutView)
 
   const filteredModules = React.useMemo(() => {
     return modulesWithAdminComponents.filter((m) => {
@@ -76,30 +73,65 @@ const _AdminHome: React.FC<Props> = ({ children }) => {
     })
   }, [permissions, officeId])
 
-  return filteredModules.length ? (
-    <div className="grid grid-cols-[240px_minmax(0,auto)] gap-x-4">
-      <div>
-        <WidgetWrapper className="p-2 sticky top-2">
+  if (!filteredModules.length) {
+    return (
+      <WidgetWrapper>
+        Please select an office that you can work with.
+      </WidgetWrapper>
+    )
+  }
+
+  if (layoutView === 'desktop') {
+    return (
+      <div className="grid grid-cols-[240px_minmax(0,auto)] gap-x-4">
+        <div>
+          <WidgetWrapper className="p-2 sticky top-2 -mb-1">
+            {filteredModules.map((x, i) => {
+              const isActive = !!(page && x.routes.includes(page.route))
+              return (
+                <ModuleLink
+                  key={x.id}
+                  isActive={isActive}
+                  module={x}
+                  className="mb-1"
+                />
+              )
+            })}
+          </WidgetWrapper>
+        </div>
+        <div>
+          <div>{children}</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <WidgetWrapper className="p-2 ">
+        <div className="flex flex-wrap -mb-1 -mr-1">
           {filteredModules.map((x, i) => {
             const isActive = !!(page && x.routes.includes(page.route))
-            return <ModuleLink key={x.id} isActive={isActive} module={x} />
+            return (
+              <ModuleLink
+                key={x.id}
+                isActive={isActive}
+                module={x}
+                className="mr-1 mb-1"
+              />
+            )
           })}
-        </WidgetWrapper>
-      </div>
-      <div>
-        <div>{children}</div>
-      </div>
+        </div>
+      </WidgetWrapper>
+      <div>{children}</div>
     </div>
-  ) : (
-    <WidgetWrapper>
-      Please select an office that you can work with.
-    </WidgetWrapper>
   )
 }
 
 const ModuleLink: React.FC<{
   isActive: boolean
   module: ModuleWithAdminComponents
+  className?: string
 }> = (props) => {
   const officeId = useStore(stores.officeId)
   const counterApiUri = `/admin-api/${props.module.id}/counter`
@@ -115,9 +147,10 @@ const ModuleLink: React.FC<{
     <a
       href={`/admin/${props.module.id}`}
       className={cn(
-        'relative flex items-center px-4 py-4 rounded-tiny hover:bg-gray-50',
+        'relative flex items-center px-4 py-3 rounded-tiny hover:bg-gray-50',
         props.isActive &&
-          'bg-purple-50 hover:bg-purple-50 bg-opacity-40 hover:bg-opacity-40 text-purple-500'
+          'bg-purple-50 hover:bg-purple-50 bg-opacity-40 hover:bg-opacity-40 text-purple-500',
+        props.className
       )}
     >
       <span className="flex-1 text-ellipsis overflow-hidden mr-1 whitespace-nowrap">
