@@ -6,6 +6,7 @@ import {
   OfficeRoomCompact,
   RoomDisplayData,
   RoomReservation,
+  RoomReservationAdminDashboardStats,
   RoomReservationRequest,
   RoomReservationStatus,
   RoomReservationUpdateRequest,
@@ -215,5 +216,24 @@ export const useAdminRooms = () => {
   return useQuery<OfficeRoomCompact[], AxiosError>(
     path,
     async () => (await api.get<OfficeRoomCompact[]>(path)).data
+  )
+}
+
+export const useAdminDashboardStats = (
+  startDate: string,
+  endDate: string,
+  officeId: string,
+  opts: { enabled: boolean } = { enabled: true }
+) => {
+  const path = '/admin-api/room-reservation/admin-dashboard-stats'
+  return useQuery<RoomReservationAdminDashboardStats, AxiosError>(
+    [path, { startDate, endDate, office: officeId }],
+    async ({ queryKey }) =>
+      (
+        await api.get<RoomReservationAdminDashboardStats>(path, {
+          params: queryKey[1],
+        })
+      ).data,
+    { enabled: opts.enabled }
   )
 }

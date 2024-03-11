@@ -61,3 +61,21 @@ export type OfficeRoomCompact = {
   name: string
   officeId: string
 }
+
+export type RoomReservationAdminDashboardStats = {
+  reservationsToday: number
+  reservationsTotal: number
+  anonymouseReservationsPercent: number
+  bookersToday: number
+  bookersTotal: number
+  reservationsByDate: {
+    date: string
+    total: number
+  }[]
+  topBookers: {
+    userId: string
+    fullName: string
+    avatar: string | null
+    reservations: number
+  }[]
+}

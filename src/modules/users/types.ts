@@ -216,3 +216,15 @@ export type ProfileMetadata = {
   bio: ProfileField
   contacts: Record<string, ProfileField>
 }
+
+export type UsersAdminDashboardStats = {
+  registeredTotal: number
+  registeredToday: number
+  roles: { id: string; name: string }[] | null
+  registeredByDate: Array<
+    {
+      date: string
+      total: number
+    } & { [key: string]: number }
+  >
+}

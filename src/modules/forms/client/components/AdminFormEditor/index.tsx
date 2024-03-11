@@ -23,6 +23,7 @@ import {
   Breadcrumbs,
   LabelWrapper,
   Select,
+  WidgetWrapper,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { EntityAccessSelector } from '#client/components/EntityAccessSelector'
@@ -257,15 +258,15 @@ export const AdminFormEditor: React.FC = () => {
   )
 
   return (
-    <>
-      <Breadcrumbs
-        items={[
-          { label: 'Forms', href: '/admin/forms' },
-          { label: form?.title || 'New form' },
-        ]}
-      />
+    <WidgetWrapper>
       <form className="mb-0" onSubmit={onSubmit}>
         <H1>{formId === 'new' ? 'New form' : `Form "${form?.title}"`}</H1>
+        <Breadcrumbs
+          items={[
+            { label: 'Forms', href: '/admin/forms' },
+            { label: form?.title || 'New form' },
+          ]}
+        />
 
         <EntityAccessSelector
           value={{
@@ -435,7 +436,7 @@ export const AdminFormEditor: React.FC = () => {
           />
         </div>
 
-        <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-8 -mx-8 -mb-8">
+        <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-6 -mx-6 -mb-6 rounded-b-sm">
           <ButtonsWrapper
             right={[
               <Button
@@ -449,7 +450,7 @@ export const AdminFormEditor: React.FC = () => {
           />
         </div>
       </form>
-    </>
+    </WidgetWrapper>
   )
 }
 

@@ -5,11 +5,13 @@ import {
   Button,
   H1,
   Icons,
+  Placeholder,
   RoundButton,
   Select,
   Table,
   Tag,
   UserLabel,
+  WidgetWrapper,
 } from '#client/components/ui'
 import { by, groupBy, pick, propEq, propIn, sortBy } from '#shared/utils/fp'
 import { formatDateRange } from '#client/utils'
@@ -319,7 +321,7 @@ export const AdminWorkingHours: React.FC = () => {
   }, [users])
 
   return (
-    <div>
+    <WidgetWrapper>
       <div className="flex items-center mb-6">
         <H1 className="flex-1 mb-0">Working Hours</H1>
         <div>
@@ -389,7 +391,7 @@ export const AdminWorkingHours: React.FC = () => {
           <Table columns={columns} data={userWorkingHours} />
         </div>
       ) : (
-        <div className="text-gray-400 text-center my-12">No data</div>
+        <Placeholder children="No data" />
       )}
 
       {showExportModal && (
@@ -407,6 +409,6 @@ export const AdminWorkingHours: React.FC = () => {
           moduleConfig={moduleConfig}
         />
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

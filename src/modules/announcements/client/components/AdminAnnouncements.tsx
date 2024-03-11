@@ -1,5 +1,13 @@
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
-import { Button, H1, Link, Table, UserLabel } from '#client/components/ui'
+import {
+  Button,
+  H1,
+  Link,
+  Placeholder,
+  Table,
+  UserLabel,
+  WidgetWrapper,
+} from '#client/components/ui'
 import * as React from 'react'
 import { useAdminAnnouncements } from '../queries'
 import * as stores from '#client/stores'
@@ -94,20 +102,24 @@ export const _AdminAnnouncements: React.FC<{}> = () => {
   )
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <H1>Announcements</H1>
+    <WidgetWrapper>
+      <div className="flex justify-between items-center mb-6">
+        <H1 className="mb-0">Announcements</H1>
         <PermissionsValidator required={[Permissions.announcements.__Admin]}>
           <Button href="/admin/announcements/new">Create</Button>
         </PermissionsValidator>
       </div>
       {announcements?.length ? (
-        <div className="-mx-8">
-          <Table columns={columns} data={announcements} />
+        <div className="-mx-6">
+          <Table
+            columns={columns}
+            data={announcements}
+            paddingClassName="px-6"
+          />
         </div>
       ) : (
-        <div className="text-gray-400 text-center my-12">No data</div>
+        <Placeholder children="No data" />
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

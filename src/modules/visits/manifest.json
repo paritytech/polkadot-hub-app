@@ -25,5 +25,6 @@
         "availablePortals": ["admin_visits_header"]
       }
     }
-  }
+  },
+  "adminLinkCounter": true
 }

@@ -5,6 +5,7 @@ import {
   Icons,
   Link,
   Tag,
+  Placeholder,
 } from '#client/components/ui'
 import { LabelWrapper } from '#client/components/ui/Input'
 import { MapTypes } from '#client/components/ui/Map/mapbox/config'
@@ -22,9 +23,7 @@ import { RootComponentProps } from '#shared/types'
 
 const NoData = () => (
   <ComponentWrapper className="flex justify-center items-center">
-    <div className="flex items-center justify-center text-gray-400 min-h-32">
-      No data
-    </div>
+    <Placeholder children="No data" />
   </ComponentWrapper>
 )
 

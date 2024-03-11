@@ -9,6 +9,7 @@ import {
   H2,
   Input,
   LabelWrapper,
+  WidgetWrapper,
   showNotification,
 } from '#client/components/ui'
 import { useDocumentTitle } from '#client/utils/hooks'
@@ -125,7 +126,7 @@ export const AdminGuestInviteEditor = () => {
   }, [guestInvite])
 
   return (
-    <div>
+    <WidgetWrapper>
       <div className="flex flex-col">
         <H1>
           {notNew
@@ -209,7 +210,7 @@ export const AdminGuestInviteEditor = () => {
             />
           </div>
 
-          <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-8 -mx-8 -mb-8">
+          <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-6 -mx-6 -mb-6 rounded-b-sm">
             <ButtonsWrapper
               left={[
                 <Button
@@ -232,7 +233,7 @@ export const AdminGuestInviteEditor = () => {
           </div>
         </form>
       </div>
-    </div>
+    </WidgetWrapper>
   )
 }
 

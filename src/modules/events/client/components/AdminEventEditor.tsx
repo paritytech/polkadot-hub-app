@@ -14,6 +14,7 @@ import {
   MarkdownTextarea,
   RadioGroup,
   Select,
+  WidgetWrapper,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import * as stores from '#client/stores'
@@ -223,7 +224,7 @@ export const AdminEventEditor: React.FC = () => {
   )
 
   return (
-    <>
+    <WidgetWrapper>
       <Breadcrumbs
         items={[
           { label: 'Events', href: '/admin/events' },
@@ -468,7 +469,7 @@ export const AdminEventEditor: React.FC = () => {
           containerClassName="w-full mb-4"
         />
 
-        <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-8 -mx-8 -mb-8">
+        <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-6 -mx-6 -mb-6 rounded-b-sm">
           <ButtonsWrapper
             right={[
               <Button
@@ -482,6 +483,6 @@ export const AdminEventEditor: React.FC = () => {
           />
         </div>
       </form>
-    </>
+    </WidgetWrapper>
   )
 }

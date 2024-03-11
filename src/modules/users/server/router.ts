@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
-import { Filterable, Op } from 'sequelize'
+import { Filterable, Op, QueryTypes } from 'sequelize'
 import { appConfig } from '#server/app-config'
 import config from '#server/config'
 import {
@@ -14,6 +14,7 @@ import * as fp from '#shared/utils/fp'
 import { Permissions } from '../permissions'
 import {
   AuthExtension,
+  UsersAdminDashboardStats,
   AuthProvider,
   GeoData,
   ImportedTag,
@@ -645,7 +646,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
           if (!roles.length) continue
           const users = await fastify.db.User.findAll({
             where: {
-              id: { [Op.not]: req.params.userId },
+              id: { [Op.ne]: req.params.userId },
               roles: {
                 [Op.overlap]: roles,
               },
@@ -785,6 +786,101 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
 
       await transaction.commit()
       reply.ok()
+    }
+  )
+
+  fastify.get(
+    '/admin-dashboard-stats',
+    async (
+      req: FastifyRequest<{
+        Querystring: { startDate: string; endDate: string }
+      }>,
+      reply
+    ) => {
+      req.check(Permissions.AdminList)
+      const metadata = appConfig.getModuleMetadata('users') as Metadata
+      const { startDate, endDate } = req.query
+
+      const result: UsersAdminDashboardStats = {
+        registeredTotal: 0,
+        registeredToday: 0,
+        roles: null,
+        registeredByDate: [],
+      }
+
+      result.registeredTotal = await fastify.db.User.count({
+        where: {
+          createdAt: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+      })
+      result.registeredToday = await fastify.db.User.count({
+        where: {
+          createdAt: {
+            [Op.gte]: dayjs().startOf('day').toDate(),
+            [Op.lte]: dayjs().endOf('day').toDate(),
+          },
+        },
+      })
+
+      const dateFormat =
+        dayjs(endDate, DATE_FORMAT).diff(
+          dayjs(startDate, DATE_FORMAT),
+          'days'
+        ) > 31
+          ? 'YYYY-MM'
+          : 'YYYY-MM-DD'
+
+      const roleGroupId =
+        metadata.adminDashboardStats.registeredUsersByRoleGroup
+      const roleGroup =
+        appConfig.config.permissions.roleGroups.find(
+          fp.propEq('id', roleGroupId || '')
+        ) || null
+      let roles: string[] = []
+      if (roleGroup) {
+        result.roles = [{ id: '__unknown', name: 'Unknown' }].concat(
+          roleGroup.roles.map(fp.pick(['id', 'name']))
+        )
+        roles = roleGroup.roles.map(fp.prop('id'))
+      }
+      const withRoles = !!roles.length
+      result.registeredByDate = (await fastify.sequelize.query(
+        `
+          select date, total, ${roles.join(', ')} ${
+          withRoles
+            ? `, (total - ${roles.join(' - ')}) as __unknown`
+            : `total as __unknown`
+        }
+        from (
+            select
+              to_char(u."createdAt", :dateFormat) as date,
+              cast(count(u.id) as integer) as total${withRoles ? ',' : ''}
+              ${roles
+                .map(
+                  (r) =>
+                    `cast(count(case when '${r}' = any(u.roles) then 1 end) as integer) as ${r}`
+                )
+                .join(', ')}
+            from
+              "users" u
+            where
+              u."createdAt" between :startDate and :endDate
+            group by
+              date
+          ) as daily_stats
+            order by
+              date asc
+          `,
+        {
+          replacements: { dateFormat, startDate, endDate },
+          type: QueryTypes.SELECT,
+        }
+      )) as unknown as UsersAdminDashboardStats['registeredByDate']
+
+      return result
     }
   )
 }

@@ -1,10 +1,11 @@
 import { randomBytes } from 'crypto'
-import { Filterable } from 'sequelize'
+import { Filterable, Op, QueryTypes, col, fn } from 'sequelize'
 import dayjs from 'dayjs'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { appConfig } from '#server/app-config'
 import config from '#server/config'
 import { DATE_FORMAT, ROBOT_USER_ID } from '#server/constants'
+import * as fp from '#shared/utils/fp'
 import {
   formatVisitDates,
   generateVisits,
@@ -15,6 +16,7 @@ import {
   GuestInviteRequest,
   GuestInviteStatus,
   GuestInviteUpdateRequest,
+  GuestInvitesAdminDashboardStats,
 } from '../types'
 import { Permissions } from '../permissions'
 import { GuestInvite } from './models'
@@ -560,6 +562,163 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
     }
   )
+
+  fastify.get(
+    '/admin-dashboard-stats',
+    async (
+      req: FastifyRequest<{
+        Querystring: { startDate: string; endDate: string }
+      }>,
+      reply
+    ) => {
+      req.check(Permissions.AdminList)
+      const office = req.office
+      if (!office) {
+        return reply.throw.badParams('Missing office ID')
+      }
+      const { startDate, endDate } = req.query
+
+      const result: GuestInvitesAdminDashboardStats = {
+        guestsTotal: 0,
+        guestsToday: 0,
+        topGuests: [],
+        topInviters: [],
+        guestsByDate: [],
+      }
+
+      result.guestsTotal = await fastify.db.Visit.count({
+        where: {
+          officeId: office.id,
+          'metadata.guestInvite': true,
+          date: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+      })
+
+      result.guestsToday = await fastify.db.Visit.count({
+        where: {
+          officeId: office.id,
+          'metadata.guestInvite': true,
+          date: {
+            [Op.gte]: dayjs().startOf('day').toDate(),
+            [Op.lte]: dayjs().endOf('day').toDate(),
+          },
+        },
+      })
+
+      result.topGuests = (await fastify.db.Visit.findAll({
+        where: {
+          'metadata.guestInvite': true,
+          officeId: office.id,
+          date: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+        attributes: ['userId', [fn('COUNT', col('userId')), 'visits']],
+        group: ['userId'],
+        order: [[fn('COUNT', col('userId')), 'DESC']],
+        limit: 10,
+        raw: true,
+      })) as unknown as GuestInvitesAdminDashboardStats['topGuests']
+
+      let userIds = result.topGuests.map(fp.prop('userId'))
+
+      result.topInviters = (await fastify.db.GuestInvite.findAll({
+        where: {
+          office: office.id,
+          status: 'confirmed',
+          createdAt: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+        attributes: [
+          ['creatorUserId', 'userId'],
+          [fn('COUNT', col('creatorUserId')), 'guests'],
+        ],
+        group: ['creatorUserId'],
+        order: [[fn('COUNT', col('creatorUserId')), 'DESC']],
+        limit: 10,
+        raw: true,
+      })) as unknown as GuestInvitesAdminDashboardStats['topInviters']
+
+      userIds = userIds.concat(result.topInviters.map(fp.prop('userId')))
+      const uniqueUserIds = Array.from(new Set(userIds))
+      const users = await fastify.db.User.findAll({
+        where: {
+          id: { [Op.in]: uniqueUserIds },
+        },
+        attributes: ['id', 'fullName', 'avatar'],
+      })
+      const userById = users.reduce(fp.by('id'), {})
+
+      result.topGuests = result.topGuests.map((x) => {
+        const user = userById[x.userId]
+        return {
+          ...x,
+          fullName: user.fullName,
+          avatar: user.avatar,
+        }
+      })
+      result.topInviters = result.topInviters.map((x) => {
+        const user = userById[x.userId]
+        return {
+          ...x,
+          fullName: user.fullName,
+          avatar: user.avatar,
+        }
+      })
+
+      const dateFormat =
+        dayjs(endDate, DATE_FORMAT).diff(
+          dayjs(startDate, DATE_FORMAT),
+          'days'
+        ) > 31
+          ? 'YYYY-MM'
+          : 'YYYY-MM-DD'
+
+      result.guestsByDate = (await fastify.sequelize.query(
+        `
+          SELECT
+            to_char(v."date", :dateFormat) AS date,
+            cast(COUNT(*) as integer) AS total
+          FROM
+            visits v
+          WHERE
+            1=1
+            AND v."officeId" = :officeId
+            AND v."date" BETWEEN :startDate AND :endDate
+            AND v."metadata"->>'guestInvite' = 'true'
+          GROUP BY
+            to_char(v."date", :dateFormat)
+          ORDER BY
+            date ASC;
+        `,
+        {
+          replacements: { dateFormat, startDate, endDate, officeId: office.id },
+          type: QueryTypes.SELECT,
+        }
+      )) as unknown as GuestInvitesAdminDashboardStats['guestsByDate']
+
+      return result
+    }
+  )
+
+  fastify.get('/counter', async (req, reply) => {
+    if (!req.office) {
+      return reply.throw.badParams('Missing office ID')
+    }
+    req.check(Permissions.AdminList, req.office.id)
+    return fastify.db.GuestInvite.count({
+      where: {
+        office: req.office.id,
+        status: 'opened',
+      },
+    })
+  })
 }
 
 module.exports = {

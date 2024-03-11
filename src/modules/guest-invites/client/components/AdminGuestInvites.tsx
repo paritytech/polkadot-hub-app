@@ -14,6 +14,8 @@ import {
   H1,
   UserLabel,
   showNotification,
+  WidgetWrapper,
+  Placeholder,
 } from '#client/components/ui'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import Permissions from '#shared/permissions'
@@ -177,18 +179,18 @@ export const _AdminGuestInvites: React.FC = () => {
   )
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <H1>Guest invites</H1>
+    <WidgetWrapper>
+      <div className="flex justify-between items-center mb-6">
+        <H1 className="mb-0">Guest invites</H1>
         <Button href="/admin/guest-invites/editor/new">Add manual entry</Button>
       </div>
       {invites?.length ? (
-        <div className="-mx-8">
-          <Table columns={columns} data={invites} />
+        <div className="-mx-6">
+          <Table columns={columns} data={invites} paddingClassName="px-6" />
         </div>
       ) : (
-        <div className="text-gray-400 text-center my-12">No data</div>
+        <Placeholder children="No data" />
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

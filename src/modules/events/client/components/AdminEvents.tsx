@@ -14,6 +14,8 @@ import {
   UserLabel,
   Filters,
   UserRoleLabel,
+  WidgetWrapper,
+  Placeholder,
 } from '#client/components/ui'
 import config from '#client/config'
 import { OFFICE_BY_ID, USER_ROLE_BY_ID } from '#client/constants'
@@ -175,7 +177,7 @@ export const AdminEvents = () => {
           accessor: (event: EventAdminResponse) => (
             <span className="inline-block -mr-1">
               {event.allowedRoles.map((x) => (
-                <UserRoleLabel role={x} />
+                <UserRoleLabel role={x} className="mr-1" />
               ))}
             </span>
           ),
@@ -193,7 +195,7 @@ export const AdminEvents = () => {
   )
 
   return (
-    <div>
+    <WidgetWrapper>
       <div className="flex items-center mb-5">
         <H1 className="flex-1 mb-0">Events</H1>
         {permissions.has(Permissions.events.AdminManage) && (
@@ -239,12 +241,12 @@ export const AdminEvents = () => {
       </div>
 
       {events?.length ? (
-        <div className="-mx-8">
-          <Table columns={columns} data={events} />
+        <div className="-mx-6">
+          <Table columns={columns} data={events} paddingClassName="px-6" />
         </div>
       ) : (
-        <div className="text-gray-400 text-center my-12">No data</div>
+        <Placeholder children="No data" />
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

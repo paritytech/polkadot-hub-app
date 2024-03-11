@@ -13,6 +13,7 @@ import {
   LabelWrapper,
   MarkdownTextarea,
   RadioGroup,
+  WidgetWrapper,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { DATE_FORMAT } from '#client/constants'
@@ -199,7 +200,7 @@ export const AdminChecklistEditor = () => {
   }
 
   return (
-    <div>
+    <WidgetWrapper>
       <div className="flex flex-col justify-start sm:justify-between mb-4">
         <Breadcrumbs
           items={[
@@ -337,7 +338,7 @@ export const AdminChecklistEditor = () => {
               </div>
             </LabelWrapper>
           </div>
-          <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-8 -mx-8 -mb-8">
+          <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-6 -mx-6 -mb-6 rounded-b-sm">
             <ButtonsWrapper
               right={[
                 <Button disabled={formIsPristine} type="submit" kind="primary">
@@ -348,6 +349,6 @@ export const AdminChecklistEditor = () => {
           </div>
         </div>
       </form>
-    </div>
+    </WidgetWrapper>
   )
 }

@@ -1,19 +1,27 @@
 import * as React from 'react'
 import { useStore } from '@nanostores/react'
+import { useQuery } from 'react-query'
 import * as stores from '#client/stores'
 import config from '#client/config'
 import {
   ADMIN_ACCESS_PERMISSION_RE,
   ADMIN_ACCESS_PERMISSION_POSTFIX,
 } from '#client/constants'
-import { Button, ComponentWrapper } from '#client/components/ui'
+import {
+  Button,
+  ComponentWrapper,
+  WidgetWrapper,
+} from '#client/components/ui'
 import Permissions from '#shared/permissions'
 import { PermissionsSet } from '#shared/utils'
+import { cn } from '#client/utils'
+import { api } from '#client/utils/api'
 
 type ModuleWithAdminComponents = {
   id: string
   name: string
   routes: string[]
+  counter: boolean
 }
 const modulesWithAdminComponents: ModuleWithAdminComponents[] =
   config.modules.reduce((acc, m) => {
@@ -24,6 +32,7 @@ const modulesWithAdminComponents: ModuleWithAdminComponents[] =
         id: m.id,
         name: m.name,
         routes,
+        counter: m.adminLinkCounter,
       }
       return [...acc, moduleInfo]
     }
@@ -67,42 +76,63 @@ const _AdminHome: React.FC<Props> = ({ children }) => {
     })
   }, [permissions, officeId])
 
-  return (
-    <ComponentWrapper wide>
-      {filteredModules.length ? (
-        <>
-          <div className="-mx-8 -mt-4 sm:mt-0 px-2 sm:px-8 mb-6 pb-2 sm:pb-4 border-b border-gray-200">
-            {filteredModules.map((x) => {
-              return (
-                <Button
-                  key={x.id}
-                  kind={
-                    page && x.routes.includes(page.route)
-                      ? 'primary'
-                      : 'secondary'
-                  }
-                  href={`/admin/${x.id}`}
-                  className="mb-2 sm:mb-4 mr-2 rounded-[24px] relative focus:ring-0"
-                >
-                  {x.name}
-                  {/* {!!counter && <CounterBadge count={counter} />} */}
-                </Button>
-              )
-            })}
-          </div>
-          {children}
-        </>
-      ) : (
-        <div>Please select an office that you can work with.</div>
-      )}
-    </ComponentWrapper>
+  return filteredModules.length ? (
+    <div className="grid grid-cols-[240px_minmax(0,auto)] gap-x-4">
+      <div>
+        <WidgetWrapper className="p-2 sticky top-2">
+          {filteredModules.map((x, i) => {
+            const isActive = !!(page && x.routes.includes(page.route))
+            return <ModuleLink key={x.id} isActive={isActive} module={x} />
+          })}
+        </WidgetWrapper>
+      </div>
+      <div>
+        <div>{children}</div>
+      </div>
+    </div>
+  ) : (
+    <WidgetWrapper>
+      Please select an office that you can work with.
+    </WidgetWrapper>
   )
 }
 
-// const CounterBadge: React.FC<{ count: number }> = ({ count }) => {
-//   return !!count ? (
-//     <span className="absolute -top-2 right-0 border-2 border-white bg-red-500 text-white rounded-[999px] text-xs flex items-center justify-center h-[22px] min-w-[22px] px-1">
-//       {count}
-//     </span>
-//   ) : null
-// }
+const ModuleLink: React.FC<{
+  isActive: boolean
+  module: ModuleWithAdminComponents
+}> = (props) => {
+  const officeId = useStore(stores.officeId)
+  const counterApiUri = `/admin-api/${props.module.id}/counter`
+
+  const { data: count = 0 } = useQuery<number>(
+    [counterApiUri, { office: officeId }],
+    async ({ queryKey }) =>
+      (await api.get<number>(counterApiUri, { params: queryKey[1] })).data,
+    { retry: false, enabled: props.module.counter }
+  )
+
+  return (
+    <a
+      href={`/admin/${props.module.id}`}
+      className={cn(
+        'relative flex items-center px-4 py-4 rounded-tiny hover:bg-gray-50',
+        props.isActive &&
+          'bg-purple-50 hover:bg-purple-50 bg-opacity-40 hover:bg-opacity-40 text-purple-500'
+      )}
+    >
+      <span className="flex-1 text-ellipsis overflow-hidden mr-1 whitespace-nowrap">
+        {props.module.name}
+      </span>
+      <CounterBadge count={count} />
+    </a>
+  )
+}
+
+const CounterBadge: React.FC<{ count: number }> = ({ count }) => {
+  if (!count) return null
+  return (
+    <span className="bg-purple-500 text-white rounded-[999px] text-xs inline-flex items-center justify-center h-[18px] min-w-[18px] px-1">
+      {count}
+    </span>
+  )
+}

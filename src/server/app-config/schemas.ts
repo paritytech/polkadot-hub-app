@@ -238,6 +238,7 @@ export const moduleManifest = z
     availableCronJobs: z.array(z.string()).default([]),
     models: z.array(z.string()).default([]),
     clientRouter: moduleClientRouter.optional(),
+    adminLinkCounter: z.boolean().default(false),
   })
   .strict()
 

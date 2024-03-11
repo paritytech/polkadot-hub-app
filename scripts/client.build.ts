@@ -38,6 +38,7 @@ function getBuildConfig(): BuildOptions {
           router: m.manifest.clientRouter || {},
           name: m.manifest.name,
           portals: m.portals,
+          adminLinkCounter: m.manifest.adminLinkCounter,
         }))
       ),
       // TODO: add .env.COMPONENT_ID_BY_ROUTE

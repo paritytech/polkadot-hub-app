@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
-import { Filterable, Op } from 'sequelize'
+import { Filterable, Op, fn, col, literal, QueryTypes } from 'sequelize'
 import { appConfig } from '#server/app-config'
 import {
   DATE_FORMAT,
@@ -27,6 +27,7 @@ import {
   VisitsCreationRequest,
   VisitsOccupancy,
   VisitStatus,
+  VisitsAdminDashboardStats,
 } from '../types'
 
 const mId = 'visits'
@@ -702,6 +703,188 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
       return reply.code(200).send()
     }
   )
+
+  fastify.get(
+    '/admin-dashboard-stats',
+    async (
+      req: FastifyRequest<{
+        Querystring: { startDate: string; endDate: string }
+      }>,
+      reply
+    ) => {
+      req.check(Permissions.AdminList)
+      const office = req.office
+      if (!office) {
+        return reply.throw.badParams('Missing office ID')
+      }
+      const { startDate, endDate } = req.query
+
+      const result: VisitsAdminDashboardStats = {
+        visitsTotal: 0,
+        visitsToday: 0,
+        topVisitors: [],
+        topDesks: [],
+        annualVisits: [],
+        visitsByDate: [],
+        areas: [],
+      }
+
+      result.visitsTotal = await fastify.db.Visit.count({
+        where: {
+          date: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+      })
+      result.visitsToday = await fastify.db.Visit.count({
+        where: {
+          date: {
+            [Op.gte]: dayjs().startOf('day').toDate(),
+            [Op.lte]: dayjs().endOf('day').toDate(),
+          },
+        },
+      })
+
+      result.topVisitors = (await fastify.db.Visit.findAll({
+        where: {
+          officeId: office.id,
+          date: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+        attributes: ['userId', [fn('COUNT', col('userId')), 'visits']],
+        group: ['userId'],
+        order: [[fn('COUNT', col('userId')), 'DESC']],
+        limit: 10,
+        raw: true,
+      })) as unknown as VisitsAdminDashboardStats['topVisitors']
+      const userIds = result.topVisitors.map(fp.prop('userId'))
+      const users = await fastify.db.User.findAll({
+        where: {
+          id: { [Op.in]: userIds },
+        },
+        attributes: ['id', 'fullName', 'avatar'],
+      })
+      const userById = users.reduce(fp.by('id'), {})
+      result.topVisitors = result.topVisitors.map((x) => {
+        const user = userById[x.userId]
+        return {
+          ...x,
+          fullName: user.fullName,
+          avatar: user.avatar,
+        }
+      })
+
+      result.topDesks = (await fastify.db.Visit.findAll({
+        where: {
+          officeId: office.id,
+          date: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+        attributes: ['areaId', 'deskId', [fn('COUNT', col('id')), 'visits']],
+        group: ['areaId', 'deskId'],
+        order: [[fn('COUNT', col('id')), 'DESC']],
+        limit: 10,
+        raw: true,
+      })) as unknown as VisitsAdminDashboardStats['topDesks']
+      result.topDesks = result.topDesks.map((x) => {
+        const area = office.areas?.find(fp.propEq('id', x.areaId))
+        const desk = area?.desks.find(fp.propEq('id', x.deskId))
+        return {
+          ...x,
+          areaName: area?.name || 'Unknown area',
+          deskName: desk?.name || 'Unknown desk',
+        }
+      })
+
+      // TODO: check if startdate and enddate contains a year
+      result.annualVisits = (await fastify.db.Visit.findAll({
+        where: {
+          officeId: office.id,
+          date: {
+            [Op.gte]: startDate,
+            [Op.lte]: endDate,
+          },
+        },
+        attributes: [
+          [fn('to_char', col('date'), DATE_FORMAT), 'date'],
+          [fn('COUNT', col('id')), 'visits'],
+        ],
+        group: [fn('to_char', col('date'), DATE_FORMAT)],
+        order: [[col('date'), 'ASC']],
+        raw: true,
+      })) as unknown as VisitsAdminDashboardStats['annualVisits']
+
+      const dateFormat =
+        dayjs(endDate, DATE_FORMAT).diff(
+          dayjs(startDate, DATE_FORMAT),
+          'days'
+        ) > 31
+          ? 'YYYY-MM'
+          : 'YYYY-MM-DD'
+
+      const areas = (req.office?.areas || []).map(fp.pick(['id', 'name']))
+      const areaIds = areas.map(fp.prop('id'))
+
+      result.areas = [{ id: '__unknown', name: 'Unknown' }].concat(areas)
+
+      result.visitsByDate = (await fastify.sequelize.query(
+        `
+        SELECT
+          date,
+          total,
+          ${areaIds.join(', ')},
+          (total - ${areaIds.join(' - ')}) AS "__unknown"
+        FROM (
+          SELECT
+            to_char(v."date", :dateFormat) AS date,
+            cast(COUNT(*) as integer) AS total,
+            ${areaIds
+              .map(
+                (areaId) =>
+                  `cast(COUNT(CASE WHEN v."areaId" = '${areaId}' THEN 1 ELSE NULL END) as integer) as "${areaId}"`
+              )
+              .join(', ')}
+          FROM
+            visits v
+          WHERE
+            v."officeId" = :officeId AND v."date" BETWEEN :startDate AND :endDate
+          GROUP BY
+            to_char(v."date", :dateFormat)
+        ) AS daily_stats
+        ORDER BY
+          date ASC;
+
+        `,
+        {
+          replacements: { dateFormat, startDate, endDate, officeId: office.id },
+          type: QueryTypes.SELECT,
+        }
+      )) as unknown as VisitsAdminDashboardStats['visitsByDate']
+
+      return result
+    }
+  )
+
+  fastify.get('/counter', async (req, reply) => {
+    if (!req.office) {
+      return reply.throw.badParams('Missing office ID')
+    }
+    req.check(Permissions.AdminList, req.office.id)
+    return fastify.db.Visit.count({
+      where: {
+        officeId: req.office.id,
+        status: 'pending',
+        date: {
+          [Op.gte]: dayjs().format(DATE_FORMAT),
+        },
+      },
+    })
+  })
 }
 
 module.exports = {

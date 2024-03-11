@@ -12,6 +12,7 @@ import {
   Breadcrumbs,
   LoaderSpinner,
   ButtonsWrapper,
+  WidgetWrapper,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import {
@@ -188,7 +189,7 @@ export const AdminEventApplicationEditor = () => {
   )
 
   return (
-    <div>
+    <WidgetWrapper>
       <Breadcrumbs
         items={[
           { label: 'Events', href: '/admin/events' },
@@ -278,7 +279,7 @@ export const AdminEventApplicationEditor = () => {
                 ))}
               </div>
 
-              <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-8 -mx-8 -mb-8">
+              <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-6 -mx-6 -mb-6 rounded-b-sm">
                 <ButtonsWrapper
                   right={[
                     <Button
@@ -295,6 +296,6 @@ export const AdminEventApplicationEditor = () => {
           )}
         </>
       )}
-    </div>
+    </WidgetWrapper>
   )
 }

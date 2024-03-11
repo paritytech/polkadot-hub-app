@@ -40,3 +40,24 @@ export type GuestInviteOfficeRule = { id: string; label: string }
 export type GuestInviteUpdateRequest = Partial<
   Pick<GuestInvite, 'status' | 'areaId' | 'deskId'>
 >
+
+export type GuestInvitesAdminDashboardStats = {
+  guestsTotal: number
+  guestsToday: number
+  topGuests: {
+    userId: string
+    fullName: string
+    avatar: string | null
+    visits: number
+  }[]
+  topInviters: {
+    userId: string
+    fullName: string
+    avatar: string | null
+    guests: number
+  }[]
+  guestsByDate: {
+    date: string
+    total: number
+  }[]
+}

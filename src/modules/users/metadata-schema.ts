@@ -25,6 +25,9 @@ export const schema = z
       bio: profileFieldSchema.optional(),
       contacts: contactsSchema.optional(),
     }),
+    adminDashboardStats: z.object({
+      registeredUsersByRoleGroup: z.string(),
+    }),
   })
   .strict()
 

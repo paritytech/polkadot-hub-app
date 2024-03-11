@@ -19,7 +19,7 @@
         "componentId": "RoomReservationRequest"
       },
       "roomReservationDetail": {
-        "path": "/room-reservations/:roomReservationId",
+        "path": "/room-reservation/:roomReservationId",
         "componentId": "RoomReservationDetail"
       }
     },

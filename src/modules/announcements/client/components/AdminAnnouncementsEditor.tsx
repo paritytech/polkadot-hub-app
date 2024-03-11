@@ -8,6 +8,7 @@ import {
   H1,
   Input,
   MarkdownTextarea,
+  WidgetWrapper,
 } from '#client/components/ui'
 import { EntityAccessSelector } from '#client/components/EntityAccessSelector'
 import { showNotification } from '#client/components/ui/Notifications'
@@ -118,7 +119,7 @@ export const AdminAnnouncementsEditor = () => {
   }, [announcement])
 
   return (
-    <div>
+    <WidgetWrapper>
       <div className="flex flex-col">
         <H1>{notNew ? 'Edit Announcement' : 'Create New Announcement'}</H1>
         <Breadcrumbs
@@ -189,7 +190,7 @@ export const AdminAnnouncementsEditor = () => {
             containerClassName="mb-4"
           />
 
-          <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-8 -mx-8 -mb-8">
+          <div className="sticky bg-white mt-6 py-4 bottom-0 border-t border-gray-200 px-6 -mx-6 -mb-6 rounded-b-sm">
             <ButtonsWrapper
               left={[
                 <Button
@@ -212,6 +213,6 @@ export const AdminAnnouncementsEditor = () => {
           </div>
         </form>
       </div>
-    </div>
+    </WidgetWrapper>
   )
 }
