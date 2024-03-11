@@ -51,6 +51,7 @@ type ClientAppConfig = {
   roleGroups: ClientUserRoleGroup[]
   auth: ClientAuthConfig
   authMessageToSign: string
+  allowedWallets: string[]
   walletConnectProjectId: string
 }
 
@@ -68,6 +69,7 @@ const config: ClientAppConfig = {
   roleGroups: process.env.ROLE_GROUPS as unknown as ClientUserRoleGroup[],
   auth: process.env.AUTH as unknown as ClientAuthConfig,
   authMessageToSign: process.env.AUTH_MESSAGE_TO_SIGN as unknown as string,
+  allowedWallets: process.env.ALLOWED_WALLETS as unknown as string[],
   walletConnectProjectId: process.env
     .WALLET_CONNECT_PROJECT_ID as unknown as string,
 }

@@ -20,6 +20,7 @@ type Config = {
   authMessageToSign: string | undefined
   walletConnectProjectId: string | undefined
   superusers: string[]
+  allowedWallets: string[]
   workingHoursTestGroup: string[]
 }
 
@@ -38,6 +39,7 @@ const config: Config = {
   oauth2GoogleClientSecret: process.env.OAUTH2_GOOGLE_CLIENT_SECRET || '',
   superusers: JSON.parse(process.env.SUPERUSERS || '[]'),
   authMessageToSign: process.env.AUTH_MESSAGE_TO_SIGN,
+  allowedWallets: JSON.parse(process.env.ALLOWED_WALLETS || '[]'),
   workingHoursTestGroup: JSON.parse(
     process.env.WORKING_HOURS_TEST_GROUP || '[]'
   ),

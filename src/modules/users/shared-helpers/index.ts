@@ -2,15 +2,6 @@ import dayjs from 'dayjs'
 import dayjsTimezone from 'dayjs/plugin/timezone'
 import dayjsUtc from 'dayjs/plugin/utc'
 
-export const allowedPolkadotAuthProviders = [
-  'polkadot-js',
-  'talisman',
-  'subwallet-js',
-  'subwallet',
-  'novawallet',
-  'walletconnect',
-]
-
 dayjs.extend(dayjsTimezone)
 dayjs.extend(dayjsUtc)
 

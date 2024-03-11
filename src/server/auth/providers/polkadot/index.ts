@@ -4,6 +4,7 @@ import { FastifyInstance, FastifyPluginCallback, FastifyRequest } from 'fastify'
 import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { getSession, getUserByProvider, isValidSignature } from '../helper'
 import { ExtensionAccount } from '#client/components/auth/helper'
+import config from '#server/config'
 
 export const plugin: FastifyPluginCallback = async (
   fastify: FastifyInstance
@@ -12,11 +13,11 @@ export const plugin: FastifyPluginCallback = async (
     '/users',
     async (
       req: FastifyRequest<{
-        Body: { selectedAccount: InjectedAccountWithMeta; signature: string }
+        Body: { selectedAccount: ExtensionAccount; signature: string }
       }>,
       reply
     ) => {
-      const body: InjectedAccountWithMeta = req.body.selectedAccount
+      const body: ExtensionAccount = req.body.selectedAccount
       const isSignatureValid = isValidSignature(
         body.address,
         req.body.signature
@@ -35,11 +36,15 @@ export const plugin: FastifyPluginCallback = async (
     '/login',
     async (
       req: FastifyRequest<{
-        Body: { selectedAccount: InjectedAccountWithMeta; signature: string }
+        Body: { selectedAccount: ExtensionAccount; signature: string }
       }>,
       reply
     ) => {
-      const body: InjectedAccountWithMeta = req.body.selectedAccount
+      const body: ExtensionAccount = req.body.selectedAccount
+      const source = body.source?.replace(/ /g, '').toLowerCase()
+      if (!config.allowedWallets.includes(source)) {
+        return reply.throw.conflict('Unsupported extension')
+      }
       const isSignatureValid = isValidSignature(
         body.address,
         req.body.signature
@@ -69,17 +74,8 @@ export const plugin: FastifyPluginCallback = async (
     ) => {
       const body: ExtensionAccount = req.body.selectedAccount
       const source = body.source?.replace(/ /g, '').toLowerCase()
-      // @todo move to app config?
-      const allowedPolkadotAuthProviders = [
-        'polkadot-js',
-        'talisman',
-        'subwallet-js',
-        'subwallet',
-        'novawallet',
-        'walletconnect',
-      ]
 
-      if (!allowedPolkadotAuthProviders.includes(source)) {
+      if (!config.allowedWallets.includes(source)) {
         return reply.throw.conflict('Unsupported extension')
       }
 

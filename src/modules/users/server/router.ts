@@ -33,7 +33,6 @@ import {
 } from './helpers'
 
 import { Metadata } from '../metadata-schema'
-import { allowedPolkadotAuthProviders } from '../shared-helpers'
 
 const ROLES_ALLOWED_TO_BE_ON_MAP = appConfig.getRolesByPermission(
   Permissions.UseMap
@@ -499,7 +498,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       const extensionName = req.body.extensionName as string
       const source = extensionName.replace(/ /g, '').toLowerCase()
 
-      if (!allowedPolkadotAuthProviders.includes(source)) {
+      if (!config.allowedWallets.includes(source)) {
         return reply.throw.badParams(
           'This authentication provider is not approved. Please contact administrator.'
         )
