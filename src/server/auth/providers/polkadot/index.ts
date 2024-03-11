@@ -2,7 +2,7 @@ import { appConfig } from '#server/app-config'
 import { AuthAddressPair, AuthIds, AuthProvider } from '#shared/types'
 import { FastifyInstance, FastifyPluginCallback, FastifyRequest } from 'fastify'
 import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
-import { getSession, getUserProvider, isValidSignature } from '../helper'
+import { getSession, getUserByProvider, isValidSignature } from '../helper'
 
 export const plugin: FastifyPluginCallback = async (
   fastify: FastifyInstance
@@ -23,7 +23,7 @@ export const plugin: FastifyPluginCallback = async (
       if (!isSignatureValid) {
         return reply.throw.accessDenied()
       }
-      const user = await getUserProvider(AuthProvider.Polkadot, body.address)
+      const user = await getUserByProvider(AuthProvider.Polkadot, body.address)
       if (!!user.length) {
         return { userRegistered: true }
       }
@@ -47,7 +47,7 @@ export const plugin: FastifyPluginCallback = async (
         return reply.throw.accessDenied()
       }
 
-      const user = await getUserProvider(AuthProvider.Polkadot, body.address)
+      const user = await getUserByProvider(AuthProvider.Polkadot, body.address)
 
       if (!user.length) {
         return reply.throw.notFound('There is no account with this address')
@@ -90,7 +90,7 @@ export const plugin: FastifyPluginCallback = async (
         return reply.throw.accessDenied()
       }
 
-      const user = await getUserProvider(AuthProvider.Polkadot, body.address)
+      const user = await getUserByProvider(AuthProvider.Polkadot, body.address)
       if (!!user.length) {
         return reply.throw.conflict('User is already registered')
       }

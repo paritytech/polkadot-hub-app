@@ -58,7 +58,7 @@ export const walletConnectConfig = {
     name: process.env.APP_NAME,
     description: process.env.APP_NAME,
     url: process.env.APP_HOST,
-    icons: ['https://i.ibb.co/YDzD5S8/apple-touch-icon-1.png'],
+    icons: [process.env.APP_ICON ?? `${process.env.APP_HOST}/icon.png`],
   },
   options: {
     explorerRecommendedWalletIds: [

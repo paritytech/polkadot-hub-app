@@ -60,7 +60,7 @@ export const getGeoDataInfo = async (
   }
 }
 
-export const getUserProvider = async (provider: string, address: string) => {
+export const getUserByProvider = async (provider: string, address: string) => {
   const users = await sequelize.query(
     `
     SELECT * FROM "users" AS "User"

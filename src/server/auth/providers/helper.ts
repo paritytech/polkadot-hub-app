@@ -25,7 +25,7 @@ export const getSession = async (
   })
 }
 
-export const getUserProvider = async (provider: string, address: string) =>
+export const getUserByProvider = async (provider: string, address: string) =>
   sequelize.query(
     `
     SELECT * FROM "users" AS "User"

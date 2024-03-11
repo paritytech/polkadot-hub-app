@@ -1,6 +1,6 @@
 import { User } from '#modules/users/server/models'
 import { FastifyInstance } from 'fastify'
-import { getUserProvider, isValidSignature } from '../helper'
+import { getUserByProvider, isValidSignature } from '../helper'
 import { GoogleParsedStateQueryParam } from '#server/types'
 import { AuthProvider } from '#shared/types'
 
@@ -51,7 +51,7 @@ export const linkPolkadotAccountToExistingUser = async (
             `The signature is invalid. Cannot link to polkadot user.`
           )
         }
-        const users = await getUserProvider(
+        const users = await getUserByProvider(
           AuthProvider.Polkadot,
           account.address
         )
