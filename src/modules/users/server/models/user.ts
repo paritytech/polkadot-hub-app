@@ -144,24 +144,15 @@ export class User
     }
     return addresses
   }
-
   addAuthId(
     this: User,
     provider: AuthProvider,
     extensionName: AuthExtension,
     authId: AuthAddressPair
   ): User {
-    const authIds = this.toJSON().authIds
-    if (!authIds[provider]) {
-      // @todo more general adding of authIds
-      authIds[provider] = {
-        [AuthExtension.PolkadotJs]: [],
-        [AuthExtension.Talisman]: [],
-      }
-    }
-    if (!authIds[provider][extensionName]) {
-      authIds[provider][extensionName] = []
-    }
+    const authIds = { ...this.toJSON().authIds }
+    authIds[provider] = authIds[provider] || {}
+    authIds[provider][extensionName] = authIds[provider][extensionName] || []
     authIds[provider][extensionName].push(authId)
     return this.set('authIds', authIds)
   }

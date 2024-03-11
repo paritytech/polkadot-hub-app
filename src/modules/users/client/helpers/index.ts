@@ -84,21 +84,3 @@ export const reverseGeocoding = async (
     countryCode: countryCode.toUpperCase(),
   }
 }
-
-export const filterOutForbiddenAuth = (
-  authIds: AuthIds,
-  allowedKeys: string[]
-) => {
-  const res: Record<string, Array<AuthAddressPair>> = {}
-
-  const polkaDotWallets = authIds[AuthProvider.Polkadot]
-  if (!!polkaDotWallets) {
-    for (const extension of allowedKeys) {
-      if (polkaDotWallets[extension as AuthExtension]) {
-        res[extension as AuthExtension] =
-          polkaDotWallets[extension as AuthExtension]
-      }
-    }
-  }
-  return res
-}

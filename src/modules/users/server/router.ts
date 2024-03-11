@@ -13,6 +13,7 @@ import { AuthAccount } from '#shared/types'
 import * as fp from '#shared/utils/fp'
 import { Permissions } from '../permissions'
 import {
+  AuthExtension,
   AuthProvider,
   GeoData,
   ImportedTag,
@@ -26,11 +27,12 @@ import {
 import {
   getDefaultLocation,
   getGeoDataInfo,
-  getUserProviderQuery,
+  getUserByProvider,
   removeAuthId,
 } from './helpers'
 
 import { Metadata } from '../metadata-schema'
+import { allowedPolkadotAuthProviders } from '../shared-helpers'
 
 const ROLES_ALLOWED_TO_BE_ON_MAP = appConfig.getRolesByPermission(
   Permissions.UseMap
@@ -466,11 +468,12 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       const authIds = req.user.authIds[PROVIDER_NAME] ?? []
-      const alreadyLinked = authIds[req.body.extensionName]
-        ? authIds[req.body.extensionName].find(
-            (one) => one.address == req.body.address
-          )
-        : false
+      const alreadyLinked = Object.keys(authIds).map((name) =>
+        authIds[name as AuthExtension].find(
+          (one) => one.address == req.body.address
+        )
+      )
+
       if (!alreadyLinked) {
         return reply.throw.badParams()
       }
@@ -492,9 +495,16 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      const extensionName = req.body.extensionName
+      const extensionName = req.body.extensionName as string
+      const source = extensionName.replace(/ /g, '').toLowerCase()
+
+      if (!allowedPolkadotAuthProviders.includes(source)) {
+        return reply.throw.badParams(
+          'This authentication provider is not approved. Please contact administrator.'
+        )
+      }
       const providerAuthIds = req.user.authIds[AuthProvider.Polkadot] ?? []
-      const extensionIds = providerAuthIds[extensionName] ?? []
+      const extensionIds = providerAuthIds[source as AuthExtension] ?? []
 
       if (!!Object.keys(providerAuthIds).length && extensionIds) {
         const alreadyLinked = extensionIds.find(
@@ -508,17 +518,14 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         }
       }
 
-      const otherUsers = await fastify.db.User.findAllActive({
-        where: getUserProviderQuery(
-          PROVIDER_NAME,
-          extensionName,
-          req.body.address
-        ),
-      })
+      const otherUsers = await getUserByProvider(
+        PROVIDER_NAME,
+        req.body.address
+      )
 
       if (!!otherUsers.length) {
         fastify.log.error(
-          `The address  ${req.body.address} from provider ${PROVIDER_NAME}, extension: ${extensionName} has already been linked with user ${otherUsers[0].id}`
+          `The address  ${req.body.address} from provider ${PROVIDER_NAME}, extension: ${source} has already been linked with user ${otherUsers[0].id}`
         )
         return reply.throw.badParams(
           'This address has already been connected to another account.'
@@ -526,7 +533,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
 
       await req.user
-        .addAuthId(AuthProvider.Polkadot, extensionName, {
+        .addAuthId(AuthProvider.Polkadot, source as AuthExtension, {
           name: req.body.name,
           address: req.body.address,
         })

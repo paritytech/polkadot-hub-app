@@ -10,6 +10,7 @@ type Config = {
   skipCronJobs: boolean
   port: number
   appHost: string
+  appIcon: string
   logDbQueries: boolean
   databaseUri: string
   jwtSecret: string
@@ -17,6 +18,7 @@ type Config = {
   oauth2GoogleClientId: string
   oauth2GoogleClientSecret: string
   authMessageToSign: string | undefined
+  walletConnectProjectId: string | undefined
   superusers: string[]
   workingHoursTestGroup: string[]
 }
@@ -27,6 +29,7 @@ const config: Config = {
   skipCronJobs: parseBoolean(process.env.SKIP_CRON_JOBS, false),
   port: parseInt(process.env.PORT || '') || 3000,
   appHost: process.env.APP_HOST || '',
+  appIcon: process.env.APP_ICON || '',
   logDbQueries: parseBoolean(process.env.LOG_DB_QUERIES, false),
   databaseUri: process.env.DATABASE_URI || '',
   jwtSecret: process.env.JWT_SECRET || '',
@@ -38,6 +41,7 @@ const config: Config = {
   workingHoursTestGroup: JSON.parse(
     process.env.WORKING_HOURS_TEST_GROUP || '[]'
   ),
+  walletConnectProjectId: process.env.WALLET_CONNECT_PROJECT_ID,
 }
 
 export default config

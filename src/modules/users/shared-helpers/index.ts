@@ -2,6 +2,15 @@ import dayjs from 'dayjs'
 import dayjsTimezone from 'dayjs/plugin/timezone'
 import dayjsUtc from 'dayjs/plugin/utc'
 
+export const allowedPolkadotAuthProviders = [
+  'polkadot-js',
+  'talisman',
+  'subwallet-js',
+  'subwallet',
+  'novawallet',
+  'walletconnect',
+]
+
 dayjs.extend(dayjsTimezone)
 dayjs.extend(dayjsUtc)
 
@@ -23,3 +32,6 @@ export const parseGmtOffset = (timezone: string): string => {
 
   return 'GMT'.concat(`${sign}`).concat(offsetNumber.toString())
 }
+
+export const formatName = (source: string) =>
+  source.replace(/ /g, '').toLowerCase()

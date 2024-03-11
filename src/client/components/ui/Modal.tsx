@@ -4,7 +4,6 @@ import { useLockScroll } from '#client/utils/hooks'
 import { cn } from '#client/utils'
 import { H2 } from './Text'
 import { RoundButton } from './Button'
-import { Icons } from './Icons'
 
 type ModalProps = {
   title?: string

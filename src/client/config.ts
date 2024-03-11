@@ -42,6 +42,7 @@ type ClientAppConfig = {
   modules: ClientModuleConfig[]
   offices: ClientOfficeConfig[]
   appName: string
+  appIcon: string
   companyName: string
   appHost: string
   mapBoxApiKey: string
@@ -49,6 +50,7 @@ type ClientAppConfig = {
   roleGroups: ClientUserRoleGroup[]
   auth: ClientAuthConfig
   authMessageToSign: string
+  walletConnectProjectId: string
 }
 
 type ClientAuthConfig = { providers: string[] }
@@ -59,11 +61,14 @@ const config: ClientAppConfig = {
   appName: process.env.APP_NAME as unknown as string,
   companyName: process.env.COMPANY_NAME as unknown as string,
   appHost: process.env.APP_HOST as unknown as string,
+  appIcon: process.env.APP_ICON as unknown as string,
   mapBoxApiKey: process.env.MAPBOX_API_KEY as unknown as string,
   layout: process.env.LAYOUT as unknown as Layout,
   roleGroups: process.env.ROLE_GROUPS as unknown as ClientUserRoleGroup[],
   auth: process.env.AUTH as unknown as ClientAuthConfig,
   authMessageToSign: process.env.AUTH_MESSAGE_TO_SIGN as unknown as string,
+  walletConnectProjectId: process.env
+    .WALLET_CONNECT_PROJECT_ID as unknown as string,
 }
 
 export default config

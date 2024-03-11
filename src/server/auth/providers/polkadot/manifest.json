@@ -1,4 +1,4 @@
 {
   "id": "polkadot",
-  "requiredCredentials": []
+  "requiredCredentials": ["ALLOWED_EXTENSIONS", "AUTH_MESSAGE_TO_SIGN"]
 }

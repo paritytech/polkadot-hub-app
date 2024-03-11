@@ -4,9 +4,9 @@ import { decodeAddress, signatureVerify } from '@polkadot/util-crypto'
 import { Op } from 'sequelize'
 import dayjs from 'dayjs'
 import { jwt } from '#server/utils'
-import { sequelize } from '#server/db'
 import config from '#server/config'
-import { Session } from '#modules/users/server/models'
+import { Session, User } from '#modules/users/server/models'
+import { sequelize } from '#server/db'
 
 export const getSession = async (
   userId: string,
@@ -25,27 +25,27 @@ export const getSession = async (
   })
 }
 
-export const getUserProviderQuery = (
-  provider: string,
-  extension: string,
-  address: string
-) => {
-  const providerEsc = sequelize.escape(provider)
-  const extensionEsc = sequelize.escape(extension)
-  const addressEsc = sequelize.escape(address)
-  return {
-    authIds: {
-      [Op.and]: [
-        { [Op.not]: '{}' }, // Filter fields that are not an empty object
-        sequelize.literal(`jsonb_exists("User"."authIds", ${providerEsc})`),
-        sequelize.literal(`exists(
-            select 1 from jsonb_array_elements("User"."authIds"->${providerEsc}->${extensionEsc}) as elem
-            where elem->>'address' = ${addressEsc}
-          )`),
-      ],
-    },
-  }
-}
+export const getUserByProvider = async (provider: string, address: string) =>
+  sequelize.query(
+    `
+    SELECT * FROM "users" AS "User"
+    WHERE "User"."authIds" != '{}' AND
+    EXISTS (
+      SELECT 1
+      FROM jsonb_each("User"."authIds" -> :provider) AS extensions
+      WHERE EXISTS (
+        SELECT 1
+        FROM jsonb_array_elements(extensions.value) AS elem
+        WHERE elem ->> 'address' = :address
+      )
+    )
+  `,
+    {
+      model: User,
+      mapToModel: true, // Maps the results to the model, so instances of User are returned
+      replacements: { provider, address },
+    }
+  )
 
 export const isValidSignature = (address: string, signature: string) => {
   try {

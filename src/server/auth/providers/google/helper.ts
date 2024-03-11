@@ -1,6 +1,6 @@
 import { User } from '#modules/users/server/models'
 import { FastifyInstance } from 'fastify'
-import { getUserProviderQuery, isValidSignature } from '../helper'
+import { getUserByProvider, isValidSignature } from '../helper'
 import { GoogleParsedStateQueryParam } from '#server/types'
 import { AuthProvider } from '#shared/types'
 
@@ -51,13 +51,10 @@ export const linkPolkadotAccountToExistingUser = async (
             `The signature is invalid. Cannot link to polkadot user.`
           )
         }
-        const users = await fastify.db.User.findAllActive({
-          where: getUserProviderQuery(
-            AuthProvider.Polkadot,
-            account.meta.source,
-            account.address
-          ),
-        })
+        const users = await getUserByProvider(
+          AuthProvider.Polkadot,
+          account.address
+        )
         if (!!users.length) {
           throw new Error(
             'There is already a user with this address linked. Cannot connect the same address to two users.'

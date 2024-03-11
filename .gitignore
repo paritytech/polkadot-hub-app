@@ -20,3 +20,6 @@ src/shared/permissions/__import-permissions.ts
 src/server/types/__import-models-integrations.ts
 src/client/stores/__import-stores.tsx
 src/client/components/__import-components.tsx
+
+yalc.lock
+.yalc
