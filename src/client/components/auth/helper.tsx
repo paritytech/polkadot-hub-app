@@ -248,7 +248,8 @@ export const getAddressType = (address: string) => {
     return 'polkadot'
   }
 
-  if (address.startsWith('C')) {
+  const regex = /^[CDFGHJ]/i
+  if (regex.test(address)) {
     return 'kusama'
   }
 

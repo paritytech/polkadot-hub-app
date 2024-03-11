@@ -32,6 +32,7 @@ import {
 } from './helpers'
 
 import { Metadata } from '../metadata-schema'
+import { allowedPolkadotAuthProviders } from '../shared-helpers'
 
 const ROLES_ALLOWED_TO_BE_ON_MAP = appConfig.getRolesByPermission(
   Permissions.UseMap
@@ -467,11 +468,12 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       const authIds = req.user.authIds[PROVIDER_NAME] ?? []
-      const alreadyLinked = authIds[req.body.extensionName]
-        ? authIds[req.body.extensionName].find(
-            (one) => one.address == req.body.address
-          )
-        : false
+      const alreadyLinked = Object.keys(authIds).map((name) =>
+        authIds[name as AuthExtension].find(
+          (one) => one.address == req.body.address
+        )
+      )
+
       if (!alreadyLinked) {
         return reply.throw.badParams()
       }
@@ -493,11 +495,16 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      const source: AuthExtension = req.body.extensionName
-        .replaceAll(' ', '')
-        .toLowerCase()
+      const extensionName = req.body.extensionName as string
+      const source = extensionName.replace(/ /g, '').toLowerCase()
+
+      if (!allowedPolkadotAuthProviders.includes(source)) {
+        return reply.throw.badParams(
+          'This authentication provider is not approved. Please contact administrator.'
+        )
+      }
       const providerAuthIds = req.user.authIds[AuthProvider.Polkadot] ?? []
-      const extensionIds = providerAuthIds[source] ?? []
+      const extensionIds = providerAuthIds[source as AuthExtension] ?? []
 
       if (!!Object.keys(providerAuthIds).length && extensionIds) {
         const alreadyLinked = extensionIds.find(
@@ -526,7 +533,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
 
       await req.user
-        .addAuthId(AuthProvider.Polkadot, source, {
+        .addAuthId(AuthProvider.Polkadot, source as AuthExtension, {
           name: req.body.name,
           address: req.body.address,
         })

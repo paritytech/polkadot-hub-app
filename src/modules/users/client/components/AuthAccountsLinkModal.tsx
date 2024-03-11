@@ -15,8 +15,8 @@ export const AuthAccountsLinkModal: React.FC<{
   onChoose: (addr: ExtensionAccount) => Promise<void>
   onCancel: () => void
   loading: boolean
-  linkedAccounts: Record<string, AuthAddressPair[]>
-}> = ({ wallets, onChoose, onCancel, loading, linkedAccounts }) => {
+  linkedAddresses: string[]
+}> = ({ wallets, onChoose, onCancel, loading, linkedAddresses }) => {
   const [step, setStep] = useState('')
   const [error, setError] = useState<JSX.Element | string>()
   const [selectedAddress, setSelectedAddress] = useState('')
@@ -40,9 +40,11 @@ export const AuthAccountsLinkModal: React.FC<{
                 wallet.type as WalletType.INJECTED | WalletType.WALLET_CONNECT
               ](wallet)
               setChosenWallet(wallet)
-              console.log(accounts)
-              console.log(linkedAccounts)
-              setAccounts(accounts)
+              setAccounts(
+                accounts.filter(
+                  (account) => !linkedAddresses.includes(account.address)
+                )
+              )
               setStep(AuthSteps.ChooseAccount)
             } catch (e) {
               console.error(e)

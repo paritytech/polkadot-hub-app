@@ -24,30 +24,21 @@ import { AuthAccountsLinkModal } from './AuthAccountsLinkModal'
 import { AuthAccount } from './AuthAccount'
 import { AuthAddressPair, AuthExtension } from '#shared/types'
 import config from '#client/config'
-import { filterOutForbiddenAuth } from '../helpers'
 import { DeleteUserModal } from './DeleteUserModal'
 import dayjs from 'dayjs'
 import { DATE_FORMAT_DAY_NAME } from '#client/constants'
-import { WalletType } from '@polkadot-onboard/core'
 import { getWallets } from '#client/components/auth/helper'
+import { formatName } from '#modules/users/shared-helpers'
 
 export const MySettings: React.FC = () => {
   useDocumentTitle('Settings')
-  // @todo move to some config?
-  const allowedWallets = [
-    'polkadot-js',
-    'talisman',
-    'subwallet-js',
-    'subwallet',
-    'novawallet',
-    'walletconnect',
-  ]
   const me = useStore(stores.me)
   const [showModal, setShowModal] = useState(false)
   const [wallets, setWallets] = useState<any>([])
   const [linkedAccounts, setLinkedAccounts] = useState<
     Record<string, AuthAddressPair[]>
   >({})
+  const [linkedAddresses, setLinkedAddresses] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
   const officeId = useStore(stores.officeId)
@@ -73,8 +64,16 @@ export const MySettings: React.FC = () => {
 
   useEffect(() => {
     if (me) {
-      const res = filterOutForbiddenAuth(me.authIds, allowedWallets)
-      setLinkedAccounts(res ?? [])
+      const addresses: Array<string[]> = []
+      const linked: Record<string, AuthAddressPair[]> = {}
+      Object.entries(me.authIds['polkadot']).forEach(
+        ([walletName, authAddressPairs]) => {
+          linked[formatName(walletName)] = authAddressPairs
+          addresses.push(authAddressPairs.map((a) => a.address))
+        }
+      )
+      setLinkedAddresses(addresses.flat())
+      setLinkedAccounts(linked)
     }
   }, [me])
 
@@ -192,7 +191,7 @@ export const MySettings: React.FC = () => {
         <AuthAccountsLinkModal
           wallets={wallets}
           loading={loading}
-          linkedAccounts={linkedAccounts}
+          linkedAddresses={linkedAddresses}
           onChoose={async (selectedAccount: any) => {
             try {
               if (!selectedAccount) {
