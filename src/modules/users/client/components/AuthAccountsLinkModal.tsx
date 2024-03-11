@@ -34,7 +34,7 @@ export const AuthAccountsLinkModal: React.FC<{
       case AuthSteps.ChooseWallet:
         return AuthStepsComponent[AuthSteps.ChooseWallet]({
           wallets,
-          onClickConnect: async (wallet: BaseWallet) => {
+          onConnected: async (wallet: BaseWallet) => {
             try {
               const accounts = await getAccountsByType[
                 wallet.type as WalletType.INJECTED | WalletType.WALLET_CONNECT
@@ -56,7 +56,7 @@ export const AuthAccountsLinkModal: React.FC<{
           accounts,
           chosenWallet,
           onAddressSelect: (addr: string) => setSelectedAddress(addr),
-          onWalletConnectClick: async () => {
+          onConnected: async () => {
             if (chosenWallet) {
               const accounts = await getAccountsByType[
                 WalletType.WALLET_CONNECT

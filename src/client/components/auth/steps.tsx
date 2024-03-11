@@ -104,6 +104,15 @@ const ChooseAccountStep: React.FC<ChooseAccountProps> = ({
     () => accounts.find((a) => a.address === selectedAddress),
     [selectedAddress]
   )
+  const labels = accounts.map((account) => {
+    return {
+      label: `${account.name}  ${
+        account.addressType ? `- ${account.addressType}` : ''
+      } (${account.source})`,
+      value: account.address,
+    }
+  })
+
   return (
     <StepWrapper title="Choose account">
       <div>
@@ -115,10 +124,7 @@ const ChooseAccountStep: React.FC<ChooseAccountProps> = ({
             setSelectedAddress(v)
             onAddressSelect(v)
           }}
-          options={accounts.map((account) => ({
-            label: `${account.name} (${account.source})`,
-            value: account.address,
-          }))}
+          options={labels}
         ></Select>
         <div className="flex align-middle justify-center gap-2 mb-2">
           <Icons.WarningIcon />

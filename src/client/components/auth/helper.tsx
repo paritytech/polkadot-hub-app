@@ -18,6 +18,7 @@ export const LoginIcons: Record<string, JSX.Element> = {
   google: <Icons.Gmail />,
   polkadot: <Icons.Polkadot />,
 }
+const { encodeAddress } = require('@polkadot/util-crypto')
 
 export const providerUrls: Record<string, string> = {
   google: `${config.appHost}/auth/google/login`,
@@ -40,12 +41,11 @@ export type ExtendedMetadata = {
 
 export type ExtensionAccount = {
   address: string
+  addressType: string
   name: string
   source: string
   wallet: BaseWallet
 }
-
-type AddressAccount = { address: string }
 
 export const ErrorComponent = {
   [Errors.NoAccountsError]: (metadata: ExtendedMetadata) => (
@@ -208,29 +208,71 @@ export const ButtonWrapper = ({
   </div>
 )
 
+export const getPolkadotAddress = (address: string) => {
+  // https://wiki.polkadot.network/docs/learn-account-advanced#address-format
+  const isPolkaDotAddress = address.startsWith('1')
+  if (isPolkaDotAddress) {
+    return address
+  } else {
+    try {
+      return encodeAddress(address, 0)
+    } catch (e) {
+      console.error(e)
+      return ''
+    }
+  }
+}
+
+export const getSubstrateAddress = (address: string) => {
+  if (!address) {
+    return
+  }
+  const isSubstrateAddress = address.startsWith('5')
+  if (isSubstrateAddress) {
+    return address
+  } else {
+    try {
+      return encodeAddress(address)
+    } catch (e) {
+      console.error(e)
+      return ''
+    }
+  }
+}
+
+export const getAddressType = (address: string) => {
+  if (address.startsWith('5')) {
+    return 'substrate'
+  }
+  if (address.startsWith('1')) {
+    return 'polkadot'
+  }
+
+  if (address.startsWith('C')) {
+    return 'kusama'
+  }
+
+  return ''
+}
+
 export const getAccountsByType: Record<
   WalletType.WALLET_CONNECT | WalletType.INJECTED,
   (walletInfo: BaseWallet) => Promise<ExtensionAccount[] | []>
 > = {
   [WalletType.WALLET_CONNECT]: async (walletInfo: BaseWallet) => {
     let accounts = await walletInfo.getAccounts()
-    const uniqueAccounts: string[] = Array.from(
-      new Set(
-        accounts
-          .filter((a: AddressAccount) => a.address.startsWith('1'))
-          .map((a: AddressAccount) => a.address)
-      )
-    )
-
-    return uniqueAccounts.map((addr: string) => {
-      return {
-        name: '...' + addr.slice(addr.length - 12, addr.length),
-        address: addr,
-        // @ts-ignore // @fixme - define a type in wallet-connect.ts package in polkadot-onboard
+    const uniqueAccounts = Array.from(new Set(accounts.map((a) => a.address)))
+    const formattedAccounts = []
+    for (const address of uniqueAccounts) {
+      formattedAccounts.push({
+        name: `${address.slice(0, 6)}...${address.slice(-12)}`,
+        address: address,
+        addressType: getAddressType(address),
         source: walletInfo.session.peer.metadata.name,
         wallet: walletInfo,
-      }
-    })
+      })
+    }
+    return formattedAccounts
   },
   [WalletType.INJECTED]: async (walletInfo: BaseWallet) => {
     let accounts: Account[] = await walletInfo.getAccounts()

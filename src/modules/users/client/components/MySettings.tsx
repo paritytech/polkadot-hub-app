@@ -236,7 +236,7 @@ export const MySettings: React.FC = () => {
                   (provider, index) =>
                     (
                       <div key={`${provider}-${index}`}>
-                        {!!index && <HR className="mb-2" />}
+                        {!!index && <HR className="mb-6" />}
                         {providerComponents[provider]}
                       </div>
                     ) ?? ''

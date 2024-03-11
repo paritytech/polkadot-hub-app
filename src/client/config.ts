@@ -42,6 +42,7 @@ type ClientAppConfig = {
   modules: ClientModuleConfig[]
   offices: ClientOfficeConfig[]
   appName: string
+  appIcon: string
   companyName: string
   appHost: string
   mapBoxApiKey: string
@@ -60,6 +61,7 @@ const config: ClientAppConfig = {
   appName: process.env.APP_NAME as unknown as string,
   companyName: process.env.COMPANY_NAME as unknown as string,
   appHost: process.env.APP_HOST as unknown as string,
+  appIcon: process.env.APP_ICON as unknown as string,
   mapBoxApiKey: process.env.MAPBOX_API_KEY as unknown as string,
   layout: process.env.LAYOUT as unknown as Layout,
   roleGroups: process.env.ROLE_GROUPS as unknown as ClientUserRoleGroup[],

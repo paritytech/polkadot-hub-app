@@ -61,6 +61,7 @@ function getBuildConfig(): BuildOptions {
       'process.env.APP_NAME': JSON.stringify(appConfig.config.application.name),
       'process.env.COMPANY_NAME': JSON.stringify(appConfig.config.company.name),
       'process.env.APP_HOST': JSON.stringify(config.appHost),
+      'process.env.APP_ICON': JSON.stringify(config.appIcon),
       'process.env.MAPBOX_API_KEY': JSON.stringify(process.env.MAPBOX_API_KEY),
       'process.env.AUTH_MESSAGE_TO_SIGN': JSON.stringify(
         config.authMessageToSign

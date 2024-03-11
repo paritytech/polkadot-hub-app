@@ -65,14 +65,16 @@ export const PolkadotProvider: React.FC = () => {
   const googleUrl = useMemo(() => {
     const url = new URL(providerUrls.google)
     url.searchParams.append('callbackPath', '/settings')
-    url.searchParams.append(
-      'account',
-      JSON.stringify({
-        address: selectedAccount?.address,
-        name: selectedAccount?.name,
-        source: selectedAccount?.source,
-      })
-    )
+    if (selectedAccount) {
+      url.searchParams.append(
+        'account',
+        JSON.stringify({
+          address: selectedAccount?.address,
+          name: selectedAccount?.name,
+          source: selectedAccount?.source,
+        })
+      )
+    }
     if (userSignature) {
       url.searchParams.append('signature', userSignature)
     }

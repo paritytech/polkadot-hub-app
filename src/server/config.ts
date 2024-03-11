@@ -10,6 +10,7 @@ type Config = {
   skipCronJobs: boolean
   port: number
   appHost: string
+  appIcon: string
   logDbQueries: boolean
   databaseUri: string
   jwtSecret: string
@@ -28,6 +29,7 @@ const config: Config = {
   skipCronJobs: parseBoolean(process.env.SKIP_CRON_JOBS, false),
   port: parseInt(process.env.PORT || '') || 3000,
   appHost: process.env.APP_HOST || '',
+  appIcon: process.env.APP_ICON || '',
   logDbQueries: parseBoolean(process.env.LOG_DB_QUERIES, false),
   databaseUri: process.env.DATABASE_URI || '',
   jwtSecret: process.env.JWT_SECRET || '',
