@@ -4,16 +4,17 @@ import {
   Background,
   ComponentWrapper,
   H1,
-  P,
   H2,
-  Icons,
   H3,
 } from '#client/components/ui'
-import { EventType, Map } from '#client/components/ui/Map'
+import { Map } from '#client/components/ui/Map'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import { useDocumentTitle, useOffice } from '#client/utils/hooks'
 import { useVisitsAreas } from '#modules/visits/client/queries'
+import { dropMarker } from '#client/components/ui/Map/mapbox'
+import dayjs from 'dayjs'
+import { useMemo } from 'react'
 
 export const AboutPage: React.FC = () => {
   const page = useStore(stores.router)
@@ -23,6 +24,26 @@ export const AboutPage: React.FC = () => {
   const { data: areas = [] } = useVisitsAreas(office?.id || '')
 
   useDocumentTitle(`About ${office?.name}`)
+
+  const onLoad = (mapboxgl: any, map: mapboxgl.Map) =>
+    dropMarker(mapboxgl, map, office?.coordinates)
+  const events = [
+    {
+      name: 'load',
+      action: onLoad,
+    },
+  ]
+
+  const coreHours = useMemo(() => {
+    if (!office || office.workingHours?.length !== 2) {
+      return ''
+    }
+    return `${dayjs(office.workingHours[0], 'HH:mm').format('hA')} - ${dayjs(
+      office.workingHours[1],
+      'HH:mm'
+    ).format('hA')} ${!!office.workingDays ? `, ${office.workingDays}` : ''}`
+  }, [office])
+
   if (!office) {
     return (
       <Background>
@@ -36,6 +57,7 @@ export const AboutPage: React.FC = () => {
       </Background>
     )
   }
+
   return (
     <Background>
       <Header />
@@ -46,36 +68,46 @@ export const AboutPage: React.FC = () => {
 
           <div className="flex flex-col gap-10">
             <Map
-              centerPoint={[13.437433843390053, 52.49346465299907]}
+              centerPoint={office.coordinates}
               zoom={15}
-              events={[]}
+              events={events}
               className={'h-[300px]'}
             />
             <div className="flex flex-col">
               <H2>Address</H2>
               <p>
-                Glogauer Straße 6, Berlin, <br /> Germany Entrance through the
-                courtyard
+                {office.address}, {office?.city}
               </p>
+              {office.directions && office.directions}
             </div>
+
+            {office &&
+              (office.allowDeskReservation || office?.allowRoomReservation) && (
+                <div>
+                  <H2>Available facilities</H2>
+                  <div className="flex gap-2">
+                    <ul className="list-disc list-inside">
+                      {office.allowDeskReservation && <li>desk bookings</li>}
+                      {office.allowRoomReservation && (
+                        <li>meeting room bookings</li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+              )}
             <div>
-              <H2>Available facilities</H2>
-              <div className="flex gap-2">
-                <Icons.Clock fillClassName="stroke-black" />{' '}
-                <Icons.Cake fillClassName="stroke-black" />{' '}
-                <Icons.Socks fillClassName="stroke-black" />
-                <Icons.Plane />
-              </div>
-            </div>
-            <div>
-              <H2>Opening hours</H2>
-              <p>9am - 6pm, Monday - Friday</p>
+              {office.workingHours && (
+                <div>
+                  <H2>Opening hours</H2>
+                  <p>{coreHours}</p>
+                </div>
+              )}
               <br />
               <p>
-                We recommend use of the office only during 'core' working hours
-                (9am - 6pm, Monday - Friday). Any earlier or later than this, or
-                on a weekend, and we are unable to guarantee entrance or exit to
-                and from the office spaces.{' '}
+                We recommend use of the hub only during 'core' working hours{' '}
+                {!!coreHours && `(${coreHours})`}. Any earlier or later than
+                this, or on a weekend, and we are unable to guarantee entrance
+                or exit to and from the office spaces.{' '}
               </p>
             </div>
           </div>
@@ -84,13 +116,13 @@ export const AboutPage: React.FC = () => {
           <H1 className="my-10 text-center">Floor plan</H1>
           <div className="flex flex-col gap-20">
             {areas.map((area) => {
-              if (area.id === 'none') {
+              if (area.id === 'none' || !area.available || !area.bookable) {
                 return
               }
               return (
                 <div key={area.id}>
                   <H3>{area.name}</H3>
-                  <img src={area.map} className="" alt={area.map} />
+                  <img className="opacity-80" src={area.map} alt={area.map} />
                 </div>
               )
             })}

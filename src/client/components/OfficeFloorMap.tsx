@@ -20,7 +20,7 @@ type PointComponentFunctionProps = (
 ) => Element | JSX.Element
 
 const pointCommonStyle =
-  'rounded-sm border-2 -translate-y-1/2 -translate-x-1/2 hover:scale-105 transition-all delay-100 '
+  'rounded border-2 -translate-y-1/2 -translate-x-1/2 hover:scale-105 transition-all delay-100'
 
 const PointComponent: Record<
   VisitType.Visit | VisitType.RoomReservation,
@@ -34,6 +34,7 @@ const PointComponent: Record<
       color={isSelected ? 'purple' : 'default'}
       className={cn(
         pointCommonStyle,
+        ' w-fit',
         isSelected
           ? 'border-pink-600 bg-accents-pink'
           : 'bg-violet-300 border-violet-300',

@@ -111,6 +111,15 @@ export const office = z
     timezone: z.string(),
     country: z.string(),
     city: z.string(),
+    coordinates: z.tuple([z.number(), z.number()]).optional(),
+    directions: z.string().optional(),
+    workingHours: z
+      .tuple([
+        z.string().regex(/^([01][0-9]|2[0-4]):[0-5][0-9]$/),
+        z.string().regex(/^([01][0-9]|2[0-4]):[0-5][0-9]$/),
+      ])
+      .optional(),
+    workingDays: z.string().optional(),
     allowGuestInvitation: z.boolean(),
     allowDeskReservation: z.boolean(),
     allowRoomReservation: z.boolean(),
