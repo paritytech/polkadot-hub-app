@@ -62,8 +62,8 @@ export const linkPolkadotAccountToExistingUser = async (
         }
 
         await user
-          .addAuthId(AuthProvider.Polkadot, account.meta.source, {
-            name: account.meta.name,
+          .addAuthId(AuthProvider.Polkadot, account.source, {
+            name: account.name,
             address: account.address,
           })
           .save()
