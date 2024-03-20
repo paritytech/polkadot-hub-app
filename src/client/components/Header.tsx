@@ -41,6 +41,13 @@ export const Header: React.FC = () => {
         icon: 'Gear',
       })
     }
+    if (stores.isAdmin) {
+      items.push({
+        name: 'Admin',
+        link: '/admin',
+        icon: 'Person',
+      })
+    }
     items.push({
       name: 'Logout',
       icon: 'Logout',

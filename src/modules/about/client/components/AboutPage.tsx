@@ -14,11 +14,14 @@ import { useDocumentTitle, useOffice } from '#client/utils/hooks'
 import { useVisitsAreas } from '#modules/visits/client/queries'
 import { dropMarker } from '#client/components/ui/Map/mapbox'
 import dayjs from 'dayjs'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { openPage } from '#client/stores'
 
 export const AboutPage: React.FC = () => {
   const page = useStore(stores.router)
   const hubId = page?.route === 'aboutPage' ? page?.params?.hubId : null
+  const officeId = useStore(stores.officeId)
+  const [currentOfficeId, setCurrentOfficeId] = useState(officeId)
 
   const office = useOffice(hubId ?? '')
   const { data: areas = [] } = useVisitsAreas(office?.id || '')
@@ -33,6 +36,12 @@ export const AboutPage: React.FC = () => {
       action: onLoad,
     },
   ]
+  useEffect(() => {
+    if (currentOfficeId !== officeId) {
+      openPage(stores.router, 'aboutPage', { hubId: officeId })
+      setCurrentOfficeId(officeId)
+    }
+  }, [officeId])
 
   const coreHours = useMemo(() => {
     if (!office || office.workingHours?.length !== 2) {

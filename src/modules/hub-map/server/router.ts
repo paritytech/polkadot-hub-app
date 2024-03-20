@@ -11,6 +11,7 @@ import dayjs from 'dayjs'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import {
   formatEvent,
+  formatGuestInvite,
   formatRoomReservationsResult,
   formatVisit,
   getDate,
@@ -174,6 +175,53 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         }
       }
 
+      const today = dayjs().startOf('day')
+      const lastDay = dayjs().startOf('day').add(14, 'days')
+
+      const guests = await fastify.db.GuestInvite.findAll({
+        attributes: ['fullName', 'id', 'dates'],
+        where: {
+          creatorUserId: req.user.id,
+          office: officeId,
+          status: 'confirmed',
+        },
+        raw: true,
+      })
+
+      const dailyGuests = []
+      for (const oneGuest of guests) {
+        const guestInvitations = oneGuest.dates
+          .map((date) => ({
+            ...oneGuest,
+            date,
+          }))
+          .filter(
+            (invite) =>
+              dayjs(invite.date).isSameOrAfter(today) &&
+              dayjs(invite.date).isSameOrBefore(lastDay)
+          )
+
+        for (const oneInvitation of guestInvitations) {
+          const visit = await fastify.db.Visit.findOne({
+            where: {
+              'metadata.guestInviteId': oneInvitation.id,
+            },
+          })
+          const invite = formatGuestInvite(oneInvitation, visit)
+          dailyGuests.push(invite)
+          addToUpcomingByDate(
+            upcomingByDate,
+            invite,
+            dayjs(invite.date).toString(),
+            VisitType.Guest
+          )
+        }
+      }
+
+      if (!!dailyGuests.length) {
+        upcomingItems.push(dailyGuests[0] as ScheduledItemType)
+      }
+
       return {
         upcoming: upcomingItems.sort(
           (a: ScheduledItemType, b: ScheduledItemType) =>
@@ -183,6 +231,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           [VisitType.Visit]: dailyEventsVisits,
           [VisitType.RoomReservation]: dailyEventsReservations,
           event: myEvents,
+          [VisitType.Guest]: dailyGuests,
         },
         byDate: upcomingByDate,
       }

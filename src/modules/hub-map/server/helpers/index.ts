@@ -1,3 +1,4 @@
+import { GuestInvite } from '#modules/guest-invites/server/models'
 import { appConfig } from '#server/app-config'
 import { DATE_FORMAT, FRIENDLY_DATE_FORMAT_SHORT } from '#server/constants'
 import {
@@ -41,6 +42,24 @@ export const formatRoomReservationsResult = (
     description: officeRoom?.description ?? '',
     type: VisitType.RoomReservation,
     status: reservation.status,
+  }
+}
+
+export const formatGuestInvite = (
+  g: GuestInvite & { date: string },
+  v: Visit
+): ScheduledItemType => {
+  return {
+    id: v.id,
+    value: g.fullName,
+    type: VisitType.Guest,
+    date: g.date,
+    dates: g.dates,
+    description: `Desk ${v.deskName} - ${v.areaName}`,
+    dateTime: `Guest visit`,
+    areaId: v.areaId,
+    objectId: v.deskId,
+    status: g.status,
   }
 }
 
@@ -109,6 +128,10 @@ export const getVisits = async (
     officeId,
     status: {
       [Op.in]: ['confirmed', 'pending'],
+    },
+    [Op.or]: {
+      metadata: { [Op.eq]: {} },
+      'metadata.guestInvite': { [Op.ne]: 'true' },
     },
     date: {
       [Op.gte]: dayjs(date).toDate(),

@@ -5,7 +5,7 @@ export type ScheduledItemType = {
   value: string
   type: string
   date: string
-  dateTime: string
+  dateTime?: string
   description: string
   areaId?: string
   objectId?: string
