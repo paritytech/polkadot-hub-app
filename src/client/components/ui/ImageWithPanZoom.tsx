@@ -61,7 +61,10 @@ export const ImageWithPanZoom = ({
             ref={imageRef}
             src={src}
             alt={alt}
-            className={cn('max-w-none h-auto', className)}
+            className={cn(
+              'max-w-auto max-h-[720px] m-auto object-cover',
+              className
+            )}
           />
           <div className="absolute top-0 left-0 w-full h-full">
             {/*  passing scale so we can do reverse scaling on the mapped points */}

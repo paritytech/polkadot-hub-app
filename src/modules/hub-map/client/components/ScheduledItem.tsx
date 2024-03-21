@@ -1,8 +1,9 @@
 import React from 'react'
 import { cn } from '#client/utils'
-import { ScheduledItemType, VisitType } from '#shared/types'
+import { VisitType } from '#shared/types'
 import dayjs from 'dayjs'
 import { FButton, P } from '#client/components/ui'
+import { ScheduledItemType } from '#modules/hub-map/types'
 
 export const PageUrls: Record<string, string> = {
   event: '/events',
@@ -11,21 +12,21 @@ export const PageUrls: Record<string, string> = {
 const ColorsBg: Record<string, string> = {
   [VisitType.RoomReservation]: 'bg-cta-hover-jade',
   [VisitType.Visit]: 'bg-cta-hover-purple',
-  [VisitType.Guest]: 'bg-cta-hover-cerullean',
+  [VisitType.Guest]: 'bg-cta-hover-cerulean',
   event: 'bg-gray-50',
 }
 
 const ColorsBorder: Record<string, string> = {
   [VisitType.RoomReservation]: 'border-cta-jade',
   [VisitType.Visit]: 'border-cta-purple',
-  [VisitType.Guest]: 'border-cta-hover-cerullean',
+  [VisitType.Guest]: 'border-cta-cerulean',
   event: 'border-gray-300',
 }
 
 const ColorsHover: Record<string, string> = {
-  [VisitType.RoomReservation]: `hover:border-cta-jade`,
-  [VisitType.Visit]: `hover:border-cta-purple`,
-  [VisitType.Guest]: `hover:border-cta-hover-cerullean'`,
+  [VisitType.RoomReservation]: 'hover:border-cta-jade',
+  [VisitType.Visit]: 'hover:border-cta-purple',
+  [VisitType.Guest]: 'hover:border-cta-cerulean',
   event: 'hover:border-gray-300',
 }
 
@@ -74,7 +75,8 @@ export const ScheduledItem = ({
     id: string,
     type: string,
     value: string,
-    date: string
+    date: string,
+    dates?: string[]
   ) => void
 }) => {
   const iAmSelected = selected == sheduledItem.id
@@ -114,7 +116,9 @@ export const ScheduledItem = ({
               </p>
             </div>
             <p className="text-text-secondary text-sm">
-              {sheduledItem.dateTime ? sheduledItem.dateTime : ''}
+              {sheduledItem.extraInformation
+                ? sheduledItem.extraInformation
+                : ''}
             </p>
             <p className="hidden sm:block text-text-tertiary text-sm break-all">
               {sheduledItem.description}
@@ -131,7 +135,8 @@ export const ScheduledItem = ({
                 sheduledItem.id,
                 sheduledItem.type,
                 sheduledItem.value,
-                sheduledItem.date
+                sheduledItem.date,
+                sheduledItem.dates
               )
             }
           >

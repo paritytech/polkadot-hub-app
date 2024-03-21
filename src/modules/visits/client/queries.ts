@@ -126,14 +126,16 @@ export const useVisitConfig = (officeId: string | null) => {
 
 export const useOfficeVisitors = (
   officeId: string,
-  date: string
+  date: string,
+  disable?: boolean
   // opts: { retry: boolean } = { retry: true }
 ) => {
   const path = '/user-api/visits/visitors'
   return useQuery<OfficeVisitor[], AxiosError>(
     [path, { office: officeId, date }],
     async ({ queryKey }) =>
-      (await api.get<OfficeVisitor[]>(path, { params: queryKey[1] })).data
+      (await api.get<OfficeVisitor[]>(path, { params: queryKey[1] })).data,
+    { enabled: !disable }
     // { retry: opts.retry }
   )
 }

@@ -1,4 +1,4 @@
-import { FButton, H2, H3, Icons, WidgetWrapper } from '#client/components/ui'
+import { FButton, H3, WidgetWrapper } from '#client/components/ui'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import { useOffice } from '#client/utils/hooks'
@@ -17,10 +17,27 @@ export const AboutWidget: React.FC = () => {
       'HH:mm'
     ).format('hA')} ${!!office.workingDays ? `, ${office.workingDays}` : ''}`
   }, [office])
+
+  if (
+    !!office &&
+    !office.allowDeskReservation &&
+    !office.allowRoomReservation
+  ) {
+    return <></>
+  }
+
   return (
-    <WidgetWrapper title="About">
+    <WidgetWrapper title={`About ${office?.name} Hub`}>
       <div className="flex flex-col gap-5">
-        {<img src="/maps/berlin.png"></img>}
+        <img
+          src={`/maps/${office?.id}.png`}
+          className="hover:cursor-pointer"
+          onClick={() => stores.goTo('aboutPage', { hubId: officeId })}
+          onError={(e) => {
+            e.target.style.display = 'none'
+          }}
+        ></img>
+
         <div className="flex flex-col">
           {office?.address && (
             <div>
@@ -43,8 +60,11 @@ export const AboutWidget: React.FC = () => {
       </div>
       <FButton
         kind="link"
-        className="mt-4 -ml-2"
-        onClick={() => stores.goTo('aboutPage', { hubId: officeId })}
+        className=" -ml-2"
+        onClick={() => {
+          window.scrollTo(0, 0)
+          stores.goTo('aboutPage', { hubId: officeId })
+        }}
       >
         Show more
       </FButton>

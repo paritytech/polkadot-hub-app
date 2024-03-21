@@ -1,7 +1,6 @@
 import * as React from 'react'
 import {
   Avatar,
-  Input,
   Select,
   StealthMode,
   WidgetWrapper,
@@ -43,7 +42,9 @@ export const _HubMap = () => {
   const office = useOffice(officeId)
   const me = useStore(stores.me)
 
-  const { data: areas = [] } = useVisitsAreas(office?.id || '')
+  const { data: areas = [] } = useVisitsAreas(office?.id || '', {
+    enabled: office?.allowDeskReservation ?? false,
+  })
   const [areaId, setAreaId] = React.useState<string | null>(null)
   const area = React.useMemo(() => areas.find((x) => areaId === x.id), [areaId])
   const [mappablePoints, setMappablePoints] = React.useState<any[]>([])
@@ -91,7 +92,8 @@ export const _HubMap = () => {
 
   const { data: visitors, refetch: refetchVisitors } = useOfficeVisitors(
     officeId,
-    dayjs(date).format(DATE_FORMAT)
+    dayjs(date).format(DATE_FORMAT),
+    !office?.allowDeskReservation
   )
 
   const userIsInOffce = React.useMemo(
@@ -113,7 +115,7 @@ export const _HubMap = () => {
 
   const { data: availableDesks = [] } = useAvailableDesks(
     office?.id || '',
-    [date.format(DATE_FORMAT)] || []
+    office?.allowDeskReservation ? [date.format(DATE_FORMAT)] : []
   )
 
   const resetOfficeVisits = React.useCallback(() => {
@@ -219,7 +221,7 @@ export const _HubMap = () => {
               placeholder={'Select area'}
               containerClassName="w-full sm:w-auto  mb-2 block sm:hidden"
             />
-            <div className="sm:max-w-[780px] h-[400px] sm:h-auto m-auto my-auto sm:my-10">
+            <div className="h-[400px] sm:h-auto m-auto my-auto sm:my-10">
               <OfficeFloorMap
                 area={area}
                 mappablePoints={mappablePoints}

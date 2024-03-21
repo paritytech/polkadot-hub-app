@@ -20,7 +20,6 @@ export const AdminDashboard: React.FC<RootComponentProps> = (props) => {
   }, [offset, unit])
 
   const portalGroups = React.useMemo(() => {
-    console.log('AdminDashboard', props.portals)
     const result = []
     for (const portalId in props.portals) {
       result.push({

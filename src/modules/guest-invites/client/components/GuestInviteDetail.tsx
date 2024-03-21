@@ -22,8 +22,6 @@ import { DATE_FORMAT_DAY_NAME_FULL } from '#client/constants'
 import { useVisitsAreas } from '#modules/visits/client/queries'
 import { OfficeFloorMap } from '#client/components/OfficeFloorMap'
 import { useUserCompact } from '#modules/users/client/queries'
-//@todo better place for this function
-import { addParams } from '#modules/hub-map/client/helpers'
 
 export const GuestInviteDetail = () => (
   <PermissionsValidator

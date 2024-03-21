@@ -20,7 +20,7 @@ type PointComponentFunctionProps = (
 ) => Element | JSX.Element
 
 const pointCommonStyle =
-  'rounded border-2 -translate-y-1/2 -translate-x-1/2 hover:scale-105 transition-all delay-100'
+  'border-2 -translate-y-1/2 -translate-x-1/2 hover:scale-105 transition-all delay-100'
 
 const PointComponent: Record<
   VisitType.Visit | VisitType.RoomReservation,
@@ -58,11 +58,14 @@ const PointComponent: Record<
           ? 'border-pink-600 hover:text-white bg-accents-pink hover:bg-accents-pinkDark'
           : 'text-black bg-green-200 border-green-200 hover:bg-cta-jade hover:border-cta-hover-jadeNoOpacity hover:text-white',
         'sm:p-4',
-        pointCommonStyle
+        pointCommonStyle,
+        'absolute'
       )}
       onClick={onClick(item.id, VisitType.RoomReservation)}
     >
-      <p className="font-bold">{item.name}</p>
+      <p className="font-bold">
+        {!isSelected && 'Book'} {item.name}
+      </p>
     </Button>
   ),
 }
@@ -136,7 +139,7 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
               transform: `scale(${1 / scale})`,
               transformOrigin: 'top left',
             }
-
+            console.log(user)
             if (!!user && !!me) {
               return (
                 <a
@@ -184,7 +187,7 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
         <img
           src={area.map}
           alt={`${area.name} floor plan`}
-          className="block w-full opacity-60"
+          className="opacity-90"
         />
         {mapObjects(1)}
       </div>
@@ -197,7 +200,7 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
         <ImageWithPanZoom
           src={area.map}
           alt={`${area.name} floor plan`}
-          className="block w-full opacity-60 object-contain overflow-hidden rounded-sm"
+          className="block w-full object-contain overflow-hidden rounded-sm"
           imageOverlayMappingFn={(scale: number) => mapObjects(scale)}
           initialStartPosition={
             initialStartPosition ? initialStartPosition.position : undefined
