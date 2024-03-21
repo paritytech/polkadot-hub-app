@@ -66,7 +66,8 @@ export const formatGuestInvite = (
 export const formatVisit = (
   v: Visit,
   user?: User | null
-): ScheduledItemType & (User | { id: string; avatar: string | null }) => {
+): ScheduledItemType &
+  (User | { id: string; avatar: string | null }) & { guestInvite: boolean } => {
   return {
     id: v.id,
     value: `Desk ${v.deskName}`,
@@ -128,10 +129,6 @@ export const getVisits = async (
     officeId,
     status: {
       [Op.in]: ['confirmed', 'pending'],
-    },
-    [Op.or]: {
-      metadata: { [Op.eq]: {} },
-      'metadata.guestInvite': { [Op.ne]: 'true' },
     },
     date: {
       [Op.gte]: dayjs(date).toDate(),

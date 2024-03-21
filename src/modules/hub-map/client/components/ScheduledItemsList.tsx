@@ -8,7 +8,6 @@ import * as stores from '#client/stores'
 import { useUpdateRoomReservationByUser } from '#modules/room-reservation/client/queries'
 import { useUpdateGuestInviteByUser } from '#modules/guest-invites/client/queries'
 import {
-  ScheduledItemType,
   GuestInviteStatus,
   RoomReservationStatus,
   VisitStatus,
@@ -17,6 +16,7 @@ import {
 import { FRIENDLY_DATE_FORMAT } from '#client/constants'
 import { ScheduledItem } from './ScheduledItem'
 import { useUpcoming } from '../queries'
+import { ScheduledItemType } from '#modules/hub-map/types'
 
 export const ScheduledItemsList: React.FC<{
   onChooseCard: (id: string | null, areaId: string | null, date: Dayjs) => void

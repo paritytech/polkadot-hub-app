@@ -1,7 +1,6 @@
 import React, { MouseEventHandler } from 'react'
 import { Avatar, Button, P } from '#client/components/ui'
 import {
-  ScheduledItemType,
   OfficeArea,
   OfficeAreaDesk,
   OfficeRoom,
@@ -11,6 +10,7 @@ import { cn } from '#client/utils'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import { ImageWithPanZoom } from './ui/ImageWithPanZoom'
+import { ScheduledItemType } from '#modules/hub-map/types'
 
 type PointComponentFunctionProps = (
   item: OfficeAreaDesk | OfficeRoom,
@@ -139,12 +139,15 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
               transform: `scale(${1 / scale})`,
               transformOrigin: 'top left',
             }
-            console.log(user)
             if (!!user && !!me) {
+              const userLink = !user.id ? '' : `/profile/${user.id}`
               return (
                 <a
-                  href={`/profile/${user.id}`}
-                  className="absolute -translate-y-1/2 -translate-x-1/2"
+                  href={userLink}
+                  className={cn(
+                    `absolute -translate-y-1/2 -translate-x-1/2`,
+                    !userLink && 'hover:cursor-default'
+                  )}
                   style={style}
                   key={user.id + x.position.x + x.position.y}
                 >
