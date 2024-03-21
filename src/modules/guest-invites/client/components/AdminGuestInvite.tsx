@@ -18,6 +18,7 @@ import {
   ButtonsWrapper,
   Button,
   LabelWrapper,
+  WidgetWrapper,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { OfficeFloorMap } from '#client/components/OfficeFloorMap'
@@ -92,7 +93,7 @@ export const AdminGuestInvite: React.FC = () => {
   )
 
   return (
-    <div>
+    <WidgetWrapper>
       {invite ? (
         <div>
           <div className="block lg:flex">
@@ -194,6 +195,6 @@ export const AdminGuestInvite: React.FC = () => {
       ) : (
         <>Loading...</>
       )}
-    </div>
+    </WidgetWrapper>
   )
 }
