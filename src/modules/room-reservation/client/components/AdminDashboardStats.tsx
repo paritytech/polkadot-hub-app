@@ -7,7 +7,14 @@ import { StackedBarChart, Card } from '#client/components/charts'
 import { DATE_FORMAT } from '#client/constants'
 import * as stores from '#client/stores'
 import * as fp from '#shared/utils/fp'
-import { H2, HR, Placeholder, Table, UserLabel, WidgetWrapper } from '#client/components/ui'
+import {
+  H2,
+  HR,
+  Placeholder,
+  Table,
+  UserLabel,
+  WidgetWrapper,
+} from '#client/components/ui'
 import { RoomReservationAdminDashboardStats } from '#shared/types'
 import { useAdminDashboardStats } from '../queries'
 
@@ -82,7 +89,7 @@ export const AdminDashboardStats: React.FC<Props> = ({ period, unit }) => {
 
   if (!isFetched || !data) {
     return (
-      <WidgetWrapper title="Guest visits">
+      <WidgetWrapper title="Room reservations">
         <Placeholder children="Loading..." />
       </WidgetWrapper>
     )
@@ -90,7 +97,7 @@ export const AdminDashboardStats: React.FC<Props> = ({ period, unit }) => {
 
   if (noData) {
     return (
-      <WidgetWrapper title="Guest visits">
+      <WidgetWrapper title="Room reservations">
         <Placeholder children="No data" />
       </WidgetWrapper>
     )
@@ -99,26 +106,14 @@ export const AdminDashboardStats: React.FC<Props> = ({ period, unit }) => {
   return (
     <WidgetWrapper title="Room reservations">
       <div className="flex gap-x-2 mb-4 overflow-x-scroll">
-        <Card
-          title={data.reservationsToday}
-          subtitle={'Reservations today'}
-        />
-        <Card
-          title={data.reservationsTotal}
-          subtitle={'Total reservations'}
-        />
+        <Card title={data.reservationsToday} subtitle={'Reservations today'} />
+        <Card title={data.reservationsTotal} subtitle={'Total reservations'} />
         <Card
           title={data.anonymouseReservationsPercent + '%'}
           subtitle={'Anonymous reservations'}
         />
-        <Card
-          title={data.bookersToday}
-          subtitle={'Bookers today'}
-        />
-        <Card
-          title={data.bookersTotal}
-          subtitle={'Bookers total'}
-        />
+        <Card title={data.bookersToday} subtitle={'Bookers today'} />
+        <Card title={data.bookersTotal} subtitle={'Bookers total'} />
       </div>
       <StackedBarChart
         xKey="date"
