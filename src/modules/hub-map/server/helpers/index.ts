@@ -15,7 +15,8 @@ import { FastifyInstance } from 'fastify'
 import { Op } from 'sequelize'
 import { Filterable } from 'sequelize'
 
-export const getTime = (date: string | Date) => dayjs(date).format('LT')
+export const getTime = (date: string | Date, tz: string) =>
+  dayjs(date).tz(tz).format('LT')
 
 export const getDate = (d: string) => dayjs(d).format(DATE_FORMAT)
 
@@ -32,12 +33,15 @@ export const formatRoomReservationsResult = (
   )
   return {
     id: reservation.id,
-    extraInformation: `${getTime(reservation.startDate)} - ${getTime(
-      reservation.endDate
-    )}`,
+    extraInformation: `${getTime(
+      reservation.startDate,
+      office?.timezone || ''
+    )} - ${getTime(reservation.endDate, office?.timezone || '')}`,
     objectId: reservation.roomId,
     areaId,
-    date: dayjs(reservation.startDate).format('YYYY-MM-DD'),
+    date: dayjs(reservation.startDate)
+      .tz(office?.timezone)
+      .format('YYYY-MM-DD'),
     value: 'Room ' + officeRoom?.name ?? '',
     description: officeRoom?.description ?? '',
     type: VisitType.RoomReservation,

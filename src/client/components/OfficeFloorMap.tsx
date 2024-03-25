@@ -146,7 +146,9 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
                   href={userLink}
                   className={cn(
                     `absolute -translate-y-1/2 -translate-x-1/2`,
-                    !userLink && 'hover:cursor-default'
+                    !userLink && 'hover:cursor-default',
+                    isSelected &&
+                      'animate-bounce -translate-y-1/2 -translate-x-1/2'
                   )}
                   style={style}
                   key={user.id + x.position.x + x.position.y}
@@ -157,7 +159,7 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
                     size="medium"
                     className={cn(
                       '-translate-y-1/2 -translate-x-1/2 ',
-                      'border-2 border-transparent',
+                      'border-2 border-transparent scale-125',
                       `${
                         me?.id === user?.id
                           ? 'border-purple-500 rounded-full'
@@ -190,7 +192,7 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
         <img
           src={area.map}
           alt={`${area.name} floor plan`}
-          className="opacity-90"
+          className="opacity-80"
         />
         {mapObjects(1)}
       </div>
