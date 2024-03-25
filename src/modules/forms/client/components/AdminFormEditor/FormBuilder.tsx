@@ -631,17 +631,18 @@ const BlockBuilder = ({
   )
 
   const onAddCondition = useCallback(
-    (logicalOperator: '$and' | '$or') => (ev: React.MouseEvent<HTMLElement>) => {
-      ev.preventDefault()
-      const conditions = block.conditions || { $and: [], $or: [] }
-      const condition = getEmptyCondition()
-      const targetConditions =
-        logicalOperator === '$and' ? conditions['$and'] : conditions['$or']
-      targetConditions.push(condition)
-      return onChangeBlock
-        ? onChangeBlock(block.id, 'conditions')(conditions)
-        : undefined
-    },
+    (logicalOperator: '$and' | '$or') =>
+      (ev: React.MouseEvent<HTMLElement>) => {
+        ev.preventDefault()
+        const conditions = block.conditions || { $and: [], $or: [] }
+        const condition = getEmptyCondition()
+        const targetConditions =
+          logicalOperator === '$and' ? conditions['$and'] : conditions['$or']
+        targetConditions.push(condition)
+        return onChangeBlock
+          ? onChangeBlock(block.id, 'conditions')(conditions)
+          : undefined
+      },
     [onChangeBlock, block.id, block.conditions]
   )
 
@@ -905,7 +906,7 @@ const BlockBuilder = ({
             Conditions:
             <br />
             <br />
-            <div className="border border-gray-400 rounded-sm p-4 relative flex">
+            <div className="border border-gray-400 rounded-tiny p-4 relative flex">
               <span className="px-1 bg-gray-200 absolute -top-2 left-2 text-xs text-gray-500">
                 AND
               </span>
@@ -924,7 +925,7 @@ const BlockBuilder = ({
                   </Button>
                 </div>
               </div>
-              <div className="flex-1 border border-gray-400 rounded-sm p-4 relative">
+              <div className="flex-1 border border-gray-400 rounded-tiny p-4 relative">
                 <span className="px-1 bg-gray-200 absolute -top-2 left-2 text-xs text-gray-500">
                   OR
                 </span>
@@ -970,7 +971,7 @@ const BlockConditionsBuilder = ({
       {conditions.map((condition) => (
         <div
           key={condition.id}
-          className="border border-gray-300 rounded-md bg-gray-50 mb-4 p-4 relative"
+          className="border border-gray-300 rounded-tiny bg-gray-50 mb-4 p-4 relative"
         >
           <div className="mb-2">
             The answer on{' '}
