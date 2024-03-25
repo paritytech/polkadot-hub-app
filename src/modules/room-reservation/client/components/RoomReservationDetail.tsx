@@ -12,7 +12,7 @@ import {
   showNotification,
 } from '#client/components/ui'
 import dayjs from 'dayjs'
-import { DATE_FORMAT_DAY_NAME_FULL } from '#client/constants'
+import { DATE_FORMAT_DAY_NAME_FULL, OFFICE_BY_ID } from '#client/constants'
 import { useMemo } from 'react'
 import { RoomReservationStatusTag } from './RoomReservationStatusTag'
 import { useUserCompact } from '#modules/users/client/queries'
@@ -27,6 +27,7 @@ const _RoomReservationDetail = () => {
   const me = useStore(stores.me)
   const page = useStore(stores.router)
   const officeId = useStore(stores.officeId)
+  const office = OFFICE_BY_ID[officeId]
   const roomReservationId =
     page?.route === 'roomReservationDetail' ? page.params.roomReservationId : ''
   const { data: roomReservation = null, refetch: refetchReservation } =
@@ -73,8 +74,13 @@ const _RoomReservationDetail = () => {
                     DATE_FORMAT_DAY_NAME_FULL
                   )}{' '}
                   <br />
-                  {dayjs(roomReservation.startDate).format('H:mm')} -{' '}
-                  {dayjs(roomReservation.endDate).format('H:mm')}
+                  {dayjs(roomReservation.startDate)
+                    .tz(office.timezone)
+                    .format('h:mm A')}{' '}
+                  -{' '}
+                  {dayjs(roomReservation.endDate)
+                    .tz(office.timezone)
+                    .format('h:mm A')}
                 </H2>
                 {!isOwner && !!user && (
                   <div className="mb-4">
