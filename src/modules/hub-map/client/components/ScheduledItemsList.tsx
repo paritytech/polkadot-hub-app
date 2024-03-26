@@ -30,7 +30,7 @@ export const ScheduledItemsList: React.FC<{
 
   const cancellationCallback = () => {
     showNotification(`Successfully cancelled.`, 'success')
-    refetchUpcoming()
+    setTimeout(() => refetchUpcoming(), 1000)
   }
 
   const me = useStore(stores.me)
@@ -63,7 +63,7 @@ export const ScheduledItemsList: React.FC<{
         setScheduledItems(myUpcomingScheduledItems?.byType[selected?.type])
       }
     }
-  }, [myUpcomingScheduledItems?.byType, date])
+  }, [myUpcomingScheduledItems, date])
 
   const resetView = () => {
     setSelected(null)
@@ -120,7 +120,6 @@ export const ScheduledItemsList: React.FC<{
       }
       updateFns[type](data)
       setSelected(null)
-      refetchUpcoming()
     }
   }
 

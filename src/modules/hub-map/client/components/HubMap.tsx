@@ -137,6 +137,24 @@ export const _HubMap = () => {
 
   const isMobile = width <= 480
 
+  const inOfficeMessage = React.useMemo(() => {
+    if (!visitorsNumber) {
+      return `No one in the ${office?.name} hub`
+    }
+
+    if (userIsInOffce) {
+      if (visitorsNumber === 1) {
+        return `Only you in the ${office?.name} hub`
+      } else {
+        return `You and ${visitorsNumber - 1} others are in the ${
+          office?.name
+        } hub`
+      }
+    } else {
+      return `${visitorsNumber} people in the ${office?.name} hub`
+    }
+  }, [office, visitorsNumber])
+
   if (!office?.allowDeskReservation) {
     return <></>
   }
@@ -207,8 +225,7 @@ export const _HubMap = () => {
               </div>
             </div>
             <div className="mt-2 text-text-tertiary mb-4 sm:mb-0">
-              {userIsInOffce ? `You and ${visitorsNumber - 1}` : visitorsNumber}{' '}
-              people in the {office?.name} hub
+              {inOfficeMessage}
             </div>
             <Select
               label=""

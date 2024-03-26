@@ -11,6 +11,7 @@ import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import { ImageWithPanZoom } from './ui/ImageWithPanZoom'
 import { ScheduledItemType } from '#modules/hub-map/types'
+import { ROBOT_USER_ID } from '#client/constants'
 
 type PointComponentFunctionProps = (
   item: OfficeAreaDesk | OfficeRoom,
@@ -106,7 +107,6 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
     [onToggle]
   )
 
-  // @todo fix types here
   const mapObjects = (scale: number) =>
     !mappablePoints
       ? []
@@ -140,7 +140,10 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
               transformOrigin: 'top left',
             }
             if (!!user && !!me) {
-              const userLink = !user.id ? '' : `/profile/${user.id}`
+              const userLink =
+                !user.id || user.id === ROBOT_USER_ID
+                  ? ''
+                  : `/profile/${user.id}`
               return (
                 <a
                   href={userLink}

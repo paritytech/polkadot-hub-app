@@ -62,6 +62,7 @@ export const formatGuestInvite = (
     description: `Desk ${v.deskName} - ${v.areaName}`,
     extraInformation: `Guest visit`,
     areaId: v.areaId,
+    deskId: v.deskId,
     objectId: v.deskId,
     status: g.status,
   }
@@ -69,7 +70,7 @@ export const formatGuestInvite = (
 
 export const formatVisit = (
   v: Visit,
-  user?: User | null
+  user?: User | null | { id: string }
 ): ScheduledItemType &
   (User | { id: string; avatar: string | null }) & { guestInvite: boolean } => {
   return {
@@ -116,7 +117,7 @@ export const formatEvent = (
     description: isToday
       ? 'Today'
       : isSingleDay
-      ? event.startDate
+      ? start.format('MMM D HH:mm')
       : `${start.format(FRIENDLY_DATE_FORMAT_SHORT)} - ${end.format(
           FRIENDLY_DATE_FORMAT_SHORT
         )}`,

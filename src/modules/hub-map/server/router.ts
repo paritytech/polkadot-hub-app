@@ -22,12 +22,13 @@ import { Op } from 'sequelize'
 import { Event } from '#modules/events/server/models'
 import * as fp from '#shared/utils/fp'
 import { ScheduledItemType } from '../types'
+import { ROBOT_USER_ID } from '#server/constants'
 
 const publicRouter: FastifyPluginCallback = async function (fastify, opts) {}
 
 const addToUpcomingByDate = (
   upcomingByDate: Record<string, any>,
-  value: GenericVisit,
+  value: ScheduledItemType,
   date: string,
   type: string
 ) => {
@@ -128,7 +129,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
       for (const [idx, v] of visits.entries()) {
         const isGuestVisit = v.metadata && v.metadata.guestInvite
-        let user: User | null = null
+        let user: User | null | { id: string } = null
         if (isGuestVisit && !!guestInvites.length) {
           const inviteEmail = guestInvites.find(
             (inv) => inv.id === v.metadata.guestInviteId
@@ -137,6 +138,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         } else {
           user = usersById[v.userId]
         }
+        if (!user && isGuestVisit) {
+          user = { id: ROBOT_USER_ID }
+        }
+
         if (!!user) {
           const item = formatVisit(v)
           if (!idx) {
@@ -157,17 +162,51 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           model: Event,
           as: 'event',
           where: {
-            startDate: {
-              [Op.between]: [
-                dayjs().startOf('day').toDate(),
-                dayjs().startOf('day').add(14, 'days').toDate(),
-              ],
-            },
-
-            visibility: {
-              [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
-            },
+            [Op.and]: [
+              {
+                visibility: {
+                  [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
+                },
+              },
+              {
+                [Op.or]: [
+                  {
+                    // Events that start within the date range
+                    startDate: {
+                      [Op.between]: [
+                        dayjs().startOf('day').toDate(),
+                        dayjs().startOf('day').add(14, 'days').toDate(),
+                      ],
+                    },
+                  },
+                  {
+                    // Events that end within the date range
+                    endDate: {
+                      [Op.between]: [
+                        dayjs().startOf('day').toDate(),
+                        dayjs().startOf('day').add(14, 'days').toDate(),
+                      ],
+                    },
+                  },
+                  {
+                    // Events that span the entire date range
+                    startDate: {
+                      [Op.lte]: dayjs().startOf('day').toDate(),
+                    },
+                    endDate: {
+                      [Op.gte]: dayjs().startOf('day').add(14, 'days').toDate(),
+                    },
+                  },
+                ],
+              },
+              {
+                visibility: {
+                  [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
+                },
+              },
+            ],
           },
+
           attributes: ['id', 'title', 'startDate', 'endDate', 'checklist'],
           required: true,
           order: [['startDate', 'ASC']],

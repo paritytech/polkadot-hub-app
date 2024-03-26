@@ -68,9 +68,7 @@ export const EventsPage = () => {
   const [uniqueUpcoming, setUniqueUpcoming] = React.useState<Event[]>([])
 
   React.useEffect(() => {
-    if (!!events && !!myEvents && !myEvents.pending.length) {
-      return
-    } else if (!!events && !!myEvents) {
+    if (!!events && !!myEvents) {
       const upcomingEventIds = new Set(myEvents.pending.map((e) => e.id))
       const uniqueEvents = events[EventTimeCategory.upcoming].filter(
         (e) => !upcomingEventIds.has(e.id)
