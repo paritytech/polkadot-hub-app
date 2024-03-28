@@ -181,6 +181,9 @@ const publicRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
+      if (!req.office?.allowRoomReservation) {
+        return reply.throw.rejected('Room reservations are currently disabled.')
+      }
       const deviceId = req.cookies[RoomDisplayDeviceCookie]
 
       let device = deviceId
@@ -635,6 +638,9 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     async (req: FastifyRequest<{ Body: RoomReservationRequest }>, reply) => {
       if (!req.office) {
         return reply.throw.badParams('Invalid office ID')
+      }
+      if (!req.office?.allowRoomReservation) {
+        return reply.throw.rejected('Room reservation are currently disabled.')
       }
       req.check(Permissions.Create, req.office.id)
       const data = req.body

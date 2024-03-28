@@ -1,10 +1,11 @@
+import { GuestInvite } from '#modules/guest-invites/server/models'
+import { ScheduledItemType } from '#modules/hub-map/types'
 import { appConfig } from '#server/app-config'
 import { DATE_FORMAT, FRIENDLY_DATE_FORMAT_SHORT } from '#server/constants'
 import {
   Event,
   EventApplicationStatus,
   RoomReservation,
-  ScheduledItemType,
   User,
   Visit,
   VisitType,
@@ -14,7 +15,8 @@ import { FastifyInstance } from 'fastify'
 import { Op } from 'sequelize'
 import { Filterable } from 'sequelize'
 
-export const getTime = (date: string | Date) => dayjs(date).format('LT')
+export const getTime = (date: string | Date, tz: string) =>
+  dayjs(date).tz(tz).format('LT')
 
 export const getDate = (d: string) => dayjs(d).format(DATE_FORMAT)
 
@@ -31,12 +33,15 @@ export const formatRoomReservationsResult = (
   )
   return {
     id: reservation.id,
-    dateTime: `${getTime(reservation.startDate)} - ${getTime(
-      reservation.endDate
-    )}`,
+    extraInformation: `${getTime(
+      reservation.startDate,
+      office?.timezone || ''
+    )} - ${getTime(reservation.endDate, office?.timezone || '')}`,
     objectId: reservation.roomId,
     areaId,
-    date: dayjs(reservation.startDate).format('YYYY-MM-DD'),
+    date: dayjs(reservation.startDate)
+      .tz(office?.timezone)
+      .format('YYYY-MM-DD'),
     value: 'Room ' + officeRoom?.name ?? '',
     description: officeRoom?.description ?? '',
     type: VisitType.RoomReservation,
@@ -44,10 +49,30 @@ export const formatRoomReservationsResult = (
   }
 }
 
+export const formatGuestInvite = (
+  g: GuestInvite & { date: string },
+  v: Visit
+): ScheduledItemType => {
+  return {
+    id: v.id,
+    value: g.fullName,
+    type: VisitType.Guest,
+    date: g.date,
+    dates: g.dates,
+    description: `Desk ${v.deskName} - ${v.areaName}`,
+    extraInformation: `Guest visit`,
+    areaId: v.areaId,
+    deskId: v.deskId,
+    objectId: v.deskId,
+    status: g.status,
+  }
+}
+
 export const formatVisit = (
   v: Visit,
-  user?: User | null
-): ScheduledItemType & (User | { id: string; avatar: string | null }) => {
+  user?: User | null | { id: string }
+): ScheduledItemType &
+  (User | { id: string; avatar: string | null }) & { guestInvite: boolean } => {
   return {
     id: v.id,
     value: `Desk ${v.deskName}`,
@@ -92,7 +117,7 @@ export const formatEvent = (
     description: isToday
       ? 'Today'
       : isSingleDay
-      ? event.startDate
+      ? start.format('MMM D HH:mm')
       : `${start.format(FRIENDLY_DATE_FORMAT_SHORT)} - ${end.format(
           FRIENDLY_DATE_FORMAT_SHORT
         )}`,

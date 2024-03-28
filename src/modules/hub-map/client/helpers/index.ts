@@ -1,6 +1,7 @@
-import config from '#client/config'
+import config, { ClientOfficeConfig } from '#client/config'
 import { DATE_FORMAT } from '#client/constants'
 import {
+  Office,
   OfficeArea,
   OfficeAreaDesk,
   OfficeRoom,
@@ -8,15 +9,20 @@ import {
 } from '#shared/types'
 import { Dayjs } from 'dayjs'
 
-export const getPoints = (area: OfficeArea) => {
-  const points: Array<OfficeAreaDesk | OfficeRoom> = [
-    ...area?.desks.map((desk) => ({
-      ...desk,
-      areaId: area.id,
-      kind: VisitType.Visit,
-    })),
-  ]
-  if (!!area?.meetingRooms?.length) {
+export const getPoints = (area: OfficeArea, office: ClientOfficeConfig) => {
+  const points: Array<OfficeAreaDesk | OfficeRoom> = []
+
+  if (office.allowDeskReservation) {
+    points.push(
+      ...area?.desks.map((desk) => ({
+        ...desk,
+        areaId: area.id,
+        kind: VisitType.Visit,
+      }))
+    )
+  }
+
+  if (!!area?.meetingRooms?.length && office.allowRoomReservation) {
     points.push(
       ...area?.meetingRooms.map((room) => ({
         ...room,

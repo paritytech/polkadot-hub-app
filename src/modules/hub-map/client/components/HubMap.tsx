@@ -1,7 +1,6 @@
 import * as React from 'react'
 import {
   Avatar,
-  Input,
   Select,
   StealthMode,
   WidgetWrapper,
@@ -32,6 +31,7 @@ export const HubMap = () => (
     required={[
       Permissions.visits.Create,
       Permissions['room-reservation'].Create,
+      Permissions['guest-invites'].Create,
     ]}
   >
     <_HubMap />
@@ -43,7 +43,9 @@ export const _HubMap = () => {
   const office = useOffice(officeId)
   const me = useStore(stores.me)
 
-  const { data: areas = [] } = useVisitsAreas(office?.id || '')
+  const { data: areas = [] } = useVisitsAreas(office?.id || '', {
+    enabled: office?.allowDeskReservation ?? false,
+  })
   const [areaId, setAreaId] = React.useState<string | null>(null)
   const area = React.useMemo(() => areas.find((x) => areaId === x.id), [areaId])
   const [mappablePoints, setMappablePoints] = React.useState<any[]>([])
@@ -74,13 +76,13 @@ export const _HubMap = () => {
   React.useEffect(() => {
     if (!!areas.length) {
       setAreaId(areas[0].id)
-      setMappablePoints(getPoints(areas[0]))
+      setMappablePoints(getPoints(areas[0], office))
     }
   }, [areas])
 
   React.useEffect(() => {
     if (!!area) {
-      setMappablePoints(getPoints(area))
+      setMappablePoints(getPoints(area, office))
     }
   }, [area])
 
@@ -91,7 +93,8 @@ export const _HubMap = () => {
 
   const { data: visitors, refetch: refetchVisitors } = useOfficeVisitors(
     officeId,
-    dayjs(date).format(DATE_FORMAT)
+    dayjs(date).format(DATE_FORMAT),
+    !office?.allowDeskReservation
   )
 
   const userIsInOffce = React.useMemo(
@@ -113,7 +116,7 @@ export const _HubMap = () => {
 
   const { data: availableDesks = [] } = useAvailableDesks(
     office?.id || '',
-    [date.format(DATE_FORMAT)] || []
+    office?.allowDeskReservation ? [date.format(DATE_FORMAT)] : []
   )
 
   const resetOfficeVisits = React.useCallback(() => {
@@ -134,6 +137,24 @@ export const _HubMap = () => {
   }, [availableDesks, area])
 
   const isMobile = width <= 480
+
+  const inOfficeMessage = React.useMemo(() => {
+    if (!visitorsNumber) {
+      return `No one in the ${office?.name} hub`
+    }
+
+    if (userIsInOffce) {
+      if (visitorsNumber === 1) {
+        return `Only you in the ${office?.name} hub`
+      } else {
+        return `You and ${visitorsNumber - 1} others are in the ${
+          office?.name
+        } hub`
+      }
+    } else {
+      return `${visitorsNumber} people in the ${office?.name} hub`
+    }
+  }, [office, visitorsNumber])
 
   if (!office?.allowDeskReservation) {
     return <></>
@@ -205,8 +226,7 @@ export const _HubMap = () => {
               </div>
             </div>
             <div className="mt-2 text-text-tertiary mb-4 sm:mb-0">
-              {userIsInOffce ? `You and ${visitorsNumber - 1}` : visitorsNumber}{' '}
-              people in the {office?.name} hub
+              {inOfficeMessage}
             </div>
             <Select
               label=""
@@ -219,7 +239,7 @@ export const _HubMap = () => {
               placeholder={'Select area'}
               containerClassName="w-full sm:w-auto  mb-2 block sm:hidden"
             />
-            <div className="sm:max-w-[780px] h-[400px] sm:h-auto m-auto my-auto sm:my-10">
+            <div className="h-[400px] sm:h-auto m-auto my-auto sm:my-10">
               <OfficeFloorMap
                 area={area}
                 mappablePoints={mappablePoints}

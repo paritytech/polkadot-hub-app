@@ -8,7 +8,6 @@ import * as stores from '#client/stores'
 import { useUpdateRoomReservationByUser } from '#modules/room-reservation/client/queries'
 import { useUpdateGuestInviteByUser } from '#modules/guest-invites/client/queries'
 import {
-  ScheduledItemType,
   GuestInviteStatus,
   RoomReservationStatus,
   VisitStatus,
@@ -17,6 +16,7 @@ import {
 import { FRIENDLY_DATE_FORMAT } from '#client/constants'
 import { ScheduledItem } from './ScheduledItem'
 import { useUpcoming } from '../queries'
+import { ScheduledItemType } from '#modules/hub-map/types'
 
 export const ScheduledItemsList: React.FC<{
   onChooseCard: (id: string | null, areaId: string | null, date: Dayjs) => void
@@ -25,13 +25,12 @@ export const ScheduledItemsList: React.FC<{
   className?: string
 }> = ({ onChooseCard, setDate, date, className }) => {
   const officeId = useStore(stores.officeId)
-  const office = useOffice(officeId)
   const [scheduledItems, setScheduledItems] = React.useState([])
   const [selected, setSelected] = React.useState<ScheduledItemType | null>(null)
 
   const cancellationCallback = () => {
     showNotification(`Successfully cancelled.`, 'success')
-    refetchUpcoming()
+    setTimeout(() => refetchUpcoming(), 1000)
   }
 
   const me = useStore(stores.me)
@@ -64,7 +63,7 @@ export const ScheduledItemsList: React.FC<{
         setScheduledItems(myUpcomingScheduledItems?.byType[selected?.type])
       }
     }
-  }, [myUpcomingScheduledItems?.byType, date])
+  }, [myUpcomingScheduledItems, date])
 
   const resetView = () => {
     setSelected(null)
@@ -100,11 +99,20 @@ export const ScheduledItemsList: React.FC<{
     id: string,
     type: string,
     value: string,
-    date: string
+    date: string,
+    dates?: string[]
   ) => {
-    const confirmMessage = `Are you sure you want to cancel this ${type}: ${value} on ${dayjs(
-      date
-    ).format(FRIENDLY_DATE_FORMAT)}?`
+    let confirmMessage = ''
+    if (type === VisitType.Guest && !!dates && dates?.length > 1) {
+      const otherDates = dates
+        ?.map((d) => dayjs(d).format(FRIENDLY_DATE_FORMAT))
+        .join('\n\n')
+      confirmMessage = `By cancelling this guest invite for ${value}, you will cancel the invite for these OTHER DATES as well:\n\n${otherDates}`
+    } else {
+      confirmMessage = `Are you sure you want to cancel this ${type}: ${value} on ${dayjs(
+        date
+      ).format(FRIENDLY_DATE_FORMAT)}?`
+    }
     if (window.confirm(confirmMessage)) {
       const data: updateData = {
         id,
@@ -112,7 +120,6 @@ export const ScheduledItemsList: React.FC<{
       }
       updateFns[type](data)
       setSelected(null)
-      refetchUpcoming()
     }
   }
 
@@ -136,9 +143,9 @@ export const ScheduledItemsList: React.FC<{
           </div>
         )}
         {!!scheduledItems?.length &&
-          scheduledItems.map((item: ScheduledItemType, index) => (
+          scheduledItems.map((item: ScheduledItemType) => (
             <ScheduledItem
-              key={item?.id}
+              key={item?.id + item.value + item.date}
               sheduledItem={item}
               onClick={processOnClick}
               selected={selected?.id ?? null}

@@ -1,16 +1,17 @@
-import { User } from '#modules/users/server/models'
 import { appConfig } from '#server/app-config'
 import {
-  ScheduledItemType,
   EntityVisibility,
   EventApplicationStatus,
   GenericVisit,
+  GuestInvite,
+  User,
   VisitType,
 } from '#shared/types'
 import dayjs from 'dayjs'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import {
   formatEvent,
+  formatGuestInvite,
   formatRoomReservationsResult,
   formatVisit,
   getDate,
@@ -20,12 +21,14 @@ import {
 import { Op } from 'sequelize'
 import { Event } from '#modules/events/server/models'
 import * as fp from '#shared/utils/fp'
+import { ScheduledItemType } from '../types'
+import { ROBOT_USER_ID } from '#server/constants'
 
 const publicRouter: FastifyPluginCallback = async function (fastify, opts) {}
 
 const addToUpcomingByDate = (
   upcomingByDate: Record<string, any>,
-  value: GenericVisit,
+  value: ScheduledItemType,
   date: string,
   type: string
 ) => {
@@ -56,6 +59,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       const office = appConfig.getOfficeById(officeId)
 
       let visits = await getVisits(fastify, officeId, date, req.query.userId)
+      if (req.query.userId) {
+        // filter out the ones which we created as guest invites
+        visits = visits.filter((v) => !v.metadata || !v.metadata.guestInvite)
+      }
       let roomReservations = await getRoomReservations(
         fastify,
         officeId,
@@ -92,24 +99,62 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
       let dailyEventsVisits = []
       const userIds = Array.from(new Set(visits.map(fp.prop('userId'))))
+      const guestsInviteIds = visits
+        .filter((v) => v.metadata.guestInvite)
+        .map((v) => v.metadata.guestInviteId)
+
+      let userEmails: string[] = []
+      let guestInvites: Array<GuestInvite> = []
+
+      if (!!guestsInviteIds.length) {
+        guestInvites = await fastify.db.GuestInvite.findAll({
+          where: { id: { [Op.in]: guestsInviteIds } },
+        })
+        userEmails = Array.from(new Set(guestInvites.map(fp.prop('email'))))
+      }
+
       const users = await fastify.db.User.findAll({
-        where: { id: { [Op.in]: userIds }, stealthMode: false },
+        where: {
+          [Op.or]: [
+            { id: { [Op.in]: userIds } },
+            { email: { [Op.in]: userEmails } },
+          ],
+          stealthMode: false,
+        },
         raw: true,
       })
+
+      const usersByEmail = users.reduce(fp.by('email'), {})
       const usersById = users.reduce(fp.by('id'), {})
 
       for (const [idx, v] of visits.entries()) {
-        const item = formatVisit(v)
-        if (!idx) {
-          upcomingItems.push(item)
+        const isGuestVisit = v.metadata && v.metadata.guestInvite
+        let user: User | null | { id: string } = null
+        if (isGuestVisit && !!guestInvites.length) {
+          const inviteEmail = guestInvites.find(
+            (inv) => inv.id === v.metadata.guestInviteId
+          )?.email
+          user = usersByEmail[inviteEmail ?? ''] ?? null
+        } else {
+          user = usersById[v.userId]
         }
-        addToUpcomingByDate(
-          upcomingByDate,
-          formatVisit(v, usersById[v.userId]),
-          v.date,
-          VisitType.Visit
-        )
-        dailyEventsVisits.push(item)
+        if (!user && isGuestVisit) {
+          user = { id: ROBOT_USER_ID }
+        }
+
+        if (!!user) {
+          const item = formatVisit(v)
+          if (!idx) {
+            upcomingItems.push(item)
+          }
+          addToUpcomingByDate(
+            upcomingByDate,
+            formatVisit(v, user),
+            v.date,
+            VisitType.Visit
+          )
+          dailyEventsVisits.push(item)
+        }
       }
 
       const eventApplications = await fastify.db.EventApplication.findAll({
@@ -117,17 +162,51 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           model: Event,
           as: 'event',
           where: {
-            startDate: {
-              [Op.between]: [
-                dayjs().startOf('day').toDate(),
-                dayjs().startOf('day').add(14, 'days').toDate(),
-              ],
-            },
-
-            visibility: {
-              [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
-            },
+            [Op.and]: [
+              {
+                visibility: {
+                  [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
+                },
+              },
+              {
+                [Op.or]: [
+                  {
+                    // Events that start within the date range
+                    startDate: {
+                      [Op.between]: [
+                        dayjs().startOf('day').toDate(),
+                        dayjs().startOf('day').add(14, 'days').toDate(),
+                      ],
+                    },
+                  },
+                  {
+                    // Events that end within the date range
+                    endDate: {
+                      [Op.between]: [
+                        dayjs().startOf('day').toDate(),
+                        dayjs().startOf('day').add(14, 'days').toDate(),
+                      ],
+                    },
+                  },
+                  {
+                    // Events that span the entire date range
+                    startDate: {
+                      [Op.lte]: dayjs().startOf('day').toDate(),
+                    },
+                    endDate: {
+                      [Op.gte]: dayjs().startOf('day').add(14, 'days').toDate(),
+                    },
+                  },
+                ],
+              },
+              {
+                visibility: {
+                  [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
+                },
+              },
+            ],
           },
+
           attributes: ['id', 'title', 'startDate', 'endDate', 'checklist'],
           required: true,
           order: [['startDate', 'ASC']],
@@ -174,6 +253,53 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         }
       }
 
+      const today = dayjs().startOf('day')
+      const lastDay = dayjs().startOf('day').add(14, 'days')
+
+      const guests = await fastify.db.GuestInvite.findAll({
+        attributes: ['fullName', 'id', 'dates'],
+        where: {
+          creatorUserId: req.user.id,
+          office: officeId,
+          status: 'confirmed',
+        },
+        raw: true,
+      })
+
+      const dailyGuests = []
+      for (const oneGuest of guests) {
+        const guestInvitations = oneGuest.dates
+          .map((date) => ({
+            ...oneGuest,
+            date,
+          }))
+          .filter(
+            (invite) =>
+              dayjs(invite.date).isSameOrAfter(today) &&
+              dayjs(invite.date).isSameOrBefore(lastDay)
+          )
+
+        for (const oneInvitation of guestInvitations) {
+          const visit = await fastify.db.Visit.findOne({
+            where: {
+              'metadata.guestInviteId': oneInvitation.id,
+            },
+          })
+          const invite = formatGuestInvite(oneInvitation, visit)
+          dailyGuests.push(invite)
+          addToUpcomingByDate(
+            upcomingByDate,
+            invite,
+            dayjs(invite.date).toString(),
+            VisitType.Guest
+          )
+        }
+      }
+
+      if (!!dailyGuests.length) {
+        upcomingItems.push(dailyGuests[0] as ScheduledItemType)
+      }
+
       return {
         upcoming: upcomingItems.sort(
           (a: ScheduledItemType, b: ScheduledItemType) =>
@@ -183,6 +309,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           [VisitType.Visit]: dailyEventsVisits,
           [VisitType.RoomReservation]: dailyEventsReservations,
           event: myEvents,
+          [VisitType.Guest]: dailyGuests,
         },
         byDate: upcomingByDate,
       }

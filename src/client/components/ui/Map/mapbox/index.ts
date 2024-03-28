@@ -1,4 +1,3 @@
-import { MutableRefObject } from 'react'
 import { UserMapPin } from '../../../../../modules/users/types'
 import {
   Berlin,
@@ -16,7 +15,13 @@ export const dropMarker = (
   mapboxgl: any,
   map: mapboxgl.Map,
   coords: Coordinates | undefined
-) => (coords ? new mapboxgl.Marker().setLngLat(coords).addTo(map) : null)
+) => {
+  if (coords && coords.length == 2) {
+    return new mapboxgl.Marker({ color: '#E6087B' })
+      .setLngLat(coords)
+      .addTo(map)
+  }
+}
 
 export const getMap = (
   mapboxgl: any,

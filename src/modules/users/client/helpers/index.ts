@@ -1,12 +1,6 @@
 import dayjs, { Dayjs } from 'dayjs'
 import dayjsTimezone from 'dayjs/plugin/timezone'
 import dayjsUtc from 'dayjs/plugin/utc'
-import {
-  AuthAddressPair,
-  AuthIds,
-  AuthProvider,
-  AuthExtension,
-} from '#shared/types'
 
 dayjs.extend(dayjsUtc)
 dayjs.extend(dayjsTimezone)

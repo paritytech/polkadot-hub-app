@@ -1,5 +1,5 @@
 import { randomBytes } from 'crypto'
-import { Filterable, Op, QueryTypes, col, fn } from 'sequelize'
+import { Op, QueryTypes, col, fn } from 'sequelize'
 import dayjs from 'dayjs'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { appConfig } from '#server/app-config'

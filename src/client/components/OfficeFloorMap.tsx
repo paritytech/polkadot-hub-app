@@ -1,7 +1,6 @@
 import React, { MouseEventHandler } from 'react'
 import { Avatar, Button, P } from '#client/components/ui'
 import {
-  ScheduledItemType,
   OfficeArea,
   OfficeAreaDesk,
   OfficeRoom,
@@ -11,6 +10,8 @@ import { cn } from '#client/utils'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import { ImageWithPanZoom } from './ui/ImageWithPanZoom'
+import { ScheduledItemType } from '#modules/hub-map/types'
+import { ROBOT_USER_ID } from '#client/constants'
 
 type PointComponentFunctionProps = (
   item: OfficeAreaDesk | OfficeRoom,
@@ -20,7 +21,7 @@ type PointComponentFunctionProps = (
 ) => Element | JSX.Element
 
 const pointCommonStyle =
-  'rounded-sm border-2 -translate-y-1/2 -translate-x-1/2 hover:scale-105 transition-all delay-100 '
+  'border-2 -translate-y-1/2 -translate-x-1/2 hover:scale-105 transition-all delay-100'
 
 const PointComponent: Record<
   VisitType.Visit | VisitType.RoomReservation,
@@ -34,6 +35,7 @@ const PointComponent: Record<
       color={isSelected ? 'purple' : 'default'}
       className={cn(
         pointCommonStyle,
+        ' w-fit',
         isSelected
           ? 'border-pink-600 bg-accents-pink'
           : 'bg-violet-300 border-violet-300',
@@ -57,11 +59,14 @@ const PointComponent: Record<
           ? 'border-pink-600 hover:text-white bg-accents-pink hover:bg-accents-pinkDark'
           : 'text-black bg-green-200 border-green-200 hover:bg-cta-jade hover:border-cta-hover-jadeNoOpacity hover:text-white',
         'sm:p-4',
-        pointCommonStyle
+        pointCommonStyle,
+        'absolute'
       )}
       onClick={onClick(item.id, VisitType.RoomReservation)}
     >
-      <p className="font-bold">{item.name}</p>
+      <p className="font-bold">
+        {!isSelected && 'Book'} {item.name}
+      </p>
     </Button>
   ),
 }
@@ -102,7 +107,6 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
     [onToggle]
   )
 
-  // @todo fix types here
   const mapObjects = (scale: number) =>
     !mappablePoints
       ? []
@@ -135,12 +139,20 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
               transform: `scale(${1 / scale})`,
               transformOrigin: 'top left',
             }
-
             if (!!user && !!me) {
+              const userLink =
+                !user.id || user.id === ROBOT_USER_ID
+                  ? ''
+                  : `/profile/${user.id}`
               return (
                 <a
-                  href={`/profile/${user.id}`}
-                  className="absolute -translate-y-1/2 -translate-x-1/2"
+                  href={userLink}
+                  className={cn(
+                    `absolute -translate-y-1/2 -translate-x-1/2`,
+                    !userLink && 'hover:cursor-default',
+                    isSelected &&
+                      'animate-bounce -translate-y-1/2 -translate-x-1/2'
+                  )}
                   style={style}
                   key={user.id + x.position.x + x.position.y}
                 >
@@ -150,7 +162,7 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
                     size="medium"
                     className={cn(
                       '-translate-y-1/2 -translate-x-1/2 ',
-                      'border-2 border-transparent',
+                      'border-2 border-transparent scale-125',
                       `${
                         me?.id === user?.id
                           ? 'border-purple-500 rounded-full'
@@ -183,7 +195,7 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
         <img
           src={area.map}
           alt={`${area.name} floor plan`}
-          className="block w-full opacity-60"
+          className="opacity-80"
         />
         {mapObjects(1)}
       </div>
@@ -196,7 +208,7 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
         <ImageWithPanZoom
           src={area.map}
           alt={`${area.name} floor plan`}
-          className="block w-full opacity-60 object-contain overflow-hidden rounded-sm"
+          className="block w-full object-contain overflow-hidden rounded-sm"
           imageOverlayMappingFn={(scale: number) => mapObjects(scale)}
           initialStartPosition={
             initialStartPosition ? initialStartPosition.position : undefined
