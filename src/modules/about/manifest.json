@@ -1,0 +1,19 @@
+{
+  "id": "about",
+  "name": "About",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": [],
+  "clientRouter": {
+    "public": {},
+    "user": {
+      "aboutPage": {
+        "path": "/about/:hubId",
+        "componentId": "AboutPage",
+        "fullScreen": true
+      }
+    },
+    "admin": {}
+  }
+}

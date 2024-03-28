@@ -1,6 +1,6 @@
 import React from 'react'
 import dayjs from 'dayjs'
-import { FButton } from '#client/components/ui'
+import { FButton, Tag, Warning } from '#client/components/ui'
 import { Event } from '#shared/types'
 import { cn } from '#client/utils'
 
@@ -10,8 +10,14 @@ type Props = {
   event: Event
   className?: string
   withApplyButton?: boolean
+  requiresAction?: boolean
 }
-export const EventBadge: React.FC<Props> = ({ event, className = '', withApplyButton = false }) => {
+export const EventBadge: React.FC<Props> = ({
+  event,
+  className = '',
+  withApplyButton = false,
+  requiresAction = false,
+}) => {
   const url = React.useMemo(() => `/event/${event.id}`, [event])
   const now = dayjs()
   const [startDate, endDate] = [event.startDate, event.endDate].map(dayjs)
@@ -32,13 +38,26 @@ export const EventBadge: React.FC<Props> = ({ event, className = '', withApplyBu
       </a>
       <a href={url} className="flex-1 block">
         <div className="text-accents-red mb-1 text-sm">
-          {isToday ? 'Today' : isSingleDay ? startDate.format(DATE_FORMAT) : `${startDate.format(DATE_FORMAT)} - ${endDate.format(DATE_FORMAT)}`}
+          {isToday
+            ? 'Today'
+            : isSingleDay
+            ? startDate.format(DATE_FORMAT)
+            : `${startDate.format(DATE_FORMAT)} - ${endDate.format(
+                DATE_FORMAT
+              )}`}
         </div>
         <div>{event.title}</div>
       </a>
+      {requiresAction && (
+        <Tag color="red" className="h-fit">
+          <p className="text-accents-pink">incomplete checklist</p>
+        </Tag>
+      )}
       {withApplyButton && (
         <div className="flex items-center ml-4">
-          <FButton size="small" kind="secondary" href={url}>Apply</FButton>
+          <FButton size="small" kind="secondary" href={url}>
+            Apply
+          </FButton>
         </div>
       )}
     </div>

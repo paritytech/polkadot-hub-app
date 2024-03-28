@@ -52,10 +52,9 @@ export const Home: React.FC = () => {
         className={cn(
           'grid',
           layoutView === 'mobile' && 'grid-cols-[minmax(0,_1fr)]',
-          layoutView === 'tablet' &&
-            'grid-cols-[minmax(0,_1fr)_minmax(0,_1fr)]',
+          layoutView === 'tablet' && 'grid-cols-[minmax(0,_1fr)]',
           layoutView === 'desktop' &&
-            'grid-cols-[minmax(0,_25fr)_minmax(0,_44fr)_minmax(0,_31fr)]',
+            'grid-cols-[minmax(0,_25fr)_minmax(0,_75fr)]',
           'gap-x-4'
         )}
       >
@@ -63,20 +62,24 @@ export const Home: React.FC = () => {
         {layoutView === 'mobile' && (
           <div>{config.layout.mobile[tab].map(renderWidget)}</div>
         )}
-
         {/* desktop first column */}
         {layoutView === 'desktop' && (
-          <div>{config.layout.desktop[0].map(renderWidget)}</div>
+          <div>{config.layout.desktop.sidebar.map(renderWidget)}</div>
         )}
-
         {/* desktop second column === tablet first column */}
         {(layoutView === 'desktop' || layoutView === 'tablet') && (
-          <div>{config.layout.desktop[1].map(renderWidget)}</div>
-        )}
-
-        {/* desktop third column === tablet second column */}
-        {(layoutView === 'desktop' || layoutView === 'tablet') && (
-          <div>{config.layout.desktop[2].map(renderWidget)}</div>
+          <div>
+            {config.layout.desktop.main.map((row) => (
+              <div
+                className={cn(
+                  'grid items-stretch',
+                  row.length == 2 ? 'grid grid-cols-2 gap-2' : 'grid-cols-1'
+                )}
+              >
+                {row.map(renderWidget)}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </>
@@ -95,7 +98,7 @@ const Tabs: React.FC<{
     []
   )
   return (
-    <div className="bg-bg-primary flex rounded-b-sm px-4 mb-1 md:mb-2">
+    <div className="bg-bg-primary flex rounded-sm px-4 mb-1 md:mb-2">
       {TABS.map((tab) => {
         const IconComponent = Icons[tab.icon as Icon]
         return (

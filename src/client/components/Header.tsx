@@ -13,6 +13,7 @@ import MC from './__import-components'
 export const Header: React.FC = () => {
   const me = useStore(stores.me)
   const permissions = useStore(stores.permissions)
+  const isAdmin = useStore(stores.isAdmin)
 
   const menuItems = React.useMemo(() => {
     const canUpdateProfile = permissions.has(Permissions.users.ManageProfile)
@@ -39,6 +40,13 @@ export const Header: React.FC = () => {
         name: 'Settings',
         link: '/settings',
         icon: 'Gear',
+      })
+    }
+    if (isAdmin) {
+      items.push({
+        name: 'Admin',
+        link: '/admin',
+        icon: 'Person',
       })
     }
     items.push({

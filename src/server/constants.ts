@@ -7,6 +7,8 @@ export const DATE_FORMAT = 'YYYY-MM-DD'
 
 export const FRIENDLY_DATE_FORMAT = 'MMMM D YYYY'
 
+export const FRIENDLY_DATE_FORMAT_SHORT = 'MMM D'
+
 export const DATE_FORMAT_DAY_NAME = 'ddd, MMMM D'
 
 // TODO: implement shared constants and move it there

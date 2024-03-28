@@ -13,6 +13,8 @@ import {
   EventPreview,
   EventPublicResponse,
   EventToogleCheckboxRequest,
+  EventsByStatusCategory,
+  EventsByTimeCategory,
   FormSubmissionRequest,
   GlobalEvent,
   PublicForm,
@@ -50,12 +52,33 @@ export const useUpcomingEvents = (officeId: string | null) => {
   )
 }
 
-export const useMyEvents = (officeId: string | null) => {
+export const useEventsView = (officeId: string | null, sortBy?: string) => {
+  const path = '/user-api/events/event/view'
+  return useQuery<EventsByTimeCategory, AxiosError>(
+    [path, { office: officeId, sortBy }],
+    async ({ queryKey }) =>
+      (await api.get<EventsByTimeCategory>(path, { params: queryKey[1] })).data,
+    { enabled: !!officeId }
+  )
+}
+
+export const useMyEvents = (officeId: string | null, sortBy?: string) => {
   const path = '/user-api/events/event/me'
   return useQuery<Event[], AxiosError>(
-    [path, { office: officeId }],
+    [path, { office: officeId, sortBy }],
     async ({ queryKey }) =>
       (await api.get<Event[]>(path, { params: queryKey[1] })).data,
+    { enabled: !!officeId }
+  )
+}
+
+export const useMyEventsView = (officeId: string | null, sortBy?: string) => {
+  const path = '/user-api/events/event/me/view'
+  return useQuery<EventsByStatusCategory, AxiosError>(
+    [path, { office: officeId, sortBy }],
+    async ({ queryKey }) =>
+      (await api.get<EventsByStatusCategory>(path, { params: queryKey[1] }))
+        .data,
     { enabled: !!officeId }
   )
 }

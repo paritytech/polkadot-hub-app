@@ -1,0 +1,19 @@
+{
+  "id": "hub-map",
+  "name": "HubMap",
+  "dependencies": [
+    "visits",
+    "guest-invites",
+    "room-reservation",
+    "users",
+    "events"
+  ],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": [],
+  "clientRouter": {
+    "public": {},
+    "user": {},
+    "admin": {}
+  }
+}

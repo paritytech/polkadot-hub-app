@@ -11,7 +11,7 @@ import {
   FormSubmissionRequest,
   PublicForm,
 } from '#modules/forms/types'
-import { EntityVisibility } from '#shared/types'
+import { EntityVisibility, EventStatusCategory } from '#shared/types'
 import * as fp from '#shared/utils/fp'
 import { Permissions } from '../permissions'
 import {
@@ -23,8 +23,14 @@ import {
   EventParticipant,
   EventPublicResponse,
   EventToogleCheckboxRequest,
+  EventWithApplications,
 } from '../types'
-import { getApplicationMessage, getApplicationUpdateMessage } from './helpers'
+import {
+  getApplicationMessage,
+  getApplicationUpdateMessage,
+  getUpcomingEventApplicationsForUser,
+  getUpcomingEventsForUser,
+} from './helpers'
 import { isEventApplicationUncompleted } from './helpers/checklists'
 import { Metadata } from '../metadata-schema'
 
@@ -437,70 +443,159 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     }
   )
 
-  fastify.get('/event', async (req, reply) => {
-    if (!req.office) {
-      return reply.throw.badParams('Invalid office ID')
+  fastify.get(
+    '/event',
+    async (
+      req: FastifyRequest<{
+        Querystring: { sortBy?: string }
+      }>,
+      reply
+    ) => {
+      if (!req.office) {
+        return reply.throw.badParams('Invalid office ID')
+      }
+      const events = await getUpcomingEventsForUser(
+        fastify,
+        req.user,
+        req.office.id
+      )
+
+      return events.map((e) => {
+        const application = !!e?.applications?.length ? e.applications[0] : null
+        return e.usePublicView(application, [], null)
+      })
     }
-    const events = await fastify.db.Event.findAll({
-      where: {
-        endDate: {
-          [Op.gte]: new Date(),
-        },
-        visibility: EntityVisibility.Visible,
-        allowedRoles: { [Op.overlap]: req.user.roles },
-        offices: { [Op.contains]: [req.office.id] },
-      },
-      order: ['startDate'],
-    })
+  )
 
-    const applications = await fastify.db.EventApplication.findAll({
-      where: {
-        userId: req.user.id,
-        eventId: {
-          [Op.in]: events.map((x: Event) => x.id),
-        },
-      },
-    })
+  fastify.get(
+    '/event/view',
+    async (
+      req: FastifyRequest<{
+        Querystring: { sortBy?: string }
+      }>,
+      reply
+    ) => {
+      if (!req.office) {
+        return reply.throw.badParams('Invalid office ID')
+      }
+      const sort = ['time']
+      if (!req.query.sortBy || !sort.includes(req.query.sortBy)) {
+        return reply.throw.badParams('Invalid sortBy parameter')
+      }
 
-    return events.map((e) => {
-      const application = applications.find((a) => a.eventId === e.id)
-      return e.usePublicView(application || null, [], null)
-    })
-  })
+      if (req.query.sortBy === 'time') {
+        const upcomingEvents = await getUpcomingEventsForUser(
+          fastify,
+          req.user,
+          req.office.id
+        )
+        const pastEvents = await fastify.db.Event.findAll({
+          where: {
+            endDate: {
+              [Op.lt]: new Date(),
+            },
+            visibility: EntityVisibility.Visible,
+            allowedRoles: { [Op.overlap]: req.user.roles },
+            offices: { [Op.contains]: [req.office.id] },
+          },
+          order: ['startDate'],
+        })
+        return {
+          upcoming: upcomingEvents,
+          past: pastEvents,
+        }
+      }
 
-  fastify.get('/event/me', async (req, reply) => {
-    if (!req.office) {
-      return reply.throw.badParams('Invalid office ID')
+      return []
     }
+  )
 
-    const applicationEventIds = await fastify.db.EventApplication.findAll({
-      where: {
-        status: {
-          [Op.in]: [
-            EventApplicationStatus.Opened,
-            EventApplicationStatus.Pending,
-            EventApplicationStatus.Confirmed,
-          ],
-        },
-        userId: req.user.id,
-      },
-      attributes: ['eventId'],
-    }).then((xs) => xs.map((x) => x.eventId))
+  fastify.get(
+    '/event/me/view',
+    async (
+      req: FastifyRequest<{
+        Querystring: { sortBy?: string }
+      }>,
+      reply
+    ) => {
+      if (!req.office) {
+        return reply.throw.badParams('Invalid office ID')
+      }
 
-    const events = await fastify.db.Event.findAll({
-      where: {
-        id: { [Op.in]: applicationEventIds },
-        endDate: {
-          [Op.gte]: new Date(),
-        },
-        visibility: {
-          [Op.in]: [EntityVisibility.Visible, EntityVisibility.Url],
-        },
-      },
-      order: [['startDate', 'ASC']],
-    })
-    return events
-  })
+      const sort = ['status']
+      if (!req.query.sortBy || !sort.includes(req.query.sortBy)) {
+        return reply.throw.badParams('Invalid sortBy parameter')
+      }
+      const eventApplications = await getUpcomingEventApplicationsForUser(
+        fastify,
+        req.user.id
+      )
+
+      if (req.query.sortBy === 'status') {
+        const result: Record<
+          EventStatusCategory,
+          Array<Event & { applicationId: string }>
+        > = {
+          [EventApplicationStatus.Confirmed]: [],
+          [EventApplicationStatus.Pending]: [],
+          [EventApplicationStatus.Opened]: [],
+        }
+
+        for (const app of eventApplications) {
+          const event = app.event?.get({ plain: true })
+          const checklistLength = app?.event?.checklist?.length
+          let checkmarks = []
+
+          if (checklistLength) {
+            checkmarks = await fastify.db.EventCheckmark.findAll({
+              where: {
+                userId: req.user.id,
+                eventId: app.eventId,
+              },
+            })
+          }
+
+          const objectToAdd: EventWithApplications & {
+            applicationId: string
+            applicationComplete: boolean
+          } = {
+            ...event,
+            applicationId: app.id,
+            applicationComplete: checkmarks?.length == checklistLength,
+          }
+          if (app.status == EventApplicationStatus.Opened) {
+            result[EventApplicationStatus.Pending].push(objectToAdd)
+          } else {
+            result[app.status as EventStatusCategory].push(objectToAdd)
+          }
+        }
+        return result
+      }
+
+      return eventApplications.map((e) => e.event)
+    }
+  )
+
+  fastify.get(
+    '/event/me',
+    async (
+      req: FastifyRequest<{
+        Querystring: { sortBy?: string }
+      }>,
+      reply
+    ) => {
+      if (!req.office) {
+        return reply.throw.badParams('Invalid office ID')
+      }
+
+      const eventApplications = await getUpcomingEventApplicationsForUser(
+        fastify,
+        req.user.id
+      )
+
+      return eventApplications.map((e) => e.event)
+    }
+  )
 
   fastify.get('/event/uncompleted', async (req, reply) => {
     if (!req.office) {

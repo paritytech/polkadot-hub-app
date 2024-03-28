@@ -42,7 +42,7 @@ const MinidenticonImg = ({
     [username, saturation, lightness]
   )
   return (
-    <div className="bg-fill-6 rounded-full">
+    <div className="bg-white border border-fill-6 rounded-full">
       <img src={svgURI} alt={username} {...props} />
     </div>
   )
@@ -57,7 +57,7 @@ export const Avatar: React.FC<Props> = ({
   const [hasError, setHasError] = React.useState(false)
   const setError = () => setHasError(true)
   const resultClassName = cn(
-    'rounded-full bg-gray-200',
+    'block rounded-full bg-gray-200',
     SIZE_CLASSNAME[size],
     className
   )

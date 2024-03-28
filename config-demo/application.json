@@ -5,19 +5,11 @@
   },
   "layout": {
     "mobile": {
-      "fixed": [
-        ["users", "NewjoinerDetector"],
-        ["users", "UserStatus"]
-      ],
+      "fixed": [["users", "NewjoinerDetector"]],
       "office": [
         ["office-visits", "Actions", { "offices": ["berlin"] }],
         ["announcements", "Announcement"],
-        ["checklists", "Checklist"],
-        ["working-hours", "WorkingHoursWidget"],
-        ["events", "UncompletedActions"],
         ["events", "MyEvents"],
-        ["office-visits", "MyOfficeVisits", { "offices": ["berlin"] }],
-        ["visits", "WhoIsInOffice", { "offices": ["berlin"] }],
         ["quick-navigation", "QuickNav"],
         ["users", "UsersMapWidget"],
         ["events", "GlobalEvents", { "offices": ["global"] }]
@@ -32,21 +24,18 @@
         ["quick-navigation", "QuickNav"]
       ],
       [
-        ["users", "UserStatus"],
-        ["office-visits", "Actions", { "offices": ["berlin"] }],
+        [
+          "office-visits",
+          "Actions",
+          { "offices": ["berlin", "lisbon", "london"] }
+        ],
         ["announcements", "Announcement"],
-        ["checklists", "Checklist"],
-        ["events", "UncompletedActions"],
-        ["office-visits", "MyOfficeVisits", { "offices": ["berlin"] }],
-        ["visits", "WhoIsInOffice", { "offices": ["berlin"] }],
-        ["users", "UsersMapWidget"],
-        ["events", "GlobalEvents", { "offices": ["global"] }]
-      ],
-      [
-        ["working-hours", "WorkingHoursWidget"],
-        ["events", "MyEvents"],
-        ["events", "UpcomingEvents"],
-        ["news", "LatestNews"]
+        ["users", "UsersMapWidget", { "offices": ["global"] }],
+        ["events", "GlobalEvents", { "offices": ["global"] }],
+        [
+          ["events", "UpcomingEvents"],
+          ["news", "LatestNews"]
+        ]
       ]
     ]
   }

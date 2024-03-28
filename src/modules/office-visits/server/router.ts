@@ -3,21 +3,21 @@ import dayjs, { Dayjs } from 'dayjs'
 import localizedFormat from 'dayjs/plugin/localizedFormat'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Op } from 'sequelize'
-import { appConfig } from '#server/app-config'
 import { DATE_FORMAT } from '#server/constants'
 import {
   BUSINESS_DAYS_LIMIT,
   getBusinessDaysFromDate,
   getDate,
 } from './helpers'
-import { Visit, GenericVisit, VisitType, VisitsDailyStats } from '#shared/types'
-import * as fp from '#shared/utils'
 import { Permissions } from '../permissions'
 import { Metadata } from '../metadata-schema'
+import { Visit, GenericVisit, VisitType, VisitsDailyStats } from '#shared/types'
+import * as fp from '#shared/utils'
+import { appConfig } from '#server/app-config'
+import { getRoom } from '#modules/room-reservation/shared-helpers'
 
 dayjs.extend(localizedFormat)
 
-// @todo fix types
 const publicRouter: FastifyPluginCallback = async function (fastify, opts) {}
 
 const userRouter: FastifyPluginCallback = async function (fastify, opts) {
@@ -34,13 +34,12 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         return reply.throw.badParams('Missing office ID')
       }
       const office = appConfig.getOfficeById(officeId)
-
       const nextBusinessDays = getBusinessDaysFromDate(
         date,
         BUSINESS_DAYS_LIMIT
       )
       // @todo REwrite this using native SQL query using JOIN on dates
-      // or rewrite by mergin all the tables into one
+      // or rewrite by merging all the tables into one
       let result: Record<string, any> = {}
 
       const addToResult = (value: GenericVisit, date: string, type: string) => {
@@ -135,10 +134,8 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         )
       })
       roomReservations.forEach((reservation) => {
-        const office = appConfig.offices.find((o) => o.id === officeId)
-        const officeRoom = (office?.rooms || []).find(
-          (r) => r.id === reservation.roomId
-        )
+        let officeRoom = getRoom(office, reservation.roomId)
+
         return addToResult(
           {
             id: reservation.id,

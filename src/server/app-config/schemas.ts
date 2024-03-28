@@ -1,16 +1,16 @@
 import { z } from 'zod'
 
 const SAFE_ID_RE = /^[A-Za-z_][A-Za-z0-9_]*$/
-
-export const componentRef = z
-  .tuple([z.string(), z.string()])
-  .or(
+const componentRef: z.ZodTypeAny = z.lazy(() =>
+  z.union([
+    z.tuple([z.string(), z.string()]),
     z.tuple([
       z.string(),
       z.string(),
       z.object({ offices: z.array(z.string()).optional() }),
-    ])
-  )
+    ]),
+  ])
+)
 
 export const layout = z.object({
   mobile: z.object({
@@ -19,11 +19,15 @@ export const layout = z.object({
     events: z.array(componentRef),
     news: z.array(componentRef),
   }),
-  desktop: z.tuple([
-    z.array(componentRef),
-    z.array(componentRef),
-    z.array(componentRef),
-  ]),
+  desktop: z.object({
+    sidebar: z.array(componentRef),
+    main: z.array(
+      z.union([
+        z.array(componentRef).length(1),
+        z.array(componentRef).length(2),
+      ])
+    ),
+  }),
 })
 
 export const applicationConfig = z.object({
@@ -71,17 +75,6 @@ export const officeAreaDesk = z
     ])
   )
 
-export const officeArea = z.object({
-  id: z.string().regex(SAFE_ID_RE),
-  available: z.boolean().default(true),
-  name: z.string(),
-  capacity: z.number().min(1),
-  map: z.string(),
-  // @todo remove type: "desks"
-  bookable: z.boolean().default(false),
-  desks: z.array(officeAreaDesk).min(1),
-})
-
 export const officeRoom = z.object({
   id: z.string(),
   name: z.string(),
@@ -90,6 +83,10 @@ export const officeRoom = z.object({
   photo: z.string(),
   equipment: z.string(),
   capacity: z.number().min(1),
+  position: z.object({
+    x: z.number().min(0).max(100),
+    y: z.number().min(0).max(100),
+  }),
   workingHours: z.tuple([
     z.string().regex(/^([01][0-9]|2[0-4]):[0-5][0-9]$/),
     z.string().regex(/^([01][0-9]|2[0-4]):[0-5][0-9]$/),
@@ -97,6 +94,16 @@ export const officeRoom = z.object({
   autoConfirm: z.boolean(),
 })
 
+export const officeArea = z.object({
+  id: z.string().regex(SAFE_ID_RE),
+  available: z.boolean().default(true),
+  name: z.string(),
+  capacity: z.number().min(1),
+  map: z.string(),
+  bookable: z.boolean().default(false),
+  desks: z.array(officeAreaDesk).min(1),
+  meetingRooms: z.array(officeRoom).min(1).optional(),
+})
 export const office = z
   .object({
     id: z.string().regex(SAFE_ID_RE),
@@ -105,6 +112,15 @@ export const office = z
     timezone: z.string(),
     country: z.string(),
     city: z.string(),
+    coordinates: z.tuple([z.number(), z.number()]).optional(),
+    directions: z.string().optional(),
+    workingHours: z
+      .tuple([
+        z.string().regex(/^([01][0-9]|2[0-4]):[0-5][0-9]$/),
+        z.string().regex(/^([01][0-9]|2[0-4]):[0-5][0-9]$/),
+      ])
+      .optional(),
+    workingDays: z.string().optional(),
     allowGuestInvitation: z.boolean(),
     allowDeskReservation: z.boolean(),
     allowRoomReservation: z.boolean(),
@@ -112,7 +128,6 @@ export const office = z
     address: z.string().optional(),
     visitsConfig: officeVisitsConfig.optional(),
     areas: z.array(officeArea).min(1).optional(),
-    rooms: z.array(officeRoom).min(1).optional(),
   })
   .superRefine((office, ctx) => {
     if (office.allowDeskReservation) {
@@ -134,15 +149,23 @@ export const office = z
       }
     }
     if (office.allowRoomReservation) {
-      const roomsParsed = z.array(officeRoom).min(1).safeParse(office.rooms)
+      let hasMeetingRooms = false
+      if (office.areas) {
+        for (const area of office.areas) {
+          if (area.meetingRooms && area.meetingRooms.length > 0) {
+            hasMeetingRooms = true
+            break
+          }
+        }
+      }
       const roomsPlaceholderMessageParsed = z
         .string()
         .nonempty()
         .safeParse(office.roomsPlaceholderMessage)
-      if (!roomsParsed.success && !roomsPlaceholderMessageParsed.success) {
+      if (!hasMeetingRooms && !roomsPlaceholderMessageParsed.success) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Property 'allowRoomReservation' is set but 'rooms' or 'roomsPlaceholderMessageParsed' is missing`,
+          message: `Property 'allowRoomReservation' is set but 'meetingRooms' or 'roomsPlaceholderMessageParsed' is missing in your office areas configuration`,
         })
       }
     }

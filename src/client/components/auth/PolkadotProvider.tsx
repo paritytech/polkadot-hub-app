@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { FButton, H3, LoadingPolkadot, Modal, P } from '#client/components/ui'
+import { FButton, H3, LoadingPolkadot } from '#client/components/ui'
 import config from '#client/config'
 import { api } from '#client/utils/api'
 import { WalletType, BaseWallet } from '@polkadot-onboard/core'

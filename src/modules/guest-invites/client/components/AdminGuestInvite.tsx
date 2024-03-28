@@ -25,6 +25,7 @@ import { OfficeFloorMap } from '#client/components/OfficeFloorMap'
 import { propEq } from '#shared/utils/fp'
 import { DATE_FORMAT } from '#client/constants'
 import { useGuestInviteAdmin, useUpdateGuestInvite } from '../queries'
+import { VisitType } from '#shared/types'
 
 export const AdminGuestInvite: React.FC = () => {
   const page = useStore(stores.router)
@@ -171,9 +172,16 @@ export const AdminGuestInvite: React.FC = () => {
                 {!!area && (
                   <OfficeFloorMap
                     area={area}
-                    availableDeskIds={availableAreaDeskIds}
-                    selectedDeskId={selectedDeskId}
-                    onToggleDesk={onToggleDesk}
+                    mappablePoints={[
+                      ...area?.desks.map((desk) => ({
+                        ...desk,
+                        areaId: area.id,
+                        kind: VisitType.Visit,
+                      })),
+                    ]}
+                    clickablePoints={availableAreaDeskIds}
+                    selectedPointId={selectedDeskId}
+                    onToggle={onToggleDesk}
                   />
                 )}
               </div>

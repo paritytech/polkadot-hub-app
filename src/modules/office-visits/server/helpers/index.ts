@@ -4,7 +4,7 @@ import { DATE_FORMAT } from '#server/constants'
 export const BUSINESS_DAYS_LIMIT: number = 40
 
 // FIXME: temporary fix
-export const getDate = (d: string, timezone: string) =>
+export const getDate = (d: string, timezone?: string) =>
   dayjs(d).format(DATE_FORMAT)
 
 // export const getDate = (d: string, timezone: string) =>
