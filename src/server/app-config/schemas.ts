@@ -1,5 +1,6 @@
 import { z } from 'zod'
 
+const SAFE_ID_RE = /^[A-Za-z_][A-Za-z0-9_]*$/
 const componentRef: z.ZodTypeAny = z.lazy(() =>
   z.union([
     z.tuple([z.string(), z.string()]),
@@ -94,7 +95,7 @@ export const officeRoom = z.object({
 })
 
 export const officeArea = z.object({
-  id: z.string(),
+  id: z.string().regex(SAFE_ID_RE),
   available: z.boolean().default(true),
   name: z.string(),
   capacity: z.number().min(1),
@@ -105,7 +106,7 @@ export const officeArea = z.object({
 })
 export const office = z
   .object({
-    id: z.string(),
+    id: z.string().regex(SAFE_ID_RE),
     name: z.string(),
     icon: z.string().optional(),
     timezone: z.string(),

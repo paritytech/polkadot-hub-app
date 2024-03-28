@@ -61,7 +61,7 @@ export const StackedBarChart = <X extends string, Y extends string>(
     if (!d3 || !container) return
     d3.select(ref.current).select('svg').remove()
 
-    const margin = { top: 4, right: 14, bottom: 14, left: 24 }
+    const margin = { top: 4, right: 0, bottom: 14, left: 16 }
     const width = ref.current.clientWidth - margin.left - margin.right
     const height = (props.height || DEFAULT_HEIGHT) - margin.top - margin.bottom
     const barPadding = 2

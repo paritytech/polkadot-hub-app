@@ -66,6 +66,11 @@ export const MySettings: React.FC = () => {
     if (me) {
       const addresses: Array<string[]> = []
       const linked: Record<string, AuthAddressPair[]> = {}
+      if (!me.authIds || !me.authIds['polkadot']) {
+        setLinkedAccounts({})
+        setLinkedAddresses([])
+        return
+      }
       Object.entries(me.authIds['polkadot']).forEach(
         ([walletName, authAddressPairs]) => {
           linked[formatName(walletName)] = authAddressPairs

@@ -177,7 +177,7 @@ export const AdminEvents = () => {
           accessor: (event: EventAdminResponse) => (
             <span className="inline-block -mr-1">
               {event.allowedRoles.map((x) => (
-                <UserRoleLabel role={x} className="mr-1" />
+                <UserRoleLabel key={x} role={x} className="mr-1" />
               ))}
             </span>
           ),
