@@ -23,34 +23,39 @@ export const UpcomingEvents: React.FC = () => {
     }
   }, [events, officeId, page])
 
-  return events?.length && isFetched ? (
+  return (
     <WidgetWrapper title="Upcoming Events">
-      {!events?.length ? (
-        <div className="text-gray-400 text-center">No upcoming events yet</div>
-      ) : (
-        <div className="-m-4">
-          {eventData?.map((x, i) => (
-            <div key={x.id}>
-              <EventBadge
-                event={x}
-                withApplyButton={!x.applicationId && !x.metadata.global}
-              />
-              {i !== events.length - 1 && (
-                <div className="px-4">
-                  <HR key={x.id} />
+      <div className="flex flex-col justify-evenly h-full">
+        {!events?.length ? (
+          <div className="text-gray-400">No upcoming events at the moment</div>
+        ) : (
+          <div className="-m-4">
+            {eventData.length &&
+              eventData?.map((x, i) => (
+                <div key={x.id}>
+                  <EventBadge
+                    event={x}
+                    withApplyButton={!x.applicationId && !x.metadata.global}
+                  />
+                  {i !== eventData.length - 1 && (
+                    <div className="px-4">
+                      <HR key={x.id} />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+              ))}
+          </div>
+        )}
+        <div>
+          <FButton
+            kind="link"
+            className="w-contain mb-6 -ml-2"
+            onClick={() => stores.goTo('events')}
+          >
+            Show more
+          </FButton>
         </div>
-      )}
-      <FButton
-        kind="link"
-        className="w-auto mt-6"
-        onClick={() => stores.goTo('events')}
-      >
-        Show more
-      </FButton>
+      </div>
     </WidgetWrapper>
-  ) : null
+  )
 }

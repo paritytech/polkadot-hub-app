@@ -152,7 +152,9 @@ export const _HubMap = () => {
         } hub`
       }
     } else {
-      return `${visitorsNumber} people in the ${office?.name} hub`
+      return `${visitorsNumber} ${
+        visitorsNumber === 1 ? 'person' : 'people'
+      } in the ${office?.name} hub`
     }
   }, [office, visitorsNumber])
 

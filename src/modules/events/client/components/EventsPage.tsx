@@ -46,7 +46,11 @@ const EventsList = ({ events, title }: { title: string; events: Event[] }) => (
                 EventsBg[title]
               )}
               event={x}
-              withApplyButton={!x.applicationId && !x.metadata?.global}
+              withApplyButton={
+                !x.applicationId &&
+                !x.metadata?.global &&
+                title !== Sections.past
+              }
               requiresAction={
                 title === Sections.confirmed && !x.applicationComplete
               }
