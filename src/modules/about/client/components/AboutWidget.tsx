@@ -18,11 +18,7 @@ export const AboutWidget: React.FC = () => {
     ).format('hA')} ${!!office.workingDays ? `, ${office.workingDays}` : ''}`
   }, [office])
 
-  if (
-    !!office &&
-    !office.allowDeskReservation &&
-    !office.allowRoomReservation
-  ) {
+  if (!office) {
     return <></>
   }
 

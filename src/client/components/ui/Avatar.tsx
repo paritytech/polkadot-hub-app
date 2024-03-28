@@ -42,7 +42,7 @@ const MinidenticonImg = ({
     [username, saturation, lightness]
   )
   return (
-    <div className="bg-white border border-fill-6 shadow-sm rounded-full">
+    <div className="bg-white border border-fill-6 rounded-full">
       <img src={svgURI} alt={username} {...props} />
     </div>
   )

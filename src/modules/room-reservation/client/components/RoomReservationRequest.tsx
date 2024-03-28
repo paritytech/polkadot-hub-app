@@ -33,6 +33,7 @@ import {
   usePlaceholderMessage,
   useRooms,
 } from '../queries'
+import { useOffice } from '#client/utils/hooks'
 
 dayjs.extend(dayjsDuration)
 
@@ -51,6 +52,7 @@ export const RoomReservationRequest = () => {
 
 const _RoomReservationRequest: React.FC = () => {
   const officeId = useStore(stores.officeId)
+  const office = useOffice(officeId)
   const [showModal, setShowModal] = useState(false)
   const roomRefs = React.useRef<Record<string, HTMLDivElement>>({})
   const [timeDuration, setTimeDuration] = useState(
@@ -222,6 +224,33 @@ const _RoomReservationRequest: React.FC = () => {
 
   const inputStyle = 'h-[56px] w-full bg-fill-6 rounded-md border-none'
 
+  const modalOnClose = () => {
+    if (mode === RoomBookingModes.AnyRoom) {
+      updateRequest('roomId', '')
+    } else {
+      updateRequest('timeSlot', '')
+    }
+  }
+
+  const options = {
+    roomDetails: rooms?.find((r) => r.id === request.roomId),
+    timeSlot: request.timeSlot,
+    date: request.date,
+    onConfirm: () => createRoomReservation(request),
+  }
+  const formattedDate = formatDayOfTheWeekWithDate(request.date)
+
+  if (!office?.allowRoomReservation) {
+    return (
+      <ComponentWrapper className="p-4 sm:p-6">
+        <H1 className="font-extra text-center mt-4 mb-8">Book Meeting Room</H1>
+        <p className="text-center">
+          Meeting room booking is currently disabled
+        </p>
+        <p className="text-center">Please contact support for details.</p>
+      </ComponentWrapper>
+    )
+  }
   if (!!placeholderMessage) {
     return (
       <ComponentWrapper className="p-4 sm:p-6">
@@ -238,21 +267,6 @@ const _RoomReservationRequest: React.FC = () => {
     )
   }
 
-  const modalOnClose = () => {
-    if (mode === RoomBookingModes.AnyRoom) {
-      updateRequest('roomId', '')
-    } else {
-      updateRequest('timeSlot', '')
-    }
-  }
-
-  const options = {
-    roomDetails: rooms?.find((r) => r.id === request.roomId),
-    timeSlot: request.timeSlot,
-    date: request.date,
-    onConfirm: () => createRoomReservation(request),
-  }
-  const formattedDate = formatDayOfTheWeekWithDate(request.date)
   return (
     <ComponentWrapper className="p-4 sm:p-6">
       {showModal && (

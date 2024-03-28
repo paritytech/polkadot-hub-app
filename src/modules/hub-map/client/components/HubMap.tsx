@@ -31,6 +31,7 @@ export const HubMap = () => (
     required={[
       Permissions.visits.Create,
       Permissions['room-reservation'].Create,
+      Permissions['guest-invites'].Create,
     ]}
   >
     <_HubMap />
@@ -75,13 +76,13 @@ export const _HubMap = () => {
   React.useEffect(() => {
     if (!!areas.length) {
       setAreaId(areas[0].id)
-      setMappablePoints(getPoints(areas[0]))
+      setMappablePoints(getPoints(areas[0], office))
     }
   }, [areas])
 
   React.useEffect(() => {
     if (!!area) {
-      setMappablePoints(getPoints(area))
+      setMappablePoints(getPoints(area, office))
     }
   }, [area])
 
