@@ -23,3 +23,6 @@ src/client/components/__import-components.tsx
 
 yalc.lock
 .yalc
+
+documentation/.next/
+documentation/node_modules/
