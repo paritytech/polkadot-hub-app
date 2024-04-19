@@ -1,5 +1,8 @@
 {
   "index": "Hub App Documentation",
   "quickStart": "Quick start",
-  "modules": "Modules"
+  "modules": "Modules",
+  "framework": "Framework",
+  "how-to": "Guides",
+  "commonErrors": "Common errors"
 }
