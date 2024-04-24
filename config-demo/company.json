@@ -19,6 +19,9 @@
       "country": "GE",
       "icon": "🇩🇪",
       "address": "Berlin street 10",
+      "directions": "Entrance through the courtyard",
+      "workingHours": ["09:00", "18:00"],
+      "workingDays": "Mon - Fri",
       "timezone": "Europe/Berlin",
       "allowGuestInvitation": true,
       "allowDeskReservation": true,
@@ -35,19 +38,35 @@
       },
       "areas": [
         {
-          "id": "area-1",
+          "id": "area1",
           "name": "1st floor",
+          "available": true,
           "capacity": 5,
           "map": "/maps/berlin/area-1.png",
-          "type": "desks",
           "bookable": true,
+          "meetingRooms": [
+            {
+              "id": "room-1",
+              "name": "Mayflower",
+              "description": "1st floor",
+              "capacity": 4,
+              "equipment": "Whiteboard, stationary, electrical sockets within reachable distance to the table.",
+              "photo": "/meeting-rooms/berlin/room-1.jpg",
+              "workingHours": ["08:00", "22:00"],
+              "autoConfirm": true,
+              "position": {
+                "x": 54,
+                "y": 78
+              }
+            }
+          ],
           "desks": [
             {
               "id": "a",
               "name": "A",
               "type": "flexible",
               "position": {
-                "x": 11,
+                "x": 10,
                 "y": 49
               }
             },
@@ -56,7 +75,7 @@
               "name": "B",
               "type": "flexible",
               "position": {
-                "x": 11,
+                "x": 10,
                 "y": 78
               }
             },
@@ -119,7 +138,7 @@
               "name": "I",
               "type": "flexible",
               "position": {
-                "x": 70.5,
+                "x": 69,
                 "y": 17
               }
             },
@@ -128,7 +147,7 @@
               "name": "J",
               "type": "flexible",
               "position": {
-                "x": 80,
+                "x": 78.25,
                 "y": 17
               }
             },
@@ -137,7 +156,7 @@
               "name": "K",
               "type": "flexible",
               "position": {
-                "x": 89,
+                "x": 88,
                 "y": 17
               }
             },
@@ -146,7 +165,7 @@
               "name": "L",
               "type": "flexible",
               "position": {
-                "x": 70.5,
+                "x": 68.5,
                 "y": 75
               }
             },
@@ -155,8 +174,8 @@
               "name": "M",
               "type": "flexible",
               "position": {
-                "x": 80,
-                "y": 75
+                "x": 78.25,
+                "y": 76
               }
             },
             {
@@ -164,7 +183,7 @@
               "name": "N",
               "type": "flexible",
               "position": {
-                "x": 89,
+                "x": 88,
                 "y": 75
               }
             }
@@ -175,7 +194,6 @@
           "name": "No floor",
           "capacity": 100,
           "map": "/maps/berlin/none.png",
-          "type": "desks",
           "desks": [
             {
               "id": "drop-in",
@@ -188,18 +206,6 @@
               }
             }
           ]
-        }
-      ],
-      "rooms": [
-        {
-          "id": "room-1",
-          "name": "Mayflower",
-          "description": "1st floor",
-          "capacity": 4,
-          "equipment": "Whiteboard, stationary, electrical sockets within reachable distance to the table.",
-          "photo": "/meeting-rooms/berlin/room-1.jpg",
-          "workingHours": ["08:00", "22:00"],
-          "autoConfirm": true
         }
       ]
     }

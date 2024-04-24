@@ -43,7 +43,7 @@ All user-facing widgets of the application are (and should be) located in its ow
 - **[Email-SMTP](./src/integrations/email-smtp/).** Notifications via email.
 - **[BambooHR](./src/integrations/bamboohr/)** Allow modules to parse information from BambooHR API.
 
-## Running HQ App locally
+## Running Polkadot Hub App locally
 
 ### [Quick start](docs/quickstart.md)
 

@@ -1,5 +1,5 @@
 {
-  "name": "Polkadot Hub Sample",
+  "name": "Parity HQ",
   "auth": {
     "providers": ["polkadot"]
   },
@@ -7,36 +7,43 @@
     "mobile": {
       "fixed": [["users", "NewjoinerDetector"]],
       "office": [
-        ["office-visits", "Actions", { "offices": ["berlin"] }],
-        ["announcements", "Announcement"],
-        ["events", "MyEvents"],
-        ["quick-navigation", "QuickNav"],
-        ["users", "UsersMapWidget"],
-        ["events", "GlobalEvents", { "offices": ["global"] }]
-      ],
-      "events": [["events", "UpcomingEvents"]],
-      "news": [["news", "LatestNews"]]
-    },
-    "desktop": [
-      [
-        ["users", "NewjoinerDetector"],
-        ["users", "ProfileCard"],
-        ["quick-navigation", "QuickNav"]
-      ],
-      [
         [
           "office-visits",
           "Actions",
           { "offices": ["berlin", "lisbon", "london"] }
         ],
         ["announcements", "Announcement"],
+        ["hub-map", "HubMap"],
+        ["quick-navigation", "QuickNav"],
         ["users", "UsersMapWidget", { "offices": ["global"] }],
-        ["events", "GlobalEvents", { "offices": ["global"] }],
+        ["about", "AboutWidget", { "offices": ["berlin", "lisbon", "london"] }]
+      ],
+      "events": [["events", "UpcomingEvents"]],
+      "news": [["news", "LatestNews"]]
+    },
+    "desktop": {
+      "sidebar": [
+        ["users", "NewjoinerDetector"],
+        ["users", "ProfileCard"],
+        ["quick-navigation", "QuickNav"],
+        ["about", "AboutWidget", { "offices": ["berlin", "lisbon", "london"] }]
+      ],
+      "main": [
+        [
+          [
+            "office-visits",
+            "Actions",
+            { "offices": ["berlin", "lisbon", "london"] }
+          ]
+        ],
+        [["announcements", "Announcement"]],
+        [["users", "UsersMapWidget", { "offices": ["global"] }]],
+        [["hub-map", "HubMap"]],
         [
           ["events", "UpcomingEvents"],
           ["news", "LatestNews"]
         ]
       ]
-    ]
+    }
   }
 }

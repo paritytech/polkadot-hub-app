@@ -10,8 +10,20 @@ import { cn } from '#client/utils'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import { ImageWithPanZoom } from './ui/ImageWithPanZoom'
-import { ScheduledItemType } from '#modules/hub-map/types'
 import { ROBOT_USER_ID } from '#client/constants'
+
+export type ScheduledItemType = {
+  id: string
+  value: string
+  type: string
+  date: string
+  extraInformation?: string
+  description: string
+  areaId?: string
+  objectId?: string
+  user?: any
+  status: string
+}
 
 type PointComponentFunctionProps = (
   item: OfficeAreaDesk | OfficeRoom,

@@ -1,9 +1,20 @@
 {
   "modules": [
     {
+      "id": "admin-dashboard",
+      "enabled": true,
+      "metadata": {},
+      "portals": {
+        "users-data": [["users", "AdminDashboardStats"]],
+        "visits-data": [["visits", "AdminDashboardStats"]],
+        "guest-invites-data": [["guest-invites", "AdminDashboardStats"]],
+        "room-reservation-data": [["room-reservation", "AdminDashboardStats"]]
+      }
+    },
+    {
       "id": "users",
       "enabled": true,
-      "enabledIntegrations": [],
+      "enabledIntegrations": ["mapbox"],
       "portals": {
         "profile_form_extra_fields": [
           ["profile-questions", "ProfileQuestionsProgress"]
@@ -37,7 +48,8 @@
             "matrix": {
               "label": "Matrix Handle",
               "placeholder": "@username:example.com",
-              "required": true,
+              "required": false,
+              "requiredForRoles": ["regular", "w3f"],
               "prefix": "https://matrix.to/#/@"
             },
             "github": {
@@ -65,6 +77,9 @@
               "prefix": "https://twitter.com/"
             }
           }
+        },
+        "adminDashboardStats": {
+          "registeredUsersByRoleGroup": "department"
         }
       }
     },
@@ -78,10 +93,6 @@
     },
     {
       "id": "news",
-      "enabled": true
-    },
-    {
-      "id": "hub-map",
       "enabled": true
     },
     {
@@ -153,17 +164,17 @@
         "rulesByOffice": {
           "__default": [
             {
-              "id": "rule-1",
+              "id": "r2",
               "label": "I agree to report any change of the information provided here and submit this questionnaire again (until further notice)."
             }
           ],
           "berlin": [
             {
-              "id": "rule-1",
+              "id": "r2",
               "label": "I agree to report any change of the information provided here and submit this questionnaire again (until further notice)."
             },
             {
-              "id": "rule-2",
+              "id": "r5",
               "label": "I understand that the office is not disabled-accessible."
             }
           ]
@@ -173,16 +184,21 @@
     {
       "id": "room-reservation",
       "enabled": true,
-      "enabledIntegrations": []
+      "enabledIntegrations": ["email-smtp"]
     },
     {
       "id": "office-visits",
-      "enabled": true
+      "enabled": true,
+      "metadata": {
+        "statistics": {
+          "splitByRoleGroup": "department"
+        }
+      }
     },
     {
       "id": "forms",
       "enabled": true,
-      "enabledIntegrations": [],
+      "enabledIntegrations": ["email-smtp"],
       "portals": {
         "public_form_header": [["events", "EventPublicFormDetector"]],
         "admin_form_submissions_header": [
@@ -194,7 +210,30 @@
     {
       "id": "events",
       "enabled": true,
-      "enabledIntegrations": []
+      "enabledIntegrations": ["email-smtp"],
+      "metadata": {
+        "links": [
+          {
+            "name": "Fun Link 1",
+            "url": "#funlink"
+          },
+          {
+            "name": "Link 2",
+            "url": "#link2"
+          },
+          {
+            "name": "FAQ link",
+            "url": "#faq"
+          }
+        ],
+        "typeColorMap": {
+          "3rd Party": "green",
+          "External": "blue",
+          "W3F hosted": "red",
+          "Parity hosted": "purple"
+        },
+        "officesWithGlobalEvents": ["global"]
+      }
     },
     {
       "enabled": true,
@@ -206,29 +245,23 @@
             "main": true,
             "links": [
               {
-                "url": "mailto:support@polkadothub.com",
-                "name": "Ask for help",
-                "icon": "Help",
+                "url": "https://ludicrous-monarch-fad.notion.site/Polkadot-Hubs-Database-082273edd62a4140be06c409673f8cf4",
+                "name": "Polkadot Hub Playbook",
+                "icon": "Book",
                 "sameTab": true,
                 "external": false
               },
               {
-                "url": "https://polkadot.network/",
-                "name": "Polkadot",
-                "icon": "Book",
+                "url": "https://ludicrous-monarch-fad.notion.site/Polkadot-Hubs-Database-082273edd62a4140be06c409673f8cf4",
+                "name": "Hubs Database",
+                "icon": "Community",
                 "external": false
               },
               {
-                "url": "https://staking.polkadot.network/",
-                "name": "Polkadot Staking",
-                "icon": "Book",
-                "external": false
-              },
-              {
-                "url": "https://helloitsbirdo.github.io/#/",
-                "name": "Polkadot Builders Handbook",
-                "icon": "Book",
-                "external": false
+                "url": "https://forum.polkadot.network/",
+                "name": "Polkadot Forum",
+                "icon": "Forum",
+                "external": true
               }
             ]
           },
@@ -236,14 +269,24 @@
             "section": "Please share your feedback",
             "links": [
               {
-                "url": "mailto:support@polkadothub.com",
+                "url": "#sendfeedback",
                 "name": "Ideas and Feedback",
-                "external": false
+                "external": true
               }
             ]
           }
         ]
       }
+    },
+    {
+      "id": "hub-map",
+      "enabled": true,
+      "metadata": {}
+    },
+    {
+      "id": "about",
+      "enabled": true,
+      "metadata": {}
     }
   ]
 }

@@ -144,7 +144,7 @@ export const office = z
       if (!areasParsed.success) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `Property 'allowDeskReservation' is set but 'areas' is missing`,
+          message: areasParsed.error.issues[0].code,
         })
       }
     }

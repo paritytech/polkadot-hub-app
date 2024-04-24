@@ -1,64 +1,235 @@
 {
-  "roles": [
+  "roleGroups": [
     {
-      "id": "guest",
-      "name": "Guest",
-      "permissions": [
-        "users.__admin",
-        "users.admin.list",
-        "users.admin.manage",
-        "users.admin.assign_roles",
-        "users.list_profiles",
-        "users.manage_profile",
-        "users.use_map",
-        "users.use_onboarding",
-        "visits.__admin",
-        "visits.admin.list",
-        "visits.admin.manage",
-        "visits.list_visitors",
-        "visits.create",
-        "office-visits.__admin",
-        "office-visits.admin.list",
-        "guest-invites.__admin",
-        "guest-invites.admin.list",
-        "guest-invites.admin.manage",
-        "guest-invites.create",
-        "room-reservation.__admin",
-        "room-reservation.admin.list",
-        "room-reservation.admin.manage",
-        "room-reservation.create",
-        "search.use",
-        "forms.__admin",
-        "forms.admin.list",
-        "forms.admin.manage",
-        "forms.admin.receive_notifications",
-        "events.admin.receive_notifications",
-        "events.__admin",
-        "events.admin.list",
-        "events.admin.manage",
-        "events.list_global_events",
-        "events.list_participants",
-        "news.__admin",
-        "news.admin.list",
-        "news.admin.manage",
-        "quick-navigation.use",
-        "profile-questions.use",
-        "help-center.get_content",
-        "checklists.use",
-        "checklists.__admin",
-        "checklists.admin.manage",
-        "announcements.__admin",
-        "announcements.use",
-        "working-hours.__admin",
-        "working-hours.admin.list",
-        "working-hours.admin.manage",
-        "working-hours.create",
-        "users.manage_profile_limited"
-      ],
-      "accessByDefault": true
+      "id": "base",
+      "name": "Base user roles",
+      "roles": [
+        {
+          "id": "regular",
+          "name": "Regular",
+          "permissions": [
+            "users.list_profiles",
+            "users.manage_profile",
+            "users.use_map",
+            "users.use_onboarding",
+            "visits.list_visitors",
+            "visits.create",
+            "guest-invites.create",
+            "room-reservation.create",
+            "search.use",
+            "events.list_global_events",
+            "events.list_participants",
+            "quick-navigation.use",
+            "profile-questions.use",
+            "help-center.get_content",
+            "checklists.use",
+            "announcements.use"
+          ],
+          "accessByDefault": true
+        },
+        {
+          "id": "ex",
+          "name": "Ex-HubMember",
+          "permissions": [
+            "users.list_profiles",
+            "users.manage_profile",
+            "events.list_global_events",
+            "events.list_participants"
+          ]
+        },
+        {
+          "id": "guest",
+          "name": "Guest",
+          "permissions": [
+            "events.list_global_events",
+            "users.manage_profile_limited"
+          ]
+        },
+        {
+          "id": "berlin_hub",
+          "name": "Berlin Hub Member",
+          "permissions": [
+            "users.list_profiles",
+            "users.manage_profile",
+            "users.use_map",
+            "users.use_onboarding",
+            "visits.list_visitors:berlin",
+            "visits.create:berlin",
+            "guest-invites.create:berlin",
+            "room-reservation.create:berlin",
+            "search.use",
+            "events.list_global_events",
+            "events.list_participants",
+            "checklists.use",
+            "help-center.get_content",
+            "quick-navigation.use",
+            "help-center.get_content",
+            "announcements.use"
+          ],
+          "accessByDefault": true
+        }
+      ]
+    },
+    {
+      "id": "admins",
+      "name": "Admins 🔥",
+      "roles": [
+        {
+          "id": "admin",
+          "name": "Admin",
+          "permissions": [
+            "users.__admin",
+            "users.admin.list",
+            "users.admin.manage",
+            "users.admin.assign_roles",
+            "users.list_profiles",
+            "users.manage_profile",
+            "users.use_map",
+            "users.use_onboarding",
+            "visits.__admin",
+            "visits.admin.list",
+            "visits.admin.manage",
+            "visits.list_visitors",
+            "visits.create",
+            "office-visits.__admin",
+            "office-visits.admin.list",
+            "guest-invites.__admin",
+            "guest-invites.admin.list",
+            "guest-invites.admin.manage",
+            "guest-invites.create",
+            "room-reservation.__admin",
+            "room-reservation.admin.list",
+            "room-reservation.admin.manage",
+            "room-reservation.create",
+            "search.use",
+            "forms.__admin",
+            "forms.admin.list",
+            "forms.admin.manage",
+            "forms.admin.receive_notifications",
+            "events.admin.receive_notifications",
+            "events.__admin",
+            "events.admin.list",
+            "events.admin.manage",
+            "events.list_global_events",
+            "events.list_participants",
+            "news.__admin",
+            "news.admin.list",
+            "news.admin.manage",
+            "quick-navigation.use",
+            "profile-questions.use",
+            "help-center.get_content",
+            "checklists.use",
+            "checklists.__admin",
+            "checklists.admin.manage",
+            "announcements.__admin",
+            "announcements.use",
+            "working-hours.__admin",
+            "working-hours.admin.list",
+            "working-hours.admin.manage",
+            "admin-dashboard.__admin"
+          ],
+          "accessByDefault": true
+        },
+        {
+          "id": "event_manager",
+          "name": "Event manager",
+          "permissions": [
+            "users.list_profiles",
+            "users.manage_profile",
+            "users.use_map",
+            "users.use_onboarding",
+            "visits.list_visitors",
+            "visits.create",
+            "guest-invites.create",
+            "room-reservation.create",
+            "search.use",
+            "forms.__admin",
+            "forms.admin.list",
+            "forms.admin.manage",
+            "forms.admin.receive_notifications",
+            "events.admin.receive_notifications",
+            "events.__admin",
+            "events.admin.list",
+            "events.admin.manage",
+            "events.list_global_events",
+            "events.list_participants",
+            "quick-navigation.use",
+            "profile-questions.use",
+            "help-center.get_content",
+            "checklists.use",
+            "checklists.__admin",
+            "checklists.admin.manage",
+            "announcements.use"
+          ],
+          "accessByDefault": true
+        }
+      ]
+    },
+    {
+      "id": "desks_berlin",
+      "name": "Assigned desks: 🇩🇪 Berlin",
+      "rules": { "unique": true },
+      "roles": [
+        {
+          "id": "berlin_desk_1floor_a",
+          "name": "Desk: Berlin, 1FL, A"
+        },
+        {
+          "id": "berlin_desk_1floor_b",
+          "name": "Desk: Berlin, 1FL, B"
+        },
+        {
+          "id": "berlin_desk_1floor_c",
+          "name": "Desk: Berlin, 1FL, C"
+        },
+        {
+          "id": "berlin_desk_1floor_d",
+          "name": "Desk: Berlin, 1FL, D"
+        },
+        {
+          "id": "berlin_desk_1floor_e",
+          "name": "Desk: Berlin, 1FL, E"
+        },
+        {
+          "id": "berlin_desk_1floor_f",
+          "name": "Desk: Berlin, 1FL, F"
+        },
+        {
+          "id": "berlin_desk_1floor_g",
+          "name": "Desk: Berlin, 1FL, G"
+        },
+        {
+          "id": "berlin_desk_1floor_h",
+          "name": "Desk: Berlin, 1FL, H"
+        },
+        {
+          "id": "berlin_desk_1floor_i",
+          "name": "Desk: Berlin, 1FL, I"
+        },
+        {
+          "id": "berlin_desk_1floor_j",
+          "name": "Desk: Berlin, 1FL, J"
+        },
+        {
+          "id": "berlin_desk_1floor_k",
+          "name": "Desk: Berlin, 1FL, K"
+        },
+        {
+          "id": "berlin_desk_1floor_l",
+          "name": "Desk: Berlin, 1FL, L"
+        },
+        {
+          "id": "berlin_desk_1floor_m",
+          "name": "Desk: Berlin, 1FL, M"
+        },
+        {
+          "id": "berlin_desk_1floor_n",
+          "name": "Desk: Berlin, 1FL, N"
+        }
+      ]
     }
   ],
   "defaultRoleByEmailDomain": {
-    "__default": "guest"
+    "__default": "admin"
   }
 }

@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   app:
-    image: ghcr.io/piggydoughnut/hqapp:latest
+    image: paritytech/polkadot-hub-app:latest
     volumes:
       - ./config:/app/config/
     env_file:

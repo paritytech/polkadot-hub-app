@@ -1,6 +1,6 @@
 import { useStore } from '@nanostores/react'
 import * as React from 'react'
-import { BackButton, ComponentWrapper, H1, H2 } from '#client/components/ui'
+import { BackButton, ComponentWrapper, H1, H2, P } from '#client/components/ui'
 import * as stores from '#client/stores'
 import { useMyEventsView, useEventsView } from '../queries'
 import { EventApplicationStatus } from '#shared/types'
@@ -33,6 +33,7 @@ const EventsBg = {
 const EventsList = ({ events, title }: { title: string; events: Event[] }) => (
   <div>
     <H2 className="mt-10 mb-4 capitalize">{title}</H2>
+    {!events.length && <P textType="additional">No events to show here.</P>}
     <div className="flex flex-col gap-2">
       {events?.map((x: any, i) => {
         if (title === Sections.upcoming && !!x.applications?.length) {

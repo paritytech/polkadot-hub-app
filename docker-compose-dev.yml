@@ -1,9 +1,9 @@
 version: '3.7'
 services:
   app:
-    container_name: app
+    container_name: app-dev
     volumes:
-      - ./config:/app/config/
+      - ./config-demo:/app/config/
       - ./src:/app/src
       - ./dist_client:/app/dist_client
     env_file:

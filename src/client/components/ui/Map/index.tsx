@@ -120,7 +120,12 @@ export const Map: React.FC<Props> = ({
   }, [])
 
   if (!config.mapBoxApiKey) {
-    return <></>
+    return (
+      <div className="text-center">
+        {' '}
+        <P textType="additional"> Erorr: No MapBox Api key is configured</P>
+      </div>
+    )
   }
 
   if (!isMapboxInitialized) {
