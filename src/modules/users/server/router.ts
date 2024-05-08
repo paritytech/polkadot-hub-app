@@ -258,7 +258,9 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   fastify.get(
     '/profile/:userId',
     async (req: FastifyRequest<{ Params: { userId: string } }>, reply) => {
-      req.check(Permissions.ListProfiles)
+      if (req.user.id !== req.params.userId) {
+        req.check(Permissions.ListProfiles)
+      }
       const user = await fastify.db.User.findByPkActive(req.params.userId, {
         include: {
           as: 'tags',
@@ -392,8 +394,14 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 
   fastify.get('/me/tags', async (req, reply) => {
-    req.check(Permissions.ManageProfile)
-    req.check(Permissions.ListProfiles)
+    if (
+      !req.permissions.hasAnyOf([
+        Permissions.ListProfiles,
+        Permissions.ManageProfile,
+      ])
+    ) {
+      return reply.throw.accessDenied()
+    }
     // FIXME: missed types for sequelize lazy loading methods (many-to-many relation)
     // @ts-ignore
     const tags = (await req.user.getTags()) as Tag[]

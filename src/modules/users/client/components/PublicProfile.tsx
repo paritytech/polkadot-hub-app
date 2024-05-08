@@ -27,14 +27,23 @@ const NoData = () => (
   </ComponentWrapper>
 )
 
-export const PublicProfile: React.FC<RootComponentProps> = (props) => (
-  <PermissionsValidator
-    required={[Permissions.users.ListProfiles]}
-    onRejectGoHome
-  >
+export const PublicProfile: React.FC<RootComponentProps> = (props) => {
+  const route = useStore(stores.router)
+  const me = useStore(stores.me)
+  const userId = route?.route === 'publicProfile' ? route.params.userId : null
+  const isMine = me?.id === userId
+
+  return isMine ? (
     <_PublicProfile {...props} />
-  </PermissionsValidator>
-)
+  ) : (
+    <PermissionsValidator
+      required={[Permissions.users.ListProfiles]}
+      onRejectGoHome
+    >
+      <_PublicProfile {...props} />
+    </PermissionsValidator>
+  )
+}
 
 const _PublicProfile: React.FC<RootComponentProps> = ({ portals }) => {
   const route = useStore(stores.router)

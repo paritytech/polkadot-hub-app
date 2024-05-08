@@ -83,11 +83,11 @@ export const Card = ({
       <div className={cn('flex flex-col', fullView ? 'gap-6' : 'gap-4')}>
         <div className="flex flex-col gap-1">
           <P className="mb-0">{user.fullName}</P>
-          <PermissionsValidator required={[Permissions.users.ListProfiles]}>
+          <MyDetailsVsOthersDetails isMine={isMine}>
             <div className="text-text-tertiary text-base leading-6">
               {[user.jobTitle, user.team].filter(Boolean).join(' · ')}
             </div>
-          </PermissionsValidator>
+          </MyDetailsVsOthersDetails>
           <div className="mt-3">
             {userRoles.map((x) => (
               <Tag key={x} size="small" color="gray" className="mr-1 mb-2">
@@ -96,7 +96,7 @@ export const Card = ({
             ))}
           </div>
         </div>
-        <PermissionsValidator required={[Permissions.users.ListProfiles]}>
+        <MyDetailsVsOthersDetails isMine={isMine}>
           <>
             <div className="flex flex-col gap-4">
               {location && (
@@ -151,9 +151,23 @@ export const Card = ({
               </PermissionsValidator>
             )}
           </>
-        </PermissionsValidator>
+        </MyDetailsVsOthersDetails>
       </div>
     </div>
+  )
+}
+
+const MyDetailsVsOthersDetails: React.FC<{
+  isMine: boolean
+  children: React.ReactNode
+}> = (props) => {
+  if (props.isMine) {
+    return <>{props.children}</>
+  }
+  return (
+    <PermissionsValidator required={[Permissions.users.ListProfiles]}>
+      {props.children}
+    </PermissionsValidator>
   )
 }
 

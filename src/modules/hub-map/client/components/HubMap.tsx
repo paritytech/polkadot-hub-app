@@ -26,17 +26,21 @@ import { useUpcoming } from '../queries'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
 import Permissions from '#shared/permissions'
 
-export const HubMap = () => (
-  <PermissionsValidator
-    required={[
-      Permissions.visits.Create,
-      Permissions['room-reservation'].Create,
-      Permissions['guest-invites'].Create,
-    ]}
-  >
-    <_HubMap />
-  </PermissionsValidator>
-)
+export const HubMap = () => {
+  const officeId = useStore(stores.officeId)
+  return (
+    <PermissionsValidator
+      officeId={officeId}
+      required={[
+        Permissions.visits.Create,
+        Permissions['room-reservation'].Create,
+        Permissions['guest-invites'].Create,
+      ]}
+    >
+      <_HubMap />
+    </PermissionsValidator>
+  )
+}
 
 export const _HubMap = () => {
   const officeId = useStore(stores.officeId)
