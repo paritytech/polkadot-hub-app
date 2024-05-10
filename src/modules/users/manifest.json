@@ -3,7 +3,7 @@
   "name": "Users",
   "dependencies": [],
   "requiredIntegrations": [],
-  "recommendedIntegrations": ["bamboohr", "matrix", "mapbox"],
+  "recommendedIntegrations": ["matrix", "mapbox"],
   "availableCronJobs": ["users-delete-users-data"],
   "models": ["User", "Session", "City", "Tag", "UserTag"],
   "clientRouter": {

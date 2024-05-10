@@ -282,7 +282,7 @@ export const WorkingHoursWidget: React.FC = () => {
 
   return (
     <WidgetWrapper
-      title="Your Working Hours"
+      title="Working Hours"
       titleUrl="/working-hours"
       className="relative overflow-hidden"
     >

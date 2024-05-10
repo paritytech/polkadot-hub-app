@@ -1,6 +1,7 @@
 import * as React from 'react'
 import dayjs from 'dayjs'
 import dayjsIsoWeek from 'dayjs/plugin/isoWeek'
+import dayjsAdvancedFormat from 'dayjs/plugin/advancedFormat'
 import {
   Modal,
   Input,
@@ -9,10 +10,13 @@ import {
   UserLabel,
   Button,
 } from '#client/components/ui'
-import { groupBy, omit, sortWith } from '#shared/utils/fp'
 import { formatDateRange } from '#client/utils'
 import { DATE_FORMAT } from '#client/constants'
-import { UserCompact, WorkingHoursConfig } from '#shared/types'
+import {
+  UserCompact,
+  WorkingHoursConfig,
+  WorkingHoursEntry,
+} from '#shared/types'
 import * as fp from '#shared/utils/fp'
 import {
   useAdminEntries,
@@ -27,9 +31,12 @@ import {
   calculateTotalTimeOffTime,
   getTimeOffByDate,
   sumTime,
+  getIntervalDates,
+  getWeekIndexesRange,
 } from '../../shared-helpers'
 
 dayjs.extend(dayjsIsoWeek)
+dayjs.extend(dayjsAdvancedFormat)
 
 type WeeklyWorkingHours = {
   weekIndex: string
@@ -44,7 +51,7 @@ type WeeklyWorkingHours = {
   timeOffEntries: string
 }
 
-type TimeOffRef = { weekIndex: number; userId: string; id: string }
+type TimeOffRef = { weekIndex: string; userId: string; id: string }
 
 export const WorkingHoursUserModal: React.FC<{
   onClose: () => void
@@ -71,7 +78,9 @@ export const WorkingHoursUserModal: React.FC<{
     const timeOffRefs: TimeOffRef[] = timeOffRequests
       .map((x) =>
         x.dates.map((d) => ({
-          weekIndex: dayjs(d, DATE_FORMAT).isoWeek(),
+          weekIndex: dayjs(d, DATE_FORMAT)
+            .startOf('isoWeek')
+            .format(DATE_FORMAT),
           userId: x.userId,
           id: String(x.id),
         }))
@@ -79,6 +88,30 @@ export const WorkingHoursUserModal: React.FC<{
       .flat()
     return timeOffRefs.reduce(fp.groupBy('weekIndex'), {})
   }, [timeOffRequests])
+
+  const entriesByWeekIndex = React.useMemo(() => {
+    type IndexedWorkingHoursEntry = WorkingHoursEntry & { weekIndex: string }
+    const indexedEntries: IndexedWorkingHoursEntry[] = entries.map((x) => ({
+      ...x,
+      weekIndex: dayjs(x.date, DATE_FORMAT)
+        .startOf('isoWeek')
+        .format(DATE_FORMAT),
+    }))
+    return indexedEntries.reduce<Record<string, WorkingHoursEntry[]>>(
+      (acc, x) => {
+        if (!acc[x.weekIndex]) acc[x.weekIndex] = []
+        const { weekIndex, ...rest } = x
+        acc[x.weekIndex].push(rest)
+        return acc
+      },
+      {}
+    )
+  }, [entries])
+
+  const weekIndexes = React.useMemo<string[]>(
+    () => getWeekIndexesRange(entries, timeOffRequests),
+    [entries, timeOffRequests]
+  )
 
   const mergedModuleConfig = React.useMemo<WorkingHoursConfig>(
     () => ({
@@ -89,25 +122,18 @@ export const WorkingHoursUserModal: React.FC<{
   )
 
   const weeks = React.useMemo<WeeklyWorkingHours[]>(() => {
-    const currentWeekIndex = dayjs().isoWeek()
-    const indexedEntries = entries.map((x) => ({
-      ...x,
-      weekIndex: dayjs(x.date, DATE_FORMAT).isoWeek().toString(),
-    }))
-    const groupedByWeekIndex = indexedEntries.reduce(groupBy('weekIndex'), {})
-    const weekIndexes = Object.keys(groupedByWeekIndex).sort(
-      sortWith(Number, 'desc')
-    )
+    const currentWeekIndex = dayjs().startOf('isoWeek').format(DATE_FORMAT)
     return weekIndexes.map((weekIndex) => {
-      const startOfWeek = dayjs().startOf('isoWeek').isoWeek(Number(weekIndex))
+      const startOfWeek = dayjs(weekIndex, DATE_FORMAT).startOf('isoWeek')
       const endOfWeek = startOfWeek.endOf('isoWeek')
-      const weekLabel =
-        currentWeekIndex === Number(weekIndex) ? 'Current' : null
-      const entriesGroupedByDay = groupedByWeekIndex[weekIndex]
-        .map(omit(['weekIndex']))
-        .reduce(groupBy('date'), {})
+      const daysOfWeek = getIntervalDates(startOfWeek, endOfWeek)
+      const weekLabel = currentWeekIndex === weekIndex ? 'Current' : null
+      const entriesGroupedByDay = (entriesByWeekIndex[weekIndex] || []).reduce(
+        fp.groupBy('date'),
+        {}
+      )
       const days = Object.keys(entriesGroupedByDay).sort(
-        sortWith((x) => dayjs(x, DATE_FORMAT).unix(), 'asc')
+        fp.sortWith((x) => dayjs(x, DATE_FORMAT).unix(), 'asc')
       )
       const dayEntries = days
         .map((date) => {
@@ -126,7 +152,7 @@ export const WorkingHoursUserModal: React.FC<{
         })
         .join('\n')
       const totalWorkingHours = calculateTotalWorkingHours(
-        groupedByWeekIndex[weekIndex]
+        entriesByWeekIndex[weekIndex] || []
       )
 
       const timeOffRefs = timeOffRefsByWeekIndex[weekIndex] || []
@@ -142,15 +168,17 @@ export const WorkingHoursUserModal: React.FC<{
         mergedModuleConfig
       )
       const timeOffByDate = getTimeOffByDate(timeOffRequests)
-      const timeOffEntries = Object.keys(timeOffByDate)
+      const timeOffEntries = daysOfWeek
         .reduce<string[]>((acc, date) => {
           const entry = timeOffByDate[date]
-          return [
-            ...acc,
-            `${dayjs(date, DATE_FORMAT).format('D MMMM')}: ${entry.value} ${
-              entry.unit
-            }(s)`,
-          ]
+          return !entry
+            ? acc
+            : [
+                ...acc,
+                `${dayjs(date, DATE_FORMAT).format('D MMMM')}: ${entry.value} ${
+                  entry.unit
+                }(s)`,
+              ]
         }, [])
         .join('\n')
 
@@ -172,7 +200,13 @@ export const WorkingHoursUserModal: React.FC<{
         timeOffEntries,
       }
     })
-  }, [entries, showEntries, timeOffRequests, mergedModuleConfig])
+  }, [
+    entriesByWeekIndex,
+    timeOffRefsByWeekIndex,
+    weekIndexes,
+    showEntries,
+    mergedModuleConfig,
+  ])
 
   const columns = React.useMemo(
     () =>

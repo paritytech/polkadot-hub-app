@@ -1,11 +1,15 @@
 import dayjs, { Dayjs } from 'dayjs'
+import dayjsIsoWeek from 'dayjs/plugin/isoWeek'
 import {
   GenericWorkingHoursEntry,
   TimeOffRequest,
   TimeOffRequestUnit,
   WorkingHoursConfig,
+  WorkingHoursEntry,
 } from '#shared/types'
 import * as fp from '#shared/utils'
+
+dayjs.extend(dayjsIsoWeek)
 
 // @todo implement #shared/constants and use `DATE_FORMAT`
 const DATE_FORMAT = 'YYYY-MM-DD'
@@ -167,21 +171,19 @@ export function getIntervalDates(from: Dayjs, to: Dayjs): string[] {
 export function getIntervalWeeks(
   from: Dayjs,
   to: Dayjs
-): Array<{ index: number; start: Dayjs; end: Dayjs }> {
+): Array<{ index: string; start: Dayjs; end: Dayjs }> {
   if (to <= from) return []
-  let i = from.isoWeek()
-  const result: Array<{ index: number; start: Dayjs; end: Dayjs }> = []
-  while (i <= to.isoWeek()) {
-    const start = dayjs().startOf('isoWeek').isoWeek(i)
-    const end = dayjs().endOf('isoWeek').isoWeek(i)
-    result.push({
-      index: i,
-      start,
-      end,
+  const diff = to.diff(from, 'week') + 1
+  return Array(diff)
+    .fill(null)
+    .map((x, i) => {
+      const start = from.startOf('isoWeek').add(i, 'week')
+      return {
+        index: start.format(DATE_FORMAT),
+        start,
+        end: start.endOf('isoWeek'),
+      }
     })
-    i++
-  }
-  return result
 }
 
 export type TimeOff = { unit: TimeOffRequestUnit; value: number }
@@ -212,4 +214,25 @@ export function getTimeOffNotation(timeOff: TimeOff): string {
     return `¼ day off`
   }
   return `${timeOff.value} day off`
+}
+
+export function getWeekIndexesRange(
+  entries: WorkingHoursEntry[],
+  timeOffRequests: TimeOffRequest[]
+): string[] {
+  const allDates = Array.from(
+    new Set([
+      ...entries.map(fp.prop('date')),
+      ...timeOffRequests.map(fp.prop('dates')).flat(),
+    ])
+  ).sort()
+  if (!allDates.length) return []
+  const start = dayjs(allDates[0], DATE_FORMAT)
+  const end = dayjs(fp.last(allDates), DATE_FORMAT)
+  const diff = end.diff(start, 'week') + 1
+  return Array(diff)
+    .fill(null)
+    .map((x, i) => {
+      return end.startOf('isoWeek').subtract(i, 'week').format(DATE_FORMAT)
+    })
 }

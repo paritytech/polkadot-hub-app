@@ -85,17 +85,10 @@ const _AdminHome: React.FC<Props> = ({ children }) => {
     return (
       <div className="grid grid-cols-[240px_minmax(0,auto)] gap-x-4">
         <div>
-          <WidgetWrapper className="p-2 sticky top-2 -mb-1">
+          <WidgetWrapper className="p-2 sticky top-2 flex flex-col gap-y-1">
             {filteredModules.map((x, i) => {
               const isActive = !!(page && x.routes.includes(page.route))
-              return (
-                <ModuleLink
-                  key={x.id}
-                  isActive={isActive}
-                  module={x}
-                  className="mb-1"
-                />
-              )
+              return <ModuleLink key={x.id} isActive={isActive} module={x} />
             })}
           </WidgetWrapper>
         </div>

@@ -20,6 +20,7 @@ import config from '#server/config'
 import { appConfig } from '#server/app-config'
 import { DATE_FORMAT } from '#server/constants'
 import { by, groupBy, prop, sortWith, omit, map } from '#shared/utils/fp'
+import * as fp from '#shared/utils/fp'
 import { Permissions } from '../permissions'
 import { validateDayEntries, validateEntry } from './helpers'
 import {
@@ -31,6 +32,7 @@ import {
   getIntervalDates,
   getIntervalWeeks,
   getTimeOffByDate,
+  getWeekIndexesRange,
   sumTime,
 } from '../shared-helpers'
 import { Metadata } from '../metadata-schema'
@@ -558,22 +560,12 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         weekIndex: string
       }
 
-      const enhancedEntries: EnhancedWorkingHoursEntry[] = entries.map((x) => {
-        const date = dayjs(x.date, DATE_FORMAT)
-        let startOfWeek = date.startOf('isoWeek')
-        let endOfWeek = date.endOf('isoWeek')
-        if (!roundUp && startOfWeek < from) {
-          startOfWeek = from.clone()
-        }
-        if (!roundUp && endOfWeek > to) {
-          endOfWeek = to.clone()
-        }
-        const result: EnhancedWorkingHoursEntry = {
-          ...x.toJSON(),
-          weekIndex: date.isoWeek().toString(),
-        }
-        return result
-      })
+      const enhancedEntries: EnhancedWorkingHoursEntry[] = entries.map((x) => ({
+        ...x.toJSON(),
+        weekIndex: dayjs(x.date, DATE_FORMAT)
+          .startOf('isoWeek')
+          .format(DATE_FORMAT),
+      }))
 
       const entriesByWeekIndex = enhancedEntries.reduce(
         groupBy('weekIndex'),
@@ -591,11 +583,13 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
 
       // group time off dates by user & by week
-      type TimeOffRef = { weekIndex: number; userId: string; id: string }
+      type TimeOffRef = { weekIndex: string; userId: string; id: string }
       const timeOffRefs: TimeOffRef[] = timeOffRequests
         .map((x) =>
           x.dates.map((d) => ({
-            weekIndex: dayjs(d, DATE_FORMAT).isoWeek(),
+            weekIndex: dayjs(d, DATE_FORMAT)
+              .startOf('isoWeek')
+              .format(DATE_FORMAT),
             userId: x.userId,
             id: String(x.id),
           }))
@@ -624,7 +618,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         'Week start',
         'Week end',
         'Working time',
-        'Working hours',
+        // 'Working hours',
         'Overwork',
         'Entries',
         'Entry creation date',
@@ -635,6 +629,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
 
       // iterate over each week
       for (const week of intervalWeeks) {
+        const daysOfWeek = getIntervalDates(week.start, week.end)
         const entriesByUser = entriesByUserByWeekIndex[week.index] || {}
         const timeOffRefsByUser = timeOffRefsByUserByWeekIndex[week.index] || {}
         const userIds = Array.from(
@@ -678,7 +673,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
           const workingHours = calculateTotalWorkingHours(entries)
           const workingHoursExact = getExactHours(workingHours)
           const timeOffTime = calculateTotalTimeOffTime(
-            [from, to],
+            [week.start, week.end],
             timeOffRequests,
             mergedModuleConfig
           )
@@ -688,15 +683,17 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
           )
 
           const timeOffByDate = getTimeOffByDate(timeOffRequests)
-          const timeOffEntries = Object.keys(timeOffByDate)
+          const timeOffEntries = daysOfWeek
             .reduce<string[]>((acc, date) => {
               const entry = timeOffByDate[date]
-              return [
-                ...acc,
-                `${dayjs(date, DATE_FORMAT).format(exportDateFormat)}: ${
-                  entry.value
-                } ${entry.unit}(s)`,
-              ]
+              return !entry
+                ? acc
+                : [
+                    ...acc,
+                    `${dayjs(date, DATE_FORMAT).format(exportDateFormat)}: ${
+                      entry.value
+                    } ${entry.unit}(s)`,
+                  ]
             }, [])
             .join('\n')
 
@@ -706,7 +703,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
             week.start.format(exportDateFormat) || '~UNKNOWN~',
             week.end.format(exportDateFormat) || '~UNKNOWN~',
             workingHours ? getDurationString(workingHours) : '0h',
-            String(workingHoursExact),
+            // String(workingHoursExact),
             overworkTime ? getDurationString(overworkTime) : '',
             dayEntries,
             dayEntryCreationDates,
@@ -774,19 +771,21 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       // group entries by week index
       const indexedEntries = entries.map((x) => ({
         ...x.toJSON(),
-        weekIndex: dayjs(x.date, DATE_FORMAT).isoWeek().toString(),
+        weekIndex: dayjs(x.date, DATE_FORMAT)
+          .startOf('isoWeek')
+          .format(DATE_FORMAT),
       }))
       const groupedByWeekIndex = indexedEntries.reduce(groupBy('weekIndex'), {})
-      const weekIndexes = Object.keys(groupedByWeekIndex).sort(
-        sortWith(Number, 'desc')
-      )
+      const weekIndexes = getWeekIndexesRange(entries, timeOffRequests)
 
       // group time off days by week index
-      type TimeOffRef = { weekIndex: number; id: string }
+      type TimeOffRef = { weekIndex: string; id: string }
       const timeOffRefs: TimeOffRef[] = timeOffRequests
         .map((x) =>
           x.dates.map((d) => ({
-            weekIndex: dayjs(d, DATE_FORMAT).isoWeek(),
+            weekIndex: dayjs(d, DATE_FORMAT)
+              .startOf('isoWeek')
+              .format(DATE_FORMAT),
             id: String(x.id),
           }))
         )
@@ -803,7 +802,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         'Week start',
         'Week end',
         'Working time',
-        'Working hours',
+        // 'Working hours',
         'Overwork',
         'Entries',
         'Entry creation date',
@@ -813,11 +812,10 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
 
       // iterate over each week
       weekIndexes.forEach((weekIndex) => {
-        const startOfWeek = dayjs()
-          .startOf('isoWeek')
-          .isoWeek(Number(weekIndex))
+        const startOfWeek = dayjs(weekIndex, DATE_FORMAT)
         const endOfWeek = startOfWeek.endOf('isoWeek')
-        const entriesGroupedByDay = groupedByWeekIndex[weekIndex]
+        const daysOfWeek = getIntervalDates(startOfWeek, endOfWeek)
+        const entriesGroupedByDay = (groupedByWeekIndex[weekIndex] || [])
           .map(omit(['weekIndex']))
           .reduce(groupBy('date'), {})
         const days = Object.keys(entriesGroupedByDay).sort(
@@ -826,7 +824,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         const dayEntries = days
           .map((date) => {
             const dateLabel = dayjs(date, DATE_FORMAT).format('D MMMM')
-            const entries = entriesGroupedByDay[date]
+            const entries = (entriesGroupedByDay[date] || [])
               .map((x) => `${x.startTime}-${x.endTime}`)
               .join(', ')
             return `${dateLabel}: ${entries}`
@@ -853,7 +851,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
           mergedModuleConfig
         )
         const totalWorkingHours = calculateTotalWorkingHours(
-          groupedByWeekIndex[weekIndex]
+          groupedByWeekIndex[weekIndex] || []
         )
         const { time: overworkTime } = calculateOverwork(
           sumTime(totalWorkingHours, timeOffTime),
@@ -861,15 +859,17 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         )
 
         const timeOffByDate = getTimeOffByDate(timeOffRequests)
-        const timeOffEntries = Object.keys(timeOffByDate)
+        const timeOffEntries = daysOfWeek
           .reduce<string[]>((acc, date) => {
             const entry = timeOffByDate[date]
-            return [
-              ...acc,
-              `${dayjs(date, DATE_FORMAT).format(exportDateFormat)}: ${
-                entry.value
-              } ${entry.unit}(s)`,
-            ]
+            return !entry
+              ? acc
+              : [
+                  ...acc,
+                  `${dayjs(date, DATE_FORMAT).format(exportDateFormat)}: ${
+                    entry.value
+                  } ${entry.unit}(s)`,
+                ]
           }, [])
           .join('\n')
 
@@ -877,7 +877,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
           startOfWeek.format('D MMMM YYYY'),
           endOfWeek.format('D MMMM YYYY'),
           totalWorkingHours ? getDurationString(totalWorkingHours) : '0h',
-          String(totalWorkingHours),
+          // String(totalWorkingHours ? getExactHours(totalWorkingHours) : 0),
           overworkTime ? getDurationString(overworkTime) : '',
           dayEntries,
           dayEntryCreationDates,

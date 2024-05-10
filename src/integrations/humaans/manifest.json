@@ -1,0 +1,5 @@
+{
+  "id": "humaans",
+  "name": "Humaans",
+  "credentials": ["HUMAANS_API_TOKEN"]
+}

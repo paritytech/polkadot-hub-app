@@ -3,7 +3,7 @@
   "name": "Office Visits",
   "dependencies": ["users"],
   "requiredIntegrations": [],
-  "recommendedIntegrations": ["bamboohr", "matrix"],
+  "recommendedIntegrations": ["matrix"],
   "availableCronJobs": ["visit-delete-data", "visit-reminder:*"],
   "models": ["Visit", "VisitReminderJob"],
   "clientRouter": {

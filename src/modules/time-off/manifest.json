@@ -3,7 +3,7 @@
   "name": "Time Off",
   "dependencies": ["users"],
   "requiredIntegrations": [],
-  "recommendedIntegrations": ["bamboohr"],
+  "recommendedIntegrations": ["bamboohr", "humaans"],
   "availableCronJobs": ["fetch-time-off-requests"],
   "models": ["TimeOffRequest"]
 }
