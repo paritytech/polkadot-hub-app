@@ -187,9 +187,17 @@ export const WorkingHoursWidget: React.FC = () => {
       .map((x, i) => selectedWeekStart.add(i, 'day').format(DATE_FORMAT))
     return (
       days.some((x) => editableDays.has(x)) &&
-      days.map((x) => entriesByDate[x] || []).every((x) => !x.length)
+      days.map((x) => entriesByDate[x] || []).every((x) => !x.length) &&
+      days.every((x) => !timeOffByDate[x]) &&
+      days.every((x) => !publicHolidayByDate[x])
     )
-  }, [selectedWeekStart, entriesByDate, editableDays])
+  }, [
+    selectedWeekStart,
+    entriesByDate,
+    editableDays,
+    publicHolidayByDate,
+    timeOffByDate,
+  ])
 
   const onSelectDate = React.useCallback(
     (date: Dayjs) => {
@@ -373,17 +381,17 @@ export const WorkingHoursWidget: React.FC = () => {
         <div className="mt-4">
           {selectedDate?.format('dddd, D MMMM')}{' '}
           {!!selectedDateTotalWorkingHours && (
-            <span className="text-cta-purple px-2 py-1 bg-cta-hover-purple rounded-tiny mr-1">
+            <span className="text-cta-purple px-2 py-1 bg-cta-hover-purple rounded-tiny mr-1 whitespace-nowrap">
               {getDurationString(selectedDateTotalWorkingHours)}
             </span>
           )}
           {!!selectedDateTimeOff && (
-            <span className="text-yellow-600 px-2 py-1 bg-yellow-100 rounded-tiny">
+            <span className="text-yellow-600 px-2 py-1 bg-yellow-100 rounded-tiny mr-1 whitespace-nowrap">
               {selectedTimeOffNotation}
             </span>
           )}
           {!!selectedDatePublicHoliday && (
-            <span className="text-orange-600 px-2 py-1 bg-orange-100 rounded-tiny">
+            <span className="text-orange-600 px-2 py-1 bg-orange-100 rounded-tiny whitespace-nowrap">
               Public Holiday
             </span>
           )}

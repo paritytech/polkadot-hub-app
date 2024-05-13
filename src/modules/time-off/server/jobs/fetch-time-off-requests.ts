@@ -205,9 +205,7 @@ async function fetchHumaansTimeAways(ctx: CronJobContext) {
   const currentTimeOffRequestsByExternalId = currentTimeOffRequests.reduce<
     Record<string, (typeof currentTimeOffRequests)[0]>
   >((acc, x) => {
-    return x.externalIds.bamboohr
-      ? { ...acc, [x.externalIds.bamboohr]: x }
-      : acc
+    return x.externalIds.humaans ? { ...acc, [x.externalIds.humaans]: x } : acc
   }, {})
 
   const report = { succeeded: 0, failed: 0 }
@@ -246,8 +244,8 @@ async function fetchHumaansTimeAways(ctx: CronJobContext) {
             })
             .save()
           ctx.log.info(`Updated time-off request for user ${user.email}`)
+          report.succeeded++
         }
-        report.succeeded++
         continue
       }
       // create
