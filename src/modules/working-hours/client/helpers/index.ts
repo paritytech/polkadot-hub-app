@@ -1,10 +1,12 @@
 import dayjs, { Dayjs } from 'dayjs'
 import { DATE_FORMAT } from '#client/constants'
 import {
+  PublicHoliday,
   TimeOffRequest,
   WorkingHoursConfig,
   WorkingHoursEntryCreationRequest,
 } from '#shared/types'
+import * as fp from '#shared/utils/fp'
 import { TimeOff, getEditableDaysSet } from '../../shared-helpers'
 
 export const SHOULD_USE_12H_CYCLE = (() => {
@@ -23,7 +25,8 @@ export function prefillWithDefaults(
   mode: 'day' | 'week',
   date: Dayjs, // any day of the week if mode == 'week'
   config: WorkingHoursConfig,
-  timeOffRequests: TimeOffRequest[]
+  timeOffRequests: TimeOffRequest[],
+  publicHolidays: PublicHoliday[]
 ): WorkingHoursEntryCreationRequest[] {
   const editableDays = getEditableDaysSet(config)
   let defaultEntries = config.defaultEntries
@@ -39,10 +42,15 @@ export function prefillWithDefaults(
     }
     return { ...acc, ...tempAcc }
   }, {})
+  const publicHolidayByDate = publicHolidays.reduce(fp.by('date'), {})
 
   if (mode === 'day') {
     const formattedDate = date.format(DATE_FORMAT)
-    if (!editableDays.has(formattedDate) || timeOffByDate[formattedDate]) {
+    if (
+      !editableDays.has(formattedDate) ||
+      timeOffByDate[formattedDate] ||
+      publicHolidayByDate[formattedDate]
+    ) {
       return []
     }
     return defaultEntries.map((de) => ({
@@ -59,7 +67,11 @@ export function prefillWithDefaults(
       .filter((x) => config.workingDays.includes(x.day()))
       .filter((x) => {
         const dateFormatted = x.format(DATE_FORMAT)
-        return editableDays.has(dateFormatted) && !timeOffByDate[dateFormatted]
+        return (
+          editableDays.has(dateFormatted) &&
+          !timeOffByDate[dateFormatted] &&
+          !publicHolidayByDate[dateFormatted]
+        )
       })
       .map((day) => {
         return defaultEntries.map((de) => ({

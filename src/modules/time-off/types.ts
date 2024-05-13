@@ -23,3 +23,13 @@ export interface TimeOffRequest {
   userId: string
   externalIds: Record<string, string>
 }
+
+export interface PublicHoliday {
+  id: string
+  name: string
+  date: string // YYYY-MM-DD
+  calendarId: string
+  externalIds: Record<string, string>
+  createdAt: Date
+  updatedAt: Date
+}

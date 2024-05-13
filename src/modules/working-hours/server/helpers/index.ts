@@ -1,5 +1,8 @@
 import dayjs from 'dayjs'
 import dayjsIsSameOrBefore from 'dayjs/plugin/isSameOrBefore'
+import { AppConfig } from '#server/app-config'
+import { WorkingHoursRoleConfig } from '#shared/types'
+import { Metadata } from '../../metadata-schema'
 
 dayjs.extend(dayjsIsSameOrBefore)
 
@@ -30,7 +33,9 @@ export function validateEntry(entry: PartialWorkingHoursEntry): string | null {
   return null
 }
 
-export function validateDayEntries(entries: PartialWorkingHoursEntry[]): string | null {
+export function validateDayEntries(
+  entries: PartialWorkingHoursEntry[]
+): string | null {
   // check overlapping
   for (let i = 0; i < entries.length; i++) {
     for (let j = i + 1; j < entries.length; j++) {
@@ -42,7 +47,10 @@ export function validateDayEntries(entries: PartialWorkingHoursEntry[]): string 
   return null
 }
 
-function isOverlap(e1: PartialWorkingHoursEntry, e2: PartialWorkingHoursEntry): boolean {
+function isOverlap(
+  e1: PartialWorkingHoursEntry,
+  e2: PartialWorkingHoursEntry
+): boolean {
   const format = 'HH:mm'
   const start1 = dayjs(e1.startTime, format)
   const end1 = dayjs(e1.endTime, format)
@@ -54,4 +62,16 @@ function isOverlap(e1: PartialWorkingHoursEntry, e2: PartialWorkingHoursEntry): 
     (start2.isSameOrBefore(start1) && end2.isAfter(end1)) ||
     (start2.isBefore(end1) && end2.isSameOrAfter(end1))
   )
+}
+
+export function getModuleRoleConfig(
+  userRoles: string[],
+  appConfig: AppConfig
+): WorkingHoursRoleConfig | null {
+  const metadata = appConfig.getModuleMetadata('working-hours') as Metadata
+  if (!metadata) return null
+  const allowedRoles = Object.keys(metadata.configByRole)
+  const userRole = userRoles.find((x) => allowedRoles.includes(x))
+  if (!userRole) return null
+  return metadata.configByRole[userRole] || null
 }

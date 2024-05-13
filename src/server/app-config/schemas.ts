@@ -219,6 +219,10 @@ export const permissionsConfig = z.object({
     .and(z.object({ __default: z.string() })),
 })
 
+export const cronJobRef = z
+  .tuple([z.string()])
+  .or(z.tuple([z.string(), z.string()]))
+
 export const moduleConfig = z
   .object({
     id: z.string(),
@@ -226,9 +230,7 @@ export const moduleConfig = z
     enabledIntegrations: z.array(z.string()).default([]),
     metadata: z.record(z.any()).optional(),
     portals: z.record(z.array(componentRef)).default({}),
-    enabledCronJobs: z
-      .array(z.tuple([z.string(), z.string().or(z.null())]))
-      .default([]),
+    enabledCronJobs: z.array(cronJobRef).default([]),
   })
   .strict()
 

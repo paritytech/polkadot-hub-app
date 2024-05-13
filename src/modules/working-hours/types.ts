@@ -1,3 +1,5 @@
+import { WorkingHoursRoleConfig as _WorkingHoursRoleConfig } from './metadata-schema'
+
 export interface WorkingHoursEntry {
   id: string
   userId: string
@@ -18,20 +20,11 @@ export type WorkingHoursEntryUpdateRequest = Pick<
   'id' | 'startTime' | 'endTime'
 >
 
-export type WorkingHoursConfig = {
-  defaultEntries: [string, string][]
+export type WorkingHoursConfig = _WorkingHoursRoleConfig & {
   personalDefaultEntries: [string, string][]
-  workingDays: number[]
-  canPrefillDay: boolean
-  canPrefillWeek: boolean
-  weeklyWorkingHours: number
-  weeklyOvertimeHoursNotice: number
-  weeklyOvertimeHoursWarning: number
-  editablePeriod: {
-    current: 'day' | 'isoWeek' | 'month'
-    extraDaysAtEdges: [number, number]
-  }
 }
+
+export type WorkingHoursRoleConfig = _WorkingHoursRoleConfig
 
 export type AdminWorkingHoursConfig = Record<string, WorkingHoursConfig>
 
@@ -65,6 +58,7 @@ export interface WorkingHoursUserConfig {
   userId: string
   value: {
     weeklyWorkingHours: number
+    workingDays: number[]
   }
   createdAt: Date
   updatedAt: Date

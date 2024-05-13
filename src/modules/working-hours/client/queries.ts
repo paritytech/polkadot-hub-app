@@ -6,6 +6,7 @@ import {
   DefaultWorkingHoursEntry,
   DefaultWorkingHoursEntryCreationRequest,
   DefaultWorkingHoursEntryUpdateRequest,
+  PublicHoliday,
   TimeOffRequest,
   WorkingHoursConfig,
   WorkingHoursEntry,
@@ -133,6 +134,21 @@ export const useTimeOffRequests = (
   )
 }
 
+// Public Holidays
+export const usePublicHolidays = (
+  startDate: string,
+  endDate: string,
+  opts: { enabled: boolean } = { enabled: true }
+) => {
+  const path = '/user-api/working-hours/public-holidays'
+  return useQuery<PublicHoliday[], AxiosError>(
+    [path, { startDate, endDate }],
+    async ({ queryKey }) =>
+      (await api.get<PublicHoliday[]>(path, { params: queryKey[1] })).data,
+    { enabled: opts.enabled }
+  )
+}
+
 // Admin
 
 export const useAdminEntries = (
@@ -171,6 +187,29 @@ export const useAdminTimeOffRequests = (
     [path, queryParams],
     async ({ queryKey }) =>
       (await api.get<TimeOffRequest[]>(path, { params: queryKey[1] })).data,
+    { enabled: opts.enabled }
+  )
+}
+
+export const useAdminPublicHolidays = (
+  startDate: string | null,
+  endDate: string | null,
+  calendarId: string | null,
+  opts: { enabled: boolean } = { enabled: true }
+) => {
+  const path = '/admin-api/working-hours/public-holidays'
+  const queryParams: {
+    startDate?: string
+    endDate?: string
+    calendarId?: string
+  } = {}
+  if (startDate) queryParams.startDate = startDate
+  if (endDate) queryParams.endDate = endDate
+  if (calendarId) queryParams.calendarId = calendarId
+  return useQuery<PublicHoliday[], AxiosError>(
+    [path, queryParams],
+    async ({ queryKey }) =>
+      (await api.get<PublicHoliday[]>(path, { params: queryKey[1] })).data,
     { enabled: opts.enabled }
   )
 }

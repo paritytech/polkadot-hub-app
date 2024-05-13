@@ -48,3 +48,16 @@ export type Paginated<T> = {
   limit: number
   skip: number
 }
+
+export type PublicHolidayCalendar = {
+  id: string
+  name: string
+  countryCode: string
+}
+
+export type PublicHoliday = {
+  id: string
+  date: string
+  name: string
+  publicHolidayCalendarId: string
+}

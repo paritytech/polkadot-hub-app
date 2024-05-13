@@ -17,6 +17,15 @@ export const cronJob: CronJob = {
 }
 
 async function fetchHumaansDefaultWorkingHours(ctx: CronJobContext) {
+  const WORKING_DAY_INDEX_BY_NAME = {
+    sunday: 0,
+    monday: 1,
+    tuesday: 2,
+    wednesday: 3,
+    thursday: 4,
+    friday: 5,
+    saturday: 6,
+  }
   const moduleMetadata = ctx.appConfig.getModuleMetadata(
     'working-hours'
   ) as Metadata
@@ -54,6 +63,9 @@ async function fetchHumaansDefaultWorkingHours(ctx: CronJobContext) {
       ? config.weeklyWorkingHours / config.workingDays.length
       : 0
     const workingDaysNumber = employee.workingDays.length
+    const workingDays = employee.workingDays
+      .map((x) => WORKING_DAY_INDEX_BY_NAME[x.day])
+      .filter((x) => x !== undefined)
     const weeklyWorkingHours = dailyWorkingHours * workingDaysNumber
 
     const userConfig = userConfigByUserId[user.id]
@@ -65,8 +77,12 @@ async function fetchHumaansDefaultWorkingHours(ctx: CronJobContext) {
       // Update config
       try {
         await userConfig
-          // @ts-ignore
-          .set({ 'value.weeklyWorkingHours': weeklyWorkingHours })
+          .set({
+            value: {
+              weeklyWorkingHours,
+              workingDays,
+            },
+          })
           .save()
         ctx.log.info(`Updated time tracking user config for ${user.email}`)
         report.succeeded++
@@ -82,7 +98,10 @@ async function fetchHumaansDefaultWorkingHours(ctx: CronJobContext) {
       try {
         await ctx.models.WorkingHoursUserConfig.create({
           userId: user.id,
-          value: { weeklyWorkingHours: weeklyWorkingHours },
+          value: {
+            weeklyWorkingHours,
+            workingDays,
+          },
         })
         ctx.log.info(`Created new time tracking user config for ${user.email}`)
         report.succeeded++

@@ -22,6 +22,7 @@ import {
   useAdminConfig,
   useAdminTimeOffRequests,
   useAdminUserConfigs,
+  useAdminPublicHolidays,
 } from '../queries'
 import {
   calculateTotalWorkingHours,
@@ -30,6 +31,7 @@ import {
   calculateOverwork,
   calculateTotalTimeOffTime,
   sumTime,
+  calculateTotalPublicHolidaysTime,
 } from '../../shared-helpers'
 import { TimeOffRequest, UserCompact, WorkingHoursEntry } from '#shared/types'
 import { WorkingHoursUserModal } from './WorkingHoursUserModal'
@@ -100,6 +102,13 @@ export const AdminWorkingHours: React.FC = () => {
     [configByRole, role]
   )
 
+  const { data: publicHolidays = [] } = useAdminPublicHolidays(
+    period[0].format(DATE_FORMAT),
+    period[1].format(DATE_FORMAT),
+    moduleConfig?.publicHolidayCalendarId || null,
+    { enabled: !!moduleConfig?.publicHolidayCalendarId }
+  )
+
   const { data: users = [] } = useUsersCompact(undefined, {
     enabled: true,
     retry: false,
@@ -127,6 +136,10 @@ export const AdminWorkingHours: React.FC = () => {
     [timeOffRequests]
   )
 
+  const publicHolidaysTime = React.useMemo(() => {
+    return calculateTotalPublicHolidaysTime(publicHolidays, moduleConfig)
+  }, [publicHolidays, moduleConfig])
+
   const userWorkingHours = React.useMemo<UserWorkingHours[]>(() => {
     return users
       .filter((user) => {
@@ -153,7 +166,7 @@ export const AdminWorkingHours: React.FC = () => {
         const { time: overworkTime, level: overworkLevel } =
           moduleConfig && mergedModuleConfig
             ? calculateOverwork(
-                sumTime(workingHours, timeOffTime),
+                sumTime(workingHours, timeOffTime, publicHolidaysTime),
                 mergedModuleConfig
               )
             : { time: null, level: null }
@@ -180,6 +193,7 @@ export const AdminWorkingHours: React.FC = () => {
     timeOffRequestsByUser,
     period,
     userConfigByUserId,
+    publicHolidaysTime,
   ])
 
   const onNavigate = React.useCallback(
@@ -229,6 +243,24 @@ export const AdminWorkingHours: React.FC = () => {
             )
           },
         },
+        {
+          Header: 'Public Holidays',
+          accessor: () => {
+            const title = publicHolidays
+              .map(
+                (x) =>
+                  `${dayjs(x.date, DATE_FORMAT).format('D MMMM')}: ${x.name}`
+              )
+              .join('\n')
+            return publicHolidays.length ? (
+              <span title={title} className="cursor-help">
+                {getDurationString(publicHolidaysTime || [0, 0])}
+              </span>
+            ) : (
+              <span className="text-gray-300">–</span>
+            )
+          },
+        },
         unit === 'week'
           ? {
               Header: 'Agreed working week',
@@ -261,7 +293,7 @@ export const AdminWorkingHours: React.FC = () => {
           ),
         },
       ].filter(Boolean),
-    [usersById, moduleConfig, unit]
+    [usersById, moduleConfig, unit, publicHolidays, publicHolidaysTime]
   )
 
   React.useEffect(() => {

@@ -5,6 +5,7 @@ import {
   useTimeOffRequests,
   useConfig,
   useCreateEntries,
+  usePublicHolidays,
 } from '../queries'
 import {
   FButton,
@@ -13,11 +14,12 @@ import {
   WidgetWrapper,
   showNotification,
 } from '#client/components/ui'
-import { groupBy, propEq, last, first, eq, sortWith } from '#shared/utils/fp'
+import * as fp from '#shared/utils/fp'
 import { cn } from '#client/utils'
 import { DATE_FORMAT } from '#client/constants'
 import { useIntersectionObserver } from '#client/utils/hooks'
 import {
+  PublicHoliday,
   TimeOffRequestUnit,
   WorkingHoursConfig,
   WorkingHoursEntry,
@@ -78,8 +80,8 @@ export const WorkingHoursWidget: React.FC = () => {
 
   const period = React.useMemo<[string, string]>(() => {
     return [
-      first(first(weeks)).format(DATE_FORMAT),
-      last(last(weeks)).format(DATE_FORMAT),
+      fp.first(fp.first(weeks)).format(DATE_FORMAT),
+      fp.last(fp.last(weeks)).format(DATE_FORMAT),
     ]
   }, [weeks])
 
@@ -96,10 +98,21 @@ export const WorkingHoursWidget: React.FC = () => {
       enabled: !!moduleConfig,
     }
   )
+  const { data: publicHolidays = [] } = usePublicHolidays(
+    period[0],
+    period[1],
+    {
+      enabled: !!moduleConfig,
+    }
+  )
 
   const timeOffByDate = React.useMemo(
     () => getTimeOffByDate(timeOffRequests),
     [timeOffRequests]
+  )
+  const publicHolidayByDate = React.useMemo(
+    () => publicHolidays.reduce(fp.by('date'), {}),
+    [publicHolidays]
   )
 
   const { mutate: createEntries } = useCreateEntries(() => {
@@ -121,13 +134,13 @@ export const WorkingHoursWidget: React.FC = () => {
   const entriesByDate = React.useMemo(() => {
     // group by date
     const result = (entries || []).reduce(
-      groupBy('date'),
+      fp.groupBy('date'),
       {} as Record<string, WorkingHoursEntry[]>
     )
     // sort entries by startTime for each date
     for (const date in result) {
       result[date] = result[date].sort(
-        sortWith((x) => {
+        fp.sortWith((x) => {
           const [h, m] = x.startTime.split(':').map(Number)
           return h * 60 + m
         })
@@ -162,6 +175,12 @@ export const WorkingHoursWidget: React.FC = () => {
     return getTimeOffNotation(selectedDateTimeOff)
   }, [selectedDateTimeOff])
 
+  const selectedDatePublicHoliday = React.useMemo(() => {
+    return selectedDate
+      ? publicHolidayByDate[selectedDate.format(DATE_FORMAT)] || null
+      : null
+  }, [selectedDate, publicHolidayByDate])
+
   const canFillSelectedWeek = React.useMemo(() => {
     const days = Array(7)
       .fill(null)
@@ -192,11 +211,18 @@ export const WorkingHoursWidget: React.FC = () => {
         mode,
         date,
         moduleConfig,
-        timeOffRequests
+        timeOffRequests,
+        publicHolidays
       )
       createEntries(newEntries)
     },
-    [selectedDate, moduleConfig, selectedWeekStart, timeOffRequests]
+    [
+      selectedDate,
+      moduleConfig,
+      selectedWeekStart,
+      timeOffRequests,
+      publicHolidays,
+    ]
   )
 
   const onSelectWeek = React.useCallback(
@@ -212,7 +238,7 @@ export const WorkingHoursWidget: React.FC = () => {
   const onNavigate = React.useCallback(
     (direction: -1 | 1) => () => {
       const currentIndex = weekStarts.findIndex(
-        eq(selectedWeekStart.format(DATE_FORMAT))
+        fp.eq(selectedWeekStart.format(DATE_FORMAT))
       )
       if (
         (direction === 1 && currentIndex + 1 > weekStarts.length - 1) ||
@@ -237,7 +263,7 @@ export const WorkingHoursWidget: React.FC = () => {
   const canNavigate = React.useCallback(
     (direction: -1 | 1) => {
       const currentIndex = weekStarts.findIndex(
-        eq(selectedWeekStart.format(DATE_FORMAT))
+        fp.eq(selectedWeekStart.format(DATE_FORMAT))
       )
       if (
         (direction === -1 && currentIndex === 0) ||
@@ -269,7 +295,7 @@ export const WorkingHoursWidget: React.FC = () => {
         return
       }
       const todayEntries = entries.filter(
-        propEq('date', today.format(DATE_FORMAT))
+        fp.propEq('date', today.format(DATE_FORMAT))
       )
       if (!todayEntries.length) {
         setSelectedDate(today)
@@ -334,6 +360,7 @@ export const WorkingHoursWidget: React.FC = () => {
                   onSelectWeek={onSelectWeek(weekStart)}
                   moduleConfig={moduleConfig}
                   timeOffByDate={timeOffByDate}
+                  publicHolidayByDate={publicHolidayByDate}
                 />
               </div>
             )
@@ -353,6 +380,11 @@ export const WorkingHoursWidget: React.FC = () => {
           {!!selectedDateTimeOff && (
             <span className="text-yellow-600 px-2 py-1 bg-yellow-100 rounded-tiny">
               {selectedTimeOffNotation}
+            </span>
+          )}
+          {!!selectedDatePublicHoliday && (
+            <span className="text-orange-600 px-2 py-1 bg-orange-100 rounded-tiny">
+              Public Holiday
             </span>
           )}
           {/* has entries */}
@@ -394,7 +426,8 @@ export const WorkingHoursWidget: React.FC = () => {
               <FButton
                 kind={
                   isSelectedDateWeekend ||
-                  selectedDateTimeOff?.unit === TimeOffRequestUnit.Day
+                  selectedDateTimeOff?.unit === TimeOffRequestUnit.Day ||
+                  !!selectedDatePublicHoliday
                     ? 'secondary'
                     : 'primary'
                 }
@@ -402,16 +435,18 @@ export const WorkingHoursWidget: React.FC = () => {
               >
                 Set working hours
               </FButton>
-              {!!moduleConfig.canPrefillDay && !selectedDateTimeOff && (
-                <FButton
-                  size="small"
-                  kind="link"
-                  className="block w-full"
-                  onClick={onFillWithDefaults('day')}
-                >
-                  Prefill day with defaults
-                </FButton>
-              )}
+              {!!moduleConfig.canPrefillDay &&
+                !selectedDateTimeOff &&
+                !selectedDatePublicHoliday && (
+                  <FButton
+                    size="small"
+                    kind="link"
+                    className="block w-full"
+                    onClick={onFillWithDefaults('day')}
+                  >
+                    Prefill day with defaults
+                  </FButton>
+                )}
             </div>
           )}
         </div>
@@ -441,6 +476,7 @@ type WeekProps = {
   selectedDate: string | null
   moduleConfig: WorkingHoursConfig
   timeOffByDate: Record<string, TimeOff>
+  publicHolidayByDate: Record<string, PublicHoliday>
 }
 const Week: React.FC<WeekProps> = (props) => {
   const todayDate = getTodayDate()
@@ -475,6 +511,7 @@ const Week: React.FC<WeekProps> = (props) => {
         const totalWorkingHours = calculateTotalWorkingHours(entries)
         // const isTimeOff = props.timeOffDates.has(date)
         const timeOff = props.timeOffByDate[date] || null
+        const publicHoliday = props.publicHolidayByDate[date] || null
         let totalWorkingHoursString = ''
         if (totalWorkingHours) {
           const [h, m] = totalWorkingHours
@@ -506,6 +543,7 @@ const Week: React.FC<WeekProps> = (props) => {
                 : 'border-fill-6',
               withEntries && 'bg-cta-hover-purple',
               !!timeOff && 'bg-yellow-stripes',
+              !!publicHoliday && 'bg-orange-stripes',
               'hover:opacity-80'
             )}
             onClick={() => props.onSelectDate(d)}
@@ -524,7 +562,8 @@ const Week: React.FC<WeekProps> = (props) => {
                   {totalWorkingHoursString}
                 </span>
               ) : isWorkingDay &&
-                (!timeOff || timeOff.unit === TimeOffRequestUnit.Hour) ? (
+                (!timeOff || timeOff.unit === TimeOffRequestUnit.Hour) &&
+                !publicHoliday ? (
                 <span className="text-text-tertiary">•</span>
               ) : null}
             </div>

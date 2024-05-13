@@ -15,12 +15,13 @@ import {
   showNotification,
 } from '#client/components/ui'
 import * as stores from '#client/stores'
-import { groupBy, sortWith } from '#shared/utils/fp'
+import * as fp from '#shared/utils/fp'
 import { cn, formatDateRange } from '#client/utils'
 import { DATE_FORMAT } from '#client/constants'
 import {
   DefaultWorkingHoursEntry,
   DefaultWorkingHoursEntryUpdateRequest,
+  PublicHoliday,
   TimeOffRequestUnit,
   WorkingHoursConfig,
   WorkingHoursEntry,
@@ -38,6 +39,7 @@ import {
   useDeleteDefaultEntry,
   useUpdateDefaultEntry,
   useTimeOffRequests,
+  usePublicHolidays,
 } from '../queries'
 import {
   formatTimeString,
@@ -108,10 +110,21 @@ export const WorkingHoursEditor: React.FC = () => {
       enabled: !!moduleConfig,
     }
   )
+  const { data: publicHolidays = [] } = usePublicHolidays(
+    period[0].format(DATE_FORMAT),
+    period[1].format(DATE_FORMAT),
+    {
+      enabled: !!moduleConfig,
+    }
+  )
 
   const timeOffByDate = React.useMemo(
     () => getTimeOffByDate(timeOffRequests),
     [timeOffRequests]
+  )
+  const publicHolidayByDate = React.useMemo(
+    () => publicHolidays.reduce(fp.by('date'), {}),
+    [publicHolidays]
   )
 
   const refetch = () => {
@@ -135,13 +148,13 @@ export const WorkingHoursEditor: React.FC = () => {
   const entriesByDate = React.useMemo(() => {
     // group by date
     const result = (entries || []).reduce(
-      groupBy('date'),
+      fp.groupBy('date'),
       {} as Record<string, WorkingHoursEntry[]>
     )
     // sort entries by startTime for each date
     for (const date in result) {
       result[date] = result[date].sort(
-        sortWith((x) => {
+        fp.sortWith((x) => {
           const [h, m] = x.startTime.split(':').map(Number)
           return h * 60 + m
         })
@@ -168,10 +181,16 @@ export const WorkingHoursEditor: React.FC = () => {
     (mode: 'day' | 'week', date: Dayjs) => () => {
       if (!moduleConfig) return
       createEntries(
-        prefillWithDefaults(mode, date, moduleConfig, timeOffRequests)
+        prefillWithDefaults(
+          mode,
+          date,
+          moduleConfig,
+          timeOffRequests,
+          publicHolidays
+        )
       )
     },
-    [moduleConfig, timeOffRequests]
+    [moduleConfig, timeOffRequests, publicHolidays]
   )
 
   const scrollToDate = React.useCallback((date: string) => {
@@ -222,7 +241,7 @@ export const WorkingHoursEditor: React.FC = () => {
                 Your default working hours:{' '}
                 {moduleConfig.personalDefaultEntries
                   .sort(
-                    sortWith((x) => {
+                    fp.sortWith((x) => {
                       const [h, m] = x[0].split(':').map(Number)
                       return h * 60 + m
                     })
@@ -303,6 +322,7 @@ export const WorkingHoursEditor: React.FC = () => {
             const date = day.format(DATE_FORMAT)
             const editable = editableDays.has(date)
             const timeOff = timeOffByDate[date]
+            const publicHoliday = publicHolidayByDate[date]
             return (
               <div
                 key={date}
@@ -324,6 +344,7 @@ export const WorkingHoursEditor: React.FC = () => {
                   deleteEntry={deleteEntry}
                   editable={editable}
                   timeOff={timeOff}
+                  publicHoliday={publicHoliday}
                   onFillWithDefaults={onFillWithDefaults}
                 />
               </div>
@@ -358,6 +379,7 @@ type DayRowProps = {
   updateEntry: (value: WorkingHoursEntryUpdateRequest) => void
   editable: boolean
   timeOff: TimeOff | null
+  publicHoliday: PublicHoliday | null
   onFillWithDefaults: (mode: 'day' | 'week', day: Dayjs) => () => void
 }
 const DayRow: React.FC<DayRowProps> = ({
@@ -370,6 +392,7 @@ const DayRow: React.FC<DayRowProps> = ({
   deleteEntry,
   editable = false,
   timeOff,
+  publicHoliday,
   onFillWithDefaults,
 }) => {
   const containerRef = React.useRef<HTMLDivElement>(null)
@@ -436,9 +459,14 @@ const DayRow: React.FC<DayRowProps> = ({
               {getDurationString(totalWorkingHours)}
             </span>
           )}
-          {timeOff && (
+          {!!timeOff && (
             <span className="text-yellow-600 px-2 py-1 bg-yellow-100 rounded-tiny">
               {timeOffNotation}
+            </span>
+          )}
+          {!!publicHoliday && (
+            <span className="text-orange-600 px-2 py-1 bg-orange-100 rounded-tiny">
+              Public Holiday: {publicHoliday.name}
             </span>
           )}
         </div>
@@ -447,6 +475,7 @@ const DayRow: React.FC<DayRowProps> = ({
             moduleConfig.canPrefillWeek &&
             !hasEntries &&
             !!timeOff &&
+            !!publicHoliday &&
             !isWeekend && (
               <FButton
                 kind="link"
@@ -463,7 +492,8 @@ const DayRow: React.FC<DayRowProps> = ({
               size="small"
               onClick={onAddEntry}
               className={cn(
-                (isWeekend || isFullDayTimeOff) && 'text-text-tertiary'
+                (isWeekend || isFullDayTimeOff || !!publicHoliday) &&
+                  'text-text-tertiary'
               )}
             >
               Add entry
@@ -623,7 +653,7 @@ const DefaultEntriesModal: React.FC<DefaultEntriesModalProps> = ({
 
   const sortedEntries = React.useMemo(() => {
     return entries.sort(
-      sortWith((x) => {
+      fp.sortWith((x) => {
         const [h, m] = x.startTime.split(':').map(Number)
         return h * 60 + m
       })

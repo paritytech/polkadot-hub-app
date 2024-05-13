@@ -15,6 +15,7 @@ import {
   WorkingHoursEntryCreationRequest,
   WorkingHoursEntryUpdateRequest,
   TimeOffRequestUnit,
+  PublicHoliday,
 } from '#shared/types'
 import config from '#server/config'
 import { appConfig } from '#server/app-config'
@@ -22,11 +23,17 @@ import { DATE_FORMAT } from '#server/constants'
 import { by, groupBy, prop, sortWith, omit, map } from '#shared/utils/fp'
 import * as fp from '#shared/utils/fp'
 import { Permissions } from '../permissions'
-import { validateDayEntries, validateEntry } from './helpers'
+import {
+  getModuleRoleConfig,
+  validateDayEntries,
+  validateEntry,
+} from './helpers'
 import {
   calculateOverwork,
+  calculateTotalPublicHolidaysTime,
   calculateTotalTimeOffTime,
   calculateTotalWorkingHours,
+  getDateRangeEdges,
   getDurationString,
   getExactHours,
   getIntervalDates,
@@ -126,6 +133,36 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         },
       })
       return requests
+    }
+  )
+
+  fastify.get(
+    '/public-holidays',
+    async (
+      req: FastifyRequest<{
+        Querystring: { startDate: string; endDate: string }
+      }>,
+      reply
+    ) => {
+      req.check(Permissions.Create)
+      if (isOutOfTestGroup(req.user)) {
+        return reply.throw.accessDenied()
+      }
+      const roleConfig = getModuleRoleConfig(req.user.roles, appConfig)
+      if (!roleConfig) return []
+      const calendarId = roleConfig.publicHolidayCalendarId
+      if (!calendarId) return []
+
+      const holidays = await fastify.db.PublicHoliday.findAll({
+        where: {
+          calendarId,
+          date: {
+            [Op.gte]: req.query.startDate,
+            [Op.lte]: req.query.endDate,
+          },
+        },
+      })
+      return holidays
     }
   )
 
@@ -451,6 +488,39 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 
   fastify.get(
+    '/public-holidays',
+    async (
+      req: FastifyRequest<{
+        Querystring: {
+          startDate?: string
+          endDate?: string
+          calendarId?: string
+        }
+      }>,
+      reply
+    ) => {
+      req.check(Permissions.AdminList)
+      const startDate = req.query.startDate
+      const endDate = req.query.endDate
+
+      const where: WhereOptions<PublicHoliday> = {}
+      if (startDate && endDate) {
+        where.date = {
+          [Op.gte]: startDate,
+          [Op.lte]: endDate,
+        }
+      }
+      if (req.query.calendarId) {
+        where.calendarId = req.query.calendarId
+      }
+      const holidays = await fastify.db.PublicHoliday.findAll({
+        where,
+      })
+      return holidays
+    }
+  )
+
+  fastify.get(
     '/user-configs',
     async (
       req: FastifyRequest<{
@@ -552,6 +622,33 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         },
       })
       const timeOffRequestsById = timeOffRequests.reduce(by('id'), {})
+      const publicHolidays = moduleConfig.publicHolidayCalendarId
+        ? await fastify.db.PublicHoliday.findAll({
+            where: {
+              calendarId: moduleConfig.publicHolidayCalendarId,
+              date: {
+                [Op.gte]: from.format(DATE_FORMAT),
+                [Op.lte]: to.format(DATE_FORMAT),
+              },
+            },
+          })
+        : []
+
+      type IndexedPublicHoliday = PublicHoliday & {
+        weekIndex: string
+      }
+      const indexedPublicHolidays: IndexedPublicHoliday[] = publicHolidays.map(
+        (x) => ({
+          ...x.toJSON(),
+          weekIndex: dayjs(x.date, DATE_FORMAT)
+            .startOf('isoWeek')
+            .format(DATE_FORMAT),
+        })
+      )
+      const publicHolidaysByWeekIndex = indexedPublicHolidays.reduce(
+        fp.groupBy('weekIndex'),
+        {}
+      )
 
       const usersById = users.reduce(by('id'), {})
 
@@ -625,6 +722,8 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         'Time Off',
         'Time Off (entries)',
         'Agreed working week',
+        'Public holidays',
+        'Public holidays (entries)',
       ])
 
       // iterate over each week
@@ -639,6 +738,25 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
           ])
         )
         if (!userIds.length) continue
+        const publicHolidays: PublicHoliday[] = (
+          publicHolidaysByWeekIndex[week.index] || []
+        ).map(fp.omit(['weekIndex']))
+        const publicHolidayTime = calculateTotalPublicHolidaysTime(
+          publicHolidays,
+          moduleConfig
+        )
+        const publicHolidayTimeDurationString = publicHolidayTime
+          ? getDurationString(publicHolidayTime)
+          : ''
+        const publicHolidayEntries = publicHolidays
+          .map(
+            (x) =>
+              `${dayjs(x.date, DATE_FORMAT).format(exportDateFormat)}: ${
+                x.name
+              }`
+          )
+          .join('\n')
+
         for (const userId of userIds) {
           const user = usersById[userId]
           const entries = entriesByUser[userId] || []
@@ -671,14 +789,14 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
             })
             .join('\n')
           const workingHours = calculateTotalWorkingHours(entries)
-          const workingHoursExact = getExactHours(workingHours)
+          // const workingHoursExact = getExactHours(workingHours)
           const timeOffTime = calculateTotalTimeOffTime(
             [week.start, week.end],
             timeOffRequests,
             mergedModuleConfig
           )
           const { time: overworkTime } = calculateOverwork(
-            sumTime(workingHours, timeOffTime),
+            sumTime(workingHours, timeOffTime, publicHolidayTime),
             mergedModuleConfig
           )
 
@@ -710,6 +828,8 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
             timeOffTime ? getDurationString(timeOffTime) : '',
             timeOffEntries || '',
             `${mergedModuleConfig.weeklyWorkingHours}h`,
+            publicHolidayTimeDurationString,
+            publicHolidayEntries,
           ])
         }
       }
@@ -766,6 +886,37 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
           status: TimeOffRequestStatus.Approved,
         },
       })
+      const dateRange = getDateRangeEdges([
+        ...entries.map(fp.prop('date')),
+        ...timeOffRequests.map((x) => x.dates).flat(),
+      ])
+      const publicHolidays = dateRange
+        ? await fastify.db.PublicHoliday.findAll({
+            where: {
+              calendarId: moduleConfig.publicHolidayCalendarId,
+              date: {
+                [Op.gte]: dateRange[0],
+                [Op.lte]: dateRange[1],
+              },
+            },
+          })
+        : []
+      type IndexedPublicHoliday = PublicHoliday & {
+        weekIndex: string
+      }
+      const indexedPublicHolidays: IndexedPublicHoliday[] = publicHolidays.map(
+        (x) => ({
+          ...x.toJSON(),
+          weekIndex: dayjs(x.date, DATE_FORMAT)
+            .startOf('isoWeek')
+            .format(DATE_FORMAT),
+        })
+      )
+      const publicHolidaysByWeekIndex = indexedPublicHolidays.reduce(
+        fp.groupBy('weekIndex'),
+        {}
+      )
+
       const timeOffRequestsById = timeOffRequests.reduce(by('id'), {})
 
       // group entries by week index
@@ -776,7 +927,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
           .format(DATE_FORMAT),
       }))
       const groupedByWeekIndex = indexedEntries.reduce(groupBy('weekIndex'), {})
-      const weekIndexes = getWeekIndexesRange(entries, timeOffRequests)
+      const weekIndexes = getWeekIndexesRange(dateRange || [])
 
       // group time off days by week index
       type TimeOffRef = { weekIndex: string; id: string }
@@ -808,6 +959,8 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         'Entry creation date',
         'Time Off',
         'Time Off (entries)',
+        'Public holidays',
+        'Public holidays (entries)',
       ])
 
       // iterate over each week
@@ -844,17 +997,36 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         const timeOffRequests = timeOffRequestIds.map(
           (x) => timeOffRequestsById[x]
         )
-
         const timeOffTime = calculateTotalTimeOffTime(
           [startOfWeek, endOfWeek],
           timeOffRequests,
           mergedModuleConfig
         )
+
+        const publicHolidays: PublicHoliday[] = (
+          publicHolidaysByWeekIndex[weekIndex] || []
+        ).map(fp.omit(['weekIndex']))
+        const publicHolidaysTime = calculateTotalPublicHolidaysTime(
+          publicHolidays,
+          mergedModuleConfig
+        )
+        const publicHolidaysTimeDurationString = publicHolidaysTime
+          ? getDurationString(publicHolidaysTime)
+          : ''
+        const publicHolidaysEntries = publicHolidays
+          .map(
+            (x) =>
+              `${dayjs(x.date, DATE_FORMAT).format(exportDateFormat)}: ${
+                x.name
+              }`
+          )
+          .join('\n')
+
         const totalWorkingHours = calculateTotalWorkingHours(
           groupedByWeekIndex[weekIndex] || []
         )
         const { time: overworkTime } = calculateOverwork(
-          sumTime(totalWorkingHours, timeOffTime),
+          sumTime(totalWorkingHours, timeOffTime, publicHolidaysTime),
           mergedModuleConfig
         )
 
@@ -883,6 +1055,8 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
           dayEntryCreationDates,
           timeOffTime ? getDurationString(timeOffTime) : '',
           timeOffEntries || '',
+          publicHolidaysTimeDurationString,
+          publicHolidaysEntries,
         ])
       })
 

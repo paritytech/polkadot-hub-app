@@ -4,6 +4,6 @@
   "dependencies": ["users"],
   "requiredIntegrations": [],
   "recommendedIntegrations": ["bamboohr", "humaans"],
-  "availableCronJobs": ["fetch-time-off-requests"],
-  "models": ["TimeOffRequest"]
+  "availableCronJobs": ["fetch-time-off-requests", "fetch-public-holidays"],
+  "models": ["TimeOffRequest", "PublicHoliday"]
 }

@@ -195,6 +195,15 @@ button.mapboxgl-popup-close-button {
     #fef9c320 16px
   );
 }
+.bg-orange-stripes {
+  background: repeating-linear-gradient(
+    135deg,
+    #ffedd5,
+    #ffedd5 8px,
+    #ffedd520 8px,
+    #ffedd520 16px
+  );
+}
 .bg-red-stripes {
   background: repeating-linear-gradient(
     135deg,

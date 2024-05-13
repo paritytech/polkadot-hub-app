@@ -13,6 +13,7 @@ import {
 import { formatDateRange } from '#client/utils'
 import { DATE_FORMAT } from '#client/constants'
 import {
+  PublicHoliday,
   UserCompact,
   WorkingHoursConfig,
   WorkingHoursEntry,
@@ -20,6 +21,7 @@ import {
 import * as fp from '#shared/utils/fp'
 import {
   useAdminEntries,
+  useAdminPublicHolidays,
   useAdminTimeOffRequests,
   useAdminUserConfigs,
 } from '../queries'
@@ -33,6 +35,7 @@ import {
   sumTime,
   getIntervalDates,
   getWeekIndexesRange,
+  calculateTotalPublicHolidaysTime,
 } from '../../shared-helpers'
 
 dayjs.extend(dayjsIsoWeek)
@@ -49,6 +52,8 @@ type WeeklyWorkingHours = {
   overworkTime: [number, number] | null
   timeOffTime: [number, number] | null
   timeOffEntries: string
+  publicHolidaysTime: [number, number] | null
+  publicHolidayEntries: string
 }
 
 type TimeOffRef = { weekIndex: string; userId: string; id: string }
@@ -64,6 +69,12 @@ export const WorkingHoursUserModal: React.FC<{
     null,
     null,
     user.id
+  )
+  const { data: publicHolidays = [] } = useAdminPublicHolidays(
+    null,
+    null,
+    moduleConfig?.publicHolidayCalendarId || null,
+    { enabled: !!moduleConfig.publicHolidayCalendarId }
   )
   const { data: userConfigs = [] } = useAdminUserConfigs({
     userId: user.id,
@@ -108,10 +119,28 @@ export const WorkingHoursUserModal: React.FC<{
     )
   }, [entries])
 
-  const weekIndexes = React.useMemo<string[]>(
-    () => getWeekIndexesRange(entries, timeOffRequests),
-    [entries, timeOffRequests]
-  )
+  const publicHolidaysByWeekIndex = React.useMemo(() => {
+    type IndexedPublicHoliday = PublicHoliday & { weekIndex: string }
+    const indexedRecords: IndexedPublicHoliday[] = publicHolidays.map((x) => ({
+      ...x,
+      weekIndex: dayjs(x.date, DATE_FORMAT)
+        .startOf('isoWeek')
+        .format(DATE_FORMAT),
+    }))
+    return indexedRecords.reduce<Record<string, PublicHoliday[]>>((acc, x) => {
+      if (!acc[x.weekIndex]) acc[x.weekIndex] = []
+      const { weekIndex, ...rest } = x
+      acc[x.weekIndex].push(rest)
+      return acc
+    }, {})
+  }, [publicHolidays])
+
+  const weekIndexes = React.useMemo<string[]>(() => {
+    return getWeekIndexesRange([
+      ...entries.map(fp.prop('date')),
+      ...timeOffRequests.map((x) => x.dates).flat(),
+    ])
+  }, [entries, timeOffRequests])
 
   const mergedModuleConfig = React.useMemo<WorkingHoursConfig>(
     () => ({
@@ -182,8 +211,17 @@ export const WorkingHoursUserModal: React.FC<{
         }, [])
         .join('\n')
 
+      const publicHolidays = publicHolidaysByWeekIndex[weekIndex] || []
+      const publicHolidaysTime = calculateTotalPublicHolidaysTime(
+        publicHolidays,
+        mergedModuleConfig
+      )
+      const publicHolidayEntries = publicHolidays
+        .map((x) => `${dayjs(x.date, DATE_FORMAT).format('D MMMM')}: ${x.name}`)
+        .join('\n')
+
       const { time: overworkTime, level: overworkLevel } = calculateOverwork(
-        sumTime(totalWorkingHours, timeOffTime),
+        sumTime(totalWorkingHours, timeOffTime, publicHolidaysTime),
         mergedModuleConfig
       )
 
@@ -198,11 +236,14 @@ export const WorkingHoursUserModal: React.FC<{
         overworkTime,
         timeOffTime,
         timeOffEntries,
+        publicHolidaysTime,
+        publicHolidayEntries,
       }
     })
   }, [
     entriesByWeekIndex,
     timeOffRefsByWeekIndex,
+    publicHolidaysByWeekIndex,
     weekIndexes,
     showEntries,
     mergedModuleConfig,
@@ -269,6 +310,24 @@ export const WorkingHoursUserModal: React.FC<{
           Header: 'Time Off Entries',
           accessor: (x: WeeklyWorkingHours) => (
             <div className="whitespace-pre">{x.timeOffEntries}</div>
+          ),
+        },
+        {
+          Header: 'Public Holidays',
+          accessor: (x: WeeklyWorkingHours) => {
+            return x.publicHolidaysTime ? (
+              <span title={x.publicHolidayEntries} className="cursor-help">
+                {getDurationString(x.publicHolidaysTime)}
+              </span>
+            ) : (
+              <span className="text-gray-300">–</span>
+            )
+          },
+        },
+        showEntries && {
+          Header: 'Public Holidays Entries',
+          accessor: (x: WeeklyWorkingHours) => (
+            <div className="whitespace-pre">{x.publicHolidayEntries}</div>
           ),
         },
       ].filter(Boolean),
