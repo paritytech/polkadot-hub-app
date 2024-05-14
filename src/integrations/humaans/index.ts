@@ -1,6 +1,14 @@
 import axios from 'axios'
 import { Integration } from '../integration'
-import { Paginated, Person, PublicHoliday, TimeAway } from './types'
+import {
+  CustomValue,
+  JobRole,
+  Paginated,
+  Person,
+  PublicHoliday,
+  TimeAway,
+} from './types'
+import * as fp from '#shared/utils/fp'
 
 class Humaans extends Integration {
   id = 'humaans'
@@ -86,6 +94,25 @@ class Humaans extends Integration {
       'date[$gte]': from,
       'date[$lte]': to,
     })
+  }
+
+  async getCurrentJobRole(personId: string): Promise<JobRole | null> {
+    const jobRoles = await this.makePaginatedRequest<JobRole>('/job-roles', {
+      personId,
+    })
+    return jobRoles.find((x) => !x.endDate) || null
+  }
+
+  async getCustomValue(
+    personId: string,
+    customFieldId: string
+  ): Promise<CustomValue | null> {
+    return (
+      (await this.makePaginatedRequest<CustomValue>('/custom-values', {
+        personId,
+        customFieldId,
+      }).then(fp.first)) || null
+    )
   }
 }
 

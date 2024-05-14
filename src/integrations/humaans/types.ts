@@ -61,3 +61,19 @@ export type PublicHoliday = {
   name: string
   publicHolidayCalendarId: string
 }
+
+export type JobRole = {
+  id: string
+  personId: string
+  jobTitle: string
+  department: string
+  effectiveDate: string
+  endDate: string
+}
+
+export type CustomValue = {
+  id: string
+  value: string
+  personId: string
+  customFieldId: string
+}
