@@ -128,9 +128,12 @@ export const UserRolesEditorModal: React.FC<{
       {config.roleGroups.map((g, i) => (
         <div key={g.id} className="mb-4">
           {!!i && <hr className="mb-4" />}
-          <div className="mb-2">
-            <div className="font-semibold">{g.name}</div>
+          <div className="mb-4">
+            <div className="font-semibold mb-2">{g.name}</div>
             <div className="text-sm">
+              {g.description && (
+                <span className="text-text-disabled">{g.description} </span>
+              )}
               {!!g.rules.max && (
                 <span className="text-text-disabled">
                   Only {g.rules.max} role{g.rules.max > 1 && 's'} can be

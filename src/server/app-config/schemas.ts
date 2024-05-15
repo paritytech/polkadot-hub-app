@@ -210,6 +210,7 @@ export const userRoleGroup = z.object({
     })
     .default({ max: undefined, unique: false }),
   roles: z.array(userRole).min(1),
+  description: z.string().optional(),
 })
 
 export const permissionsConfig = z.object({
