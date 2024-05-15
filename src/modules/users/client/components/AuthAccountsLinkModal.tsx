@@ -1,14 +1,13 @@
 import { LoadingPolkadotWithText, Modal, P } from '#client/components/ui'
 import React, { useEffect, useMemo, useState } from 'react'
 import { AuthStepsComponent } from '#client/components/auth/steps'
+import { AuthSteps } from '#client/components/auth/helper'
+import { BaseWallet, WalletType } from '@polkadot-onboard/core'
 import {
-  AuthSteps,
   ExtensionAccount,
   GENERIC_ERROR,
   getAccountsByType,
-} from '#client/components/auth/helper'
-import { BaseWallet, WalletType } from '@polkadot-onboard/core'
-import { AuthAddressPair } from '#shared/types'
+} from '#client/utils/polkadot-onboard'
 
 export const AuthAccountsLinkModal: React.FC<{
   wallets: any[]
@@ -65,14 +64,12 @@ export const AuthAccountsLinkModal: React.FC<{
               ](chosenWallet)
               setAccounts(accounts)
             }
-            // what if no chosen wallet?
           },
           onBack: () => setStep(AuthSteps.ChooseWallet),
           onContinue: () => {
             if (selectedAccount) {
               onChoose(selectedAccount)
             }
-            // what if no selected account?
           },
         })
       case AuthSteps.Error:

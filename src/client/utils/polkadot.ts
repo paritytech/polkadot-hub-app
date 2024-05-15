@@ -30,6 +30,12 @@ export const connectToPolkadot = async (): Promise<WsProvider> => {
   return provider
 }
 
+export const connectToWestend = async (): Promise<ApiPromise> => {
+  const provider = new WsProvider('wss://westend-rpc.polkadot.io')
+  const api = await ApiPromise.create({ provider })
+  return api
+}
+
 export const enablePolkadotExtension = async (): Promise<InjectedExtension[]> =>
   // this call fires up the authorization popup
   web3Enable(`${config.appName} | ${config.companyName}`)
@@ -75,4 +81,60 @@ export const sign = async (address: string, signer) => {
     console.error(e)
   }
   return null
+}
+const unitToPlanck = (units: string, decimals: number) => {
+  let [whole, decimal] = units.toString().split('.')
+
+  if (typeof decimal === 'undefined') {
+    decimal = ''
+  }
+
+  return `${whole}${decimal.padEnd(decimals, '0')}`.replace(/^0+/, '')
+}
+
+// @todo add this to admin side
+const receiverAddress = '5CVU2zUE5AmdHXRUEy8RopoMP4ZgFMm4bNF8fRyovnCFEcE5'
+
+export const makePaymentTransaction = async (
+  senderAddress: string,
+  signer,
+  amountToSend: string,
+  callback: (value: any) => void
+) => {
+  const provider = new WsProvider('wss://westend-rpc.polkadot.io')
+  const api = await ApiPromise.create({ provider })
+  await api.isReady
+  if (!!api && !!signer) {
+    // amountToSend = amountToSend * 100
+    const amount = unitToPlanck(amountToSend, api.registry.chainDecimals[0])
+
+    await api.tx.balances
+      .transferKeepAlive(receiverAddress, amount)
+      .signAndSend(senderAddress, { signer }, (res) => {
+        callback(res)
+        if (res.status.isInBlock) {
+          console.log(
+            `Completed at block hash #${res.status.asInBlock.toString()}`
+          )
+        } else {
+          console.log(`Current status: ${res.status.type}`)
+        }
+      })
+  }
+}
+
+export const getAddressType = (address: string) => {
+  if (address.startsWith('5')) {
+    return 'substrate'
+  }
+  if (address.startsWith('1')) {
+    return 'polkadot'
+  }
+
+  const regex = /^[CDFGHJ]/i
+  if (regex.test(address)) {
+    return 'kusama'
+  }
+
+  return ''
 }

@@ -27,8 +27,8 @@ import config from '#client/config'
 import { DeleteUserModal } from './DeleteUserModal'
 import dayjs from 'dayjs'
 import { DATE_FORMAT_DAY_NAME } from '#client/constants'
-import { getWallets } from '#client/components/auth/helper'
 import { formatName } from '#modules/users/shared-helpers'
+import { getWallets } from '#client/utils/polkadot-onboard'
 
 export const MySettings: React.FC = () => {
   useDocumentTitle('Settings')
@@ -109,6 +109,7 @@ export const MySettings: React.FC = () => {
         subtitle="Easily login using your Gmail account."
         connected={!!me?.email}
         onConnect={() => {
+          // @todo this 127 should not be here
           const url = new URL(`http://127.0.0.1:3000/auth/google/login`)
           url.searchParams.append('callbackPath', '/settings')
           window.location.href = url.toString()

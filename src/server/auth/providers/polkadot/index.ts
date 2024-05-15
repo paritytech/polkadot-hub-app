@@ -1,10 +1,9 @@
 import { appConfig } from '#server/app-config'
 import { AuthAddressPair, AuthIds, AuthProvider } from '#shared/types'
 import { FastifyInstance, FastifyPluginCallback, FastifyRequest } from 'fastify'
-import type { InjectedAccountWithMeta } from '@polkadot/extension-inject/types'
 import { getSession, getUserByProvider, isValidSignature } from '../helper'
-import { ExtensionAccount } from '#client/components/auth/helper'
 import config from '#server/config'
+import { ExtensionAccount } from '#client/utils/polkadot-onboard'
 
 export const plugin: FastifyPluginCallback = async (
   fastify: FastifyInstance
