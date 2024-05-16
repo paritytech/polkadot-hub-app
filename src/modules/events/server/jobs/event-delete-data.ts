@@ -13,7 +13,7 @@ export const cronJob: CronJob = {
     try {
       const users = await ctx.models.User.findAllActive({
         where: {
-          scheduledToDelete: dayjs().format('YYYY-MM-DD'),
+          scheduledToDelete: { [Op.lte]: dayjs().format('YYYY-MM-DD') },
         },
       })
 

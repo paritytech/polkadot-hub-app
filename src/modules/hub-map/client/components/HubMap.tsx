@@ -177,7 +177,6 @@ export const _HubMap = () => {
           }}
           setDate={setDate}
           date={date}
-          className={'mb-6'}
         />
 
         {area && (

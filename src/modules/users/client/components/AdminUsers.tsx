@@ -141,7 +141,7 @@ export const UserTable: React.FC = () => {
           <>
             <div className="flex items-start">
               <div className="flex-1">
-                <div className="-mb-1 -mr-1 flex flex-wrap">
+                <div className="-mb-1 -mr-1 flex flex-wrap min-w-[360px]">
                   {u.roles.map((x) => (
                     <UserRoleLabel key={x} role={x} className="mr-1 mb-1" />
                   ))}
@@ -185,12 +185,14 @@ export const UserTable: React.FC = () => {
 
             if (daysDiff < 0) {
               return (
-                <div className="text-red-300">Error: User was not deleted.</div>
+                <div className="text-red-500">
+                  Deleted on {scheduledAt.format('D MMM')}
+                </div>
               )
             }
             return (
               <div className="flex gap-2">
-                <div className="text-accents-green">scheduled {difference}</div>
+                <div className="text-red-500">Will be deleted {difference}</div>
                 <Button
                   size="small"
                   kind="secondary"

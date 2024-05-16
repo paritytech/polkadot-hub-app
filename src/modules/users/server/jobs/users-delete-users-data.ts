@@ -1,5 +1,7 @@
-import { CronJob, CronJobContext } from '#server/types'
+import { Op } from 'sequelize'
 import dayjs from 'dayjs'
+import { CronJob, CronJobContext } from '#server/types'
+import { DATE_FORMAT } from '#server/constants'
 
 const JobName = 'users-delete-users-data'
 export const jobFactory = (): CronJob => {
@@ -10,7 +12,7 @@ export const jobFactory = (): CronJob => {
       try {
         const users = await ctx.models.User.findAllActive({
           where: {
-            scheduledToDelete: dayjs().format('YYYY-MM-DD'),
+            scheduledToDelete: { [Op.lte]: dayjs().format(DATE_FORMAT) },
           },
         })
         if (!users.length) {
@@ -22,7 +24,7 @@ export const jobFactory = (): CronJob => {
         )
         for (const user of users) {
           ctx.log.info(
-            `${JobName}: Anonymizing ${user.fullName} (id: ${user.id}).`
+            `${JobName}: Anonymizing ${user.fullName} (email: ${user.email}, id: ${user.id}).`
           )
           await user.anonymize()
           await ctx.models.UserTag.destroy({ where: { userId: user.id } })
