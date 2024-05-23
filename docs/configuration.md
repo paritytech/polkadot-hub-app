@@ -1,5 +1,3 @@
-# Profile
-
 # Configuration
 
 Configuration for the project lives in a `./config` directory. We suggest keeping that directory in a separate repository and create symbolic link it for local development.
@@ -46,8 +44,27 @@ Add `.env` variables.
 
 ### Matrix
 
+[Matrix Integration](../src/integrations/matrix/README.md)
+
+```
+
+   MATRIX_SERVER=""
+
+   MATRIX_ADMIN_ROOM_ID="hq-admin-room-id-on-the-corresponding-server"
+
+   MATRIX_API_TOKEN="bot-token-on-the-corresponding-server"
+
+   MATRIX_BOT_NAME="display-name-of-the-bot-anything-you-like"
+
+   MATRIX_BOT_USERNAME="matrix-username-on-the-corresponding-server"
+
+```
+
 ### Mapbox
 
+```
+    MAPBOX_API_KEY=""
+```
 Support for maps.
 
 We use `mapbox` in a few places:
