@@ -2,7 +2,7 @@
 
 1.  `git clone git@github.com:paritytech/parity-portal-hq.git && cd parity-portal-hq`
 
-2.  Run the following command, which will run the docker compose configuration from the `docker-compose-demo.yml` file, which uses `ghcr.io/piggydoughnut/hqapp:latest` image. This runs a demo app with preset configuration.
+2.  Run the following command, which will run the docker compose configuration from the `docker-compose-demo.yml` file, which uses `paritytech/polkadot-hub-app/hqapp:latest` image. This runs a demo app with preset configuration.
 
     ```
      DATABASE_URI=postgresql://test:test@postgres/test \
