@@ -3,6 +3,8 @@
 This file configures how modules are displayed on the screen.
 You can set different module placement for mobile and for desktop. Tablet view will follow the desktop configuration.
 
+Authentication providers are also defined here under `auth.providers`. The default provider is `polkadot`. You can also turn on `google` auth provider and specify roles according to your domain.
+
 ### Application configuration sample
 
 ```
