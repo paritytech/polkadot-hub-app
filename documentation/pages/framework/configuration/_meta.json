@@ -1,7 +1,0 @@
-{
-  "application": "Application.json",
-  "company": "Company.json",
-  "modules": "Modules.json",
-  "permissions": "Permissions.json",
-  "textTemplates": "Text templates"
-}
