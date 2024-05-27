@@ -3,5 +3,8 @@ export default {
     darkMode: true,
     project: {
       link: 'https://github.com/paritytech/polkadot-hub-app'
+    },
+    sidebar: {
+      defaultMenuCollapseLevel: 1
     }
   }
