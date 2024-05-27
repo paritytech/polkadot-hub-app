@@ -5,7 +5,8 @@ This is where you turn on/off app modules, set their integrations, metadata and 
 ```
     {
       "id": "announcements",
-      "enabled": true
+      "enabled": true,
+      "enabledIntegrations": [],
     }
 ```
 
