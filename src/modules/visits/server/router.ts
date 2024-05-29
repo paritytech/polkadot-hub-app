@@ -733,6 +733,7 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
 
       result.visitsTotal = await fastify.db.Visit.count({
         where: {
+          status: 'confirmed',
           officeId: office.id,
           date: {
             [Op.gte]: startDate,
@@ -742,6 +743,7 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
       })
       result.visitsToday = await fastify.db.Visit.count({
         where: {
+          status: 'confirmed',
           officeId: office.id,
           date: {
             [Op.gte]: dayjs().startOf('day').toDate(),
@@ -752,6 +754,7 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
 
       result.topVisitors = (await fastify.db.Visit.findAll({
         where: {
+          status: 'confirmed',
           officeId: office.id,
           date: {
             [Op.gte]: startDate,
@@ -783,6 +786,7 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
 
       result.topDesks = (await fastify.db.Visit.findAll({
         where: {
+          status: 'confirmed',
           officeId: office.id,
           date: {
             [Op.gte]: startDate,
@@ -808,6 +812,7 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
       // TODO: check if startdate and enddate contains a year
       result.annualVisits = (await fastify.db.Visit.findAll({
         where: {
+          status: 'confirmed',
           officeId: office.id,
           date: {
             [Op.gte]: startDate,
@@ -856,7 +861,10 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
           FROM
             visits v
           WHERE
-            v."officeId" = :officeId AND v."date" BETWEEN :startDate AND :endDate
+            1=1 AND
+            v."status" = 'confirmed' AND
+            v."officeId" = :officeId AND
+            v."date" BETWEEN :startDate AND :endDate
           GROUP BY
             to_char(v."date", :dateFormat)
         ) AS daily_stats

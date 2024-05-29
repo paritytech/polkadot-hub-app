@@ -230,7 +230,7 @@ export class AppConfig {
     try {
       this.unsafeLoad()
     } catch (err) {
-      if (err instanceof AppError) {
+      if (config.env !== 'production' && err instanceof AppError) {
         log.error(err)
         this.error = err
       } else {
