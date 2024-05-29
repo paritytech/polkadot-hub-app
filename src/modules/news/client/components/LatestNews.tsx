@@ -1,21 +1,15 @@
 import React, { useEffect } from 'react'
 import { useStore } from '@nanostores/react'
 import dayjs from 'dayjs'
-import { FButton, P, WidgetWrapper } from '#client/components/ui'
+import {
+  FButton,
+  P,
+  PlaceholderCard,
+  WidgetWrapper,
+} from '#client/components/ui'
 import * as stores from '#client/stores'
 import { NewsItem } from '#shared/types'
 import { useNews } from '../queries'
-
-const Placeholder = () => (
-  <div className="flex pl-4 gap-4">
-    <div className="h-16 w-16 bg-gray-100 rounded-tiny"></div>
-    <div className="pt-1 flex flex-col gap-1">
-      <div className="h-4 w-44 bg-gray-100 rounded-tiny"></div>
-      <div className="h-4 w-32 bg-gray-100 rounded-tiny"></div>
-      <div className="h-4 w-32 bg-gray-100 rounded-tiny"></div>
-    </div>
-  </div>
-)
 
 const MAX_NEWS_TO_SHOW = 3
 export const LatestNews = () => {
@@ -40,12 +34,12 @@ export const LatestNews = () => {
     >
       {!news?.length ? (
         <div className="flex flex-col gap-4">
-          <Placeholder />
-          <Placeholder />
-          <Placeholder />
+          <PlaceholderCard />
+          <PlaceholderCard />
+          <PlaceholderCard />
         </div>
       ) : (
-        <div className="flex flex-col justify-between h-full pb-10">
+        <div className="flex flex-col justify-between pb-10">
           <div>
             {filteredNews.map((x, i) => (
               <div

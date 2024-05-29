@@ -27,6 +27,7 @@ export const layout = z.object({
         z.array(componentRef).length(2),
       ])
     ),
+    sidebarRight: z.array(componentRef).optional(),
   }),
 })
 

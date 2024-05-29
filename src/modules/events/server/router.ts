@@ -593,7 +593,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         req.user.id
       )
 
-      return eventApplications.map((e) => e.event)
+      return eventApplications.map((e) => ({
+        ...e.event?.dataValues,
+        status: e.status,
+      }))
     }
   )
 

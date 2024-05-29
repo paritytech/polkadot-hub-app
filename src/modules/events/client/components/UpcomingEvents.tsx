@@ -1,4 +1,9 @@
-import { FButton, HR, WidgetWrapper } from '#client/components/ui'
+import {
+  FButton,
+  HR,
+  PlaceholderCard,
+  WidgetWrapper,
+} from '#client/components/ui'
 import * as stores from '#client/stores'
 import { EventPublicResponse } from '#shared/types'
 import { useStore } from '@nanostores/react'
@@ -23,38 +28,43 @@ export const UpcomingEvents: React.FC = () => {
     }
   }, [events, officeId, page])
 
+  const title = !events?.length ? 'No Upcoming Events' : 'Upcoming Events'
   return (
-    <WidgetWrapper title="Upcoming Events">
-      <div className="flex flex-col justify-evenly h-full">
-        {!events?.length ? (
-          <div className="text-gray-400">No upcoming events at the moment</div>
-        ) : (
-          <div className="-m-4">
-            {eventData.length &&
-              eventData?.map((x, i) => (
-                <div key={x.id}>
-                  <EventBadge
-                    event={x}
-                    withApplyButton={!x.applicationId && !x.metadata.global}
-                  />
-                  {i !== eventData.length - 1 && (
-                    <div className="px-4">
-                      <HR key={x.id} />
-                    </div>
-                  )}
-                </div>
-              ))}
-          </div>
-        )}
+    <WidgetWrapper title={title}>
+      <div className="flex flex-col items-start justify-between flex-grow">
         <div>
-          <FButton
-            kind="link"
-            className="w-contain mb-6 -ml-2"
-            onClick={() => stores.goTo('events')}
-          >
-            Show more
-          </FButton>
+          {!events?.length ? (
+            <div className="flex flex-col gap-4">
+              <PlaceholderCard />
+              <PlaceholderCard />
+              <PlaceholderCard />
+            </div>
+          ) : (
+            <div className="-m-4">
+              {eventData.length &&
+                eventData?.map((x, i) => (
+                  <div key={x.id}>
+                    <EventBadge
+                      event={x}
+                      withApplyButton={!x.applicationId && !x.metadata.global}
+                    />
+                    {i !== eventData.length - 1 && (
+                      <div className="px-4">
+                        <HR key={x.id} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+            </div>
+          )}
         </div>
+        <FButton
+          kind="link"
+          className="w-contain -ml-2 full-grow"
+          onClick={() => stores.goTo('events')}
+        >
+          Show All
+        </FButton>
       </div>
     </WidgetWrapper>
   )

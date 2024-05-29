@@ -126,7 +126,8 @@
             "working-hours.__admin",
             "working-hours.admin.list",
             "working-hours.admin.manage",
-            "admin-dashboard.__admin"
+            "admin-dashboard.__admin",
+            "users.manage_profile_limited"
           ],
           "accessByDefault": true
         },
