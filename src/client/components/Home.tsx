@@ -46,7 +46,6 @@ export const Home: React.FC = () => {
           <Tabs currentTab={tab} onChangeTab={(tabId) => setTab(tabId)} />
         </>
       )}
-
       {/* grid */}
       <div
         className={cn(
@@ -54,7 +53,9 @@ export const Home: React.FC = () => {
           layoutView === 'mobile' && 'grid-cols-[minmax(0,_1fr)]',
           layoutView === 'tablet' && 'grid-cols-[minmax(0,_1fr)]',
           layoutView === 'desktop' &&
-            'grid-cols-[minmax(0,_25fr)_minmax(0,_75fr)]',
+            (!config.layout.desktop.sidebarRight?.length
+              ? 'grid-cols-[minmax(0,_25fr)_minmax(0,_75fr)]'
+              : 'grid-cols-[minmax(0,_25fr)_minmax(0,_44fr)_minmax(0,_31fr)]'),
           'gap-x-4'
         )}
       >
@@ -62,7 +63,7 @@ export const Home: React.FC = () => {
         {layoutView === 'mobile' && (
           <div>{config.layout.mobile[tab].map(renderWidget)}</div>
         )}
-        {/* desktop first column */}
+        {/* desktop left sidebar */}
         {layoutView === 'desktop' && (
           <div>{config.layout.desktop.sidebar.map(renderWidget)}</div>
         )}
@@ -80,6 +81,10 @@ export const Home: React.FC = () => {
               </div>
             ))}
           </div>
+        )}
+        {/* desktop right sidebar */}
+        {layoutView === 'desktop' && (
+          <div>{config.layout.desktop.sidebarRight?.map(renderWidget)}</div>
         )}
       </div>
     </>
