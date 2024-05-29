@@ -21,13 +21,3 @@ Configuration for the project lives in a `./config` directory. We suggest keepin
     └── visits
         └── notification.yaml
 ```
-
-### Mapbox
-
-Support for maps.
-
-We use `mapbox` in a few places:
-
-- All users map at `/map`.
-- Map of the hub location on the about page `/about/<hubId>`
-- User location on their profile if they specify that they want to share. `/profile/<userId>`
