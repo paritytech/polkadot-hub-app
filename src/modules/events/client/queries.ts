@@ -62,12 +62,18 @@ export const useEventsView = (officeId: string | null, sortBy?: string) => {
   )
 }
 
+type EventWithStatusArray = (Event & { status: EventApplicationStatus })[]
+
 export const useMyEvents = (officeId: string | null, sortBy?: string) => {
   const path = '/user-api/events/event/me'
-  return useQuery<Event[], AxiosError>(
+  return useQuery<EventWithStatusArray, AxiosError>(
     [path, { office: officeId, sortBy }],
     async ({ queryKey }) =>
-      (await api.get<Event[]>(path, { params: queryKey[1] })).data,
+      (
+        await api.get<EventWithStatusArray>(path, {
+          params: queryKey[1],
+        })
+      ).data,
     { enabled: !!officeId }
   )
 }
