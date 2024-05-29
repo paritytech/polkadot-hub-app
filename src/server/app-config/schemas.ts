@@ -43,11 +43,6 @@ export const officeVisitsConfig = z.object({
   workingDays: z.array(z.number().min(0).max(6)).min(1).max(7),
   bookableDays: z.number().min(1),
   maxCapacity: z.number().min(1),
-  capacityThresholds: z.object({
-    low: z.number().min(1),
-    medium: z.number().min(1),
-    high: z.number().min(1),
-  }),
 })
 
 export const officeAreaDesk = z

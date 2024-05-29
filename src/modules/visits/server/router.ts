@@ -733,6 +733,7 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
 
       result.visitsTotal = await fastify.db.Visit.count({
         where: {
+          officeId: office.id,
           date: {
             [Op.gte]: startDate,
             [Op.lte]: endDate,
@@ -741,6 +742,7 @@ const adminRouter: FastifyPluginCallback = async (fastify, opts) => {
       })
       result.visitsToday = await fastify.db.Visit.count({
         where: {
+          officeId: office.id,
           date: {
             [Op.gte]: dayjs().startOf('day').toDate(),
             [Op.lte]: dayjs().endOf('day').toDate(),

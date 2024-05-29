@@ -19,11 +19,6 @@ Open the `app.config.json` file and scroll down to the `offices` section. This s
                 "workingDays": [0, 1, 2, 3, 4], // Mon-Fri
                 "bookableDays": 30, // how many days in advance are allowed to book
                 "maxCapacity": 35, // maximum office capacity (including non-working desks)
-                "capacityThresholds": {  // only for stats
-                    "low": 5,
-                    "medium": 20,
-                    "high": 30
-                }
             },
             "areas": [
                 {

@@ -29,12 +29,7 @@
       "visitsConfig": {
         "workingDays": [0, 1, 2, 3, 4],
         "bookableDays": 30,
-        "maxCapacity": 35,
-        "capacityThresholds": {
-          "low": 5,
-          "medium": 14,
-          "high": 27
-        }
+        "maxCapacity": 35
       },
       "areas": [
         {
