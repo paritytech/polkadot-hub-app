@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { cn } from '#client/utils'
 //@ts-ignore
 import { PanZoom, OnStateChangeData } from 'react-easy-panzoom'
+import { LoaderSpinner } from './Loader'
 
 type ImageWithPanZoomProps = {
   src: string
@@ -21,6 +22,11 @@ export const ImageWithPanZoom = ({
   containerClassName,
 }: ImageWithPanZoomProps) => {
   const [imgScale, setImgScale] = useState(1)
+  const [isMapLoaded, setIsMapLoaded] = useState(false)
+  const maprSrc = React.useMemo(() => {
+    setIsMapLoaded(false)
+    return src
+  }, [src])
   const containerRef = useRef(null)
   const imageRef = useRef(null)
   const panZoomRef = useRef(null)
@@ -48,6 +54,7 @@ export const ImageWithPanZoom = ({
         containerClassName
       )}
     >
+      {!isMapLoaded && <LoaderSpinner />}
       <PanZoom
         enableBoundingBox
         maxZoom={2}
@@ -59,17 +66,20 @@ export const ImageWithPanZoom = ({
         <div className="relative touch-none">
           <img
             ref={imageRef}
-            src={src}
+            src={maprSrc}
             alt={alt}
             className={cn(
               'max-w-auto max-h-[720px] m-auto object-cover',
               className
             )}
+            onLoad={() => setIsMapLoaded(true)}
           />
-          <div className="absolute top-0 left-0 w-full h-full">
-            {/*  passing scale so we can do reverse scaling on the mapped points */}
-            {imageOverlayMappingFn(imgScale)}
-          </div>
+          {isMapLoaded && (
+            <div className="absolute top-0 left-0 w-full h-full">
+              {/*  passing scale so we can do reverse scaling on the mapped points */}
+              {imageOverlayMappingFn(imgScale)}
+            </div>
+          )}
         </div>
       </PanZoom>
     </div>
