@@ -7,7 +7,7 @@ Authentication providers are also defined here under `auth.providers`. The defau
 
 ### Application configuration sample
 
-```
+```json
 {
   "name": <Your-app-name>,
   "auth": {

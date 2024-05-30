@@ -2,12 +2,12 @@
 
 This is where you turn on/off app modules, set their integrations, metadata and other configuration.
 
-```
-    {
-      "id": "announcements",
-      "enabled": true,
-      "enabledIntegrations": [],
-    }
+```json
+{
+  "id": "announcements",
+  "enabled": true,
+  "enabledIntegrations": []
+}
 ```
 
 To enable a module it has to have `enabled` set to `true`.

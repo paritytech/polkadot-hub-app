@@ -1,57 +1,58 @@
 # Company.json
 
-```
+```json
+{
+  "id": "berlin",
+  "name": "BerlinHub",
+  "city": "Berlin",
+  "country": "GE",
+  "icon": "🇩🇪",
+  "address": "Main street 10",
+  "coordinates": [0.34324324, 0.234234234],
+  "directions": "Entrance through the courtyard",
+  "workingHours": ["09:00", "18:00"],
+  "workingDays": "Mon - Fri",
+  "timezone": "Europe/Berlin",
+  "allowGuestInvitation": true,
+  "allowDeskReservation": true,
+  "allowRoomReservation": true,
+  "areas": [
     {
-      "id": "berlin",
-      "name": "BerlinHub",
-      "city": "Berlin",
-      "country": "GE",
-      "icon": "🇩🇪",
-      "address": "Main street 10",
-      "coordinates": [0.34324324, 0.234234234],
-      "directions": "Entrance through the courtyard",
-      "workingHours": ["09:00", "18:00"],
-      "workingDays": "Mon - Fri",
-      "timezone": "Europe/Berlin",
-      "allowGuestInvitation": true,
-      "allowDeskReservation": true,
-      "allowRoomReservation": true,
-      "areas": [{
-        "id": "first_floor",
-        "name": "First Floor",
-        "available": true,
-        "bookable": true,
-        "map": "/path/to/map.png",
-        "meetingRooms": [
-            {
-                "id": "hibiscus",
-                "name": "Hibiscus",
-                "description": "1st floor",
-                "capacity": 5,
-                "equipment": "whiteboard",
-                "photo":"/path/to/photo.png",
-                "workingHours": ["08:00", "19:00"],
-                "autoConfirm": true,
-                "position": {
-                    "x":0,
-                    "y":0
-                }
-            }
-        ],
-        "desks": [
-            {
-                "id": "a",
-                "name": "A",
-                "type": "flexible",
-                "position": {
-                    "x":0,
-                    "y":0
-                }
-            }
-        ]
-      }]
+      "id": "first_floor",
+      "name": "First Floor",
+      "available": true,
+      "bookable": true,
+      "map": "/path/to/map.png",
+      "meetingRooms": [
+        {
+          "id": "hibiscus",
+          "name": "Hibiscus",
+          "description": "1st floor",
+          "capacity": 5,
+          "equipment": "whiteboard",
+          "photo": "/path/to/photo.png",
+          "workingHours": ["08:00", "19:00"],
+          "autoConfirm": true,
+          "position": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "desks": [
+        {
+          "id": "a",
+          "name": "A",
+          "type": "flexible",
+          "position": {
+            "x": 0,
+            "y": 0
+          }
+        }
+      ]
     }
-
+  ]
+}
 ```
 
 ## Configurable fields

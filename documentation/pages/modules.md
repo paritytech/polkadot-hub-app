@@ -4,6 +4,40 @@ All user-facing widgets of the application are (and should be) located in its ow
 
 [Module structure](https://github.com/paritytech/polkadot-hub-app/tree/master/src/modules/_template)
 
+## Manifest.json
+
+Each module has manifest.json file which defines its configurations. You can find it under `src/<MODULE-NAME>/manifest.json`
+
+E.g. partial sample of users module manifest.json
+
+```json
+{
+  "id": "users",
+  "name": "Users",
+  "dependencies": [],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": ["matrix", "mapbox"],
+  "availableCronJobs": ["users-delete-users-data"],
+  "models": ["User", "Session", "City", "Tag", "UserTag"],
+  "clientRouter": {
+    "public": {},
+    "user": {
+      "profile": {
+        "path": "/me",
+        "componentId": "Profile",
+        "availablePortals": ["profile_form_extra_fields"]
+      }
+    },
+    "admin": {
+      "adminUsers": {
+        "path": "/admin/users",
+        "componentId": "AdminUsers"
+      }
+    }
+  }
+}
+```
+
 ## Available modules:
 
 [About](./modules/about.md) - shows location and other information about the Hub
