@@ -1,5 +1,5 @@
-import React, { MouseEventHandler, useState } from 'react'
-import { Avatar, Button, P } from '#client/components/ui'
+import React, { MouseEventHandler, useEffect, useState } from 'react'
+import { Avatar, Button, LoaderSpinner, P } from '#client/components/ui'
 import {
   OfficeArea,
   OfficeAreaDesk,
@@ -105,6 +105,10 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
   onToggle,
 }) => {
   const [isMapLoaded, setIsMapLoaded] = useState(false)
+  const maprSrc = React.useMemo(() => {
+    !panZoom && setIsMapLoaded(false)
+    return area.map
+  }, [area])
   const me = useStore(stores.me)
   const initialStartPosition = selectedPointId
     ? mappablePoints?.find(
@@ -205,8 +209,9 @@ export const OfficeFloorMap: React.FC<OfficeFloorMapProps> = ({
   return (
     <div className="relative">
       <div className={cn(!!panZoom ? 'hidden' : 'block')}>
+        {!isMapLoaded && <LoaderSpinner />}
         <img
-          src={area.map}
+          src={maprSrc}
           alt={`${area.name} floor plan`}
           className="opacity-80"
           onLoad={() => setIsMapLoaded(true)}
