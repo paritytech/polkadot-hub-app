@@ -21,6 +21,7 @@ export const ImageWithPanZoom = ({
   containerClassName,
 }: ImageWithPanZoomProps) => {
   const [imgScale, setImgScale] = useState(1)
+  const [isMapLoaded, setIsMapLoaded] = useState(false)
   const containerRef = useRef(null)
   const imageRef = useRef(null)
   const panZoomRef = useRef(null)
@@ -65,11 +66,14 @@ export const ImageWithPanZoom = ({
               'max-w-auto max-h-[720px] m-auto object-cover',
               className
             )}
+            onLoad={() => setIsMapLoaded(true)}
           />
-          <div className="absolute top-0 left-0 w-full h-full">
-            {/*  passing scale so we can do reverse scaling on the mapped points */}
-            {imageOverlayMappingFn(imgScale)}
-          </div>
+          {isMapLoaded && (
+            <div className="absolute top-0 left-0 w-full h-full">
+              {/*  passing scale so we can do reverse scaling on the mapped points */}
+              {imageOverlayMappingFn(imgScale)}
+            </div>
+          )}
         </div>
       </PanZoom>
     </div>
