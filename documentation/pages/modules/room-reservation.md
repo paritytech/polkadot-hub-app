@@ -1,6 +1,6 @@
 # Room reservation module
 
-This module takes care of booking rooms. You can either book any available room for the time you need, or you can book a specific room depending on its availability.
+This module takes care of booking rooms. You can either book any available room for the time you need, or you can book a specific room depending on its availability. It also includes a special tablet-mode for on-wall devices.
 
 ## Manifest.json
 

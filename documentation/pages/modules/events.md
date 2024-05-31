@@ -1,6 +1,6 @@
 # Events module
 
-Takes care of everything about events in the app.
+Special pages for events, with different visibility options (invites only, office-wide, public), and the ability to attach a check-in form asking attendees for necessary information, such as food preferences or flight times.
 
 ## Manifest.json
 

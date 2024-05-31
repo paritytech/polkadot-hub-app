@@ -1,6 +1,6 @@
 # Visits module
 
-This module takes care of desk bookings.
+Admins can upload floor plans and allow users to book desks in the office. The system also supports additional check-in forms.
 
 ## Manifest.json
 
