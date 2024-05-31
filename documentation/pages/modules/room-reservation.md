@@ -1,6 +1,6 @@
 # Room reservation module
 
-This module takes care of desk bookings.
+This module takes care of booking rooms. You can either book any available room for the time you need, or you can book a specific room depending on its availability.
 
 ## Manifest.json
 
