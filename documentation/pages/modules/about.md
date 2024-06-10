@@ -1,6 +1,18 @@
 # About module
 
-## About widget
+## Manifest.json
+
+| key                     | value           |
+| ----------------------- | --------------- |
+| id                      | admin-dashboard |
+| name                    | Dashboard       |
+| dependencies            | []              |
+| requiredIntegrations    | []              |
+| recommendedIntegrations | []              |
+
+## Available Widgets
+
+### About widget
 
 The widget shows information that is configured in [`company.json file`](../framework/configuration/company.md):
 

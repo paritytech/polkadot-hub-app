@@ -38,3 +38,23 @@ The widget shows who is in the office on a given date. Using stealth mode the us
   height="500"
   style="border: 1px solid lightGray; border-radius: 10px; margin-top: 10px"
 />
+
+## Configuration
+
+### Floor plans
+
+1. Floor plans are added to your `config/public` folder. You can create any folder structure that you like in that folder.
+2. Adjust the source of floor plans for the specific floor in your [`company.json`](../framework/configuration/company.md) file.
+
+```json
+      "areas": [
+        {
+          "id": "parity_hq_1",
+          "available": false,
+          "name": "1st floor",
+          "capacity": 5,
+          "map": "/maps/berlin-1.png",
+          "bookable": false,
+          ....
+
+```
