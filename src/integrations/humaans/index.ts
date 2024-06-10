@@ -77,6 +77,12 @@ class Humaans extends Integration {
     return this.makePaginatedRequest<Person>('/people')
   }
 
+  async getOffboardedEmployees(): Promise<Person[]> {
+    return this.makePaginatedRequest<Person>('/people', {
+      status: 'offboarded',
+    })
+  }
+
   async getTimeAways(from: string, to: string): Promise<TimeAway[]> {
     return this.makePaginatedRequest<TimeAway>('/time-away', {
       'startDate[$gte]': from,

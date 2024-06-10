@@ -10,11 +10,11 @@ type DayOfWeek =
 export type Person = {
   id: string
   email: string
-  displayName: string
   firstName: string
   lastName: string
   teams: { name: string }[]
   workingDays: { day: DayOfWeek }[]
+  status: 'active' | 'offboarded' | 'newHire'
 }
 
 type DayPeriod = 'full' | 'am' | 'pm'

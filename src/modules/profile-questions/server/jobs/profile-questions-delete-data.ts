@@ -1,5 +1,6 @@
-import { CronJob, CronJobContext } from '#server/types'
 import dayjs from 'dayjs'
+import { Op } from 'sequelize'
+import { CronJob, CronJobContext } from '#server/types'
 
 const JobName = 'checklist-answer-delete-user-data'
 export const jobFactory = (): CronJob => {
@@ -10,7 +11,7 @@ export const jobFactory = (): CronJob => {
       try {
         const users = await ctx.models.User.findAllActive({
           where: {
-            scheduledToDelete: dayjs().format('YYYY-MM-DD'),
+            scheduledToDelete: { [Op.lte]: dayjs().format('YYYY-MM-DD') },
           },
         })
         ctx.log.info(

@@ -1,5 +1,4 @@
 import { BackButton, Icons, showNotification } from '#client/components/ui'
-import { useOffice } from '#client/utils/hooks'
 import { useUpdateVisit } from '#modules/visits/client/queries'
 import { useStore } from '@nanostores/react'
 import dayjs, { Dayjs } from 'dayjs'
@@ -12,11 +11,12 @@ import {
   RoomReservationStatus,
   VisitStatus,
   VisitType,
+  ScheduledItemType,
 } from '#shared/types'
 import { FRIENDLY_DATE_FORMAT } from '#client/constants'
+import { cn } from '#client/utils'
 import { ScheduledItem } from './ScheduledItem'
 import { useUpcoming } from '../queries'
-import { ScheduledItemType } from '#modules/hub-map/types'
 
 export const ScheduledItemsList: React.FC<{
   onChooseCard: (id: string | null, areaId: string | null, date: Dayjs) => void
@@ -124,7 +124,7 @@ export const ScheduledItemsList: React.FC<{
   }
 
   return (
-    <div className={className}>
+    <div className={cn(className, !!scheduledItems?.length && 'mb-6')}>
       {!!selected && (
         <div className="">
           <BackButton

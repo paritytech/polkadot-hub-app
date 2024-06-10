@@ -48,7 +48,7 @@ export class User
   declare geodata: UserModel['geodata']
   declare isInitialised: UserModel['isInitialised']
   declare defaultLocation: UserModel['defaultLocation']
-  declare scheduledToDelete: CreationOptional<Date>
+  declare scheduledToDelete: UserModel['scheduledToDelete']
   declare deletedAt: CreationOptional<Date>
   declare createdAt: CreationOptional<Date>
   declare updatedAt: CreationOptional<Date>
