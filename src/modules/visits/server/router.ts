@@ -492,7 +492,6 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
             areaId: a.id,
             deskId: d.id,
             type: d.type,
-            user: d.user,
             multiple: d.allowMultipleBookings,
             permittedRoles: d.permittedRoles,
           }))
@@ -507,6 +506,7 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
             .flat()
         )
       )
+      const userDeskRoles = req.user.roles.filter(fp.isIn(deskRoles))
       const usersWithDeskRoles = await fastify.db.User.findAll({
         where: { roles: { [Op.overlap]: deskRoles } },
       })
@@ -520,6 +520,16 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
           if (reservedAreaIds.includes(x.areaId)) {
             return false
           }
+          // prevent users from booking desks other than the ones they are assigned to
+          if (userDeskRoles.length) {
+            if (x.permittedRoles?.some(fp.isIn(userDeskRoles))) {
+              return true
+            }
+            if (x.type === 'full_area' || x.type === 'multi') {
+              return true
+            }
+            return false
+          }
           // desk is only available for specified list of roles
           if (x.permittedRoles.length) {
             if (x.permittedRoles.some((x) => deskRolesPresented.includes(x))) {
@@ -528,13 +538,9 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
               }
             }
           }
-          // Desk can be booked multiple times
+          // desk can be booked multiple times
           if (x.multiple) {
             return true
-          }
-          // Personal desk is not available for booking for anyone apart from the person it belongs to
-          if (x.type === 'personal' && x.user !== req.user.email) {
-            return false
           }
           // if any of the incoming bookings are for the full bookable areas
           if (
