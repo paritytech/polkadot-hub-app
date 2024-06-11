@@ -188,8 +188,8 @@ export const WorkingHoursWidget: React.FC = () => {
     return (
       days.some((x) => editableDays.has(x)) &&
       days.map((x) => entriesByDate[x] || []).every((x) => !x.length) &&
-      days.every((x) => !timeOffByDate[x]) &&
-      days.every((x) => !publicHolidayByDate[x])
+      days.some((x) => !timeOffByDate[x]) &&
+      days.some((x) => !publicHolidayByDate[x])
     )
   }, [
     selectedWeekStart,
