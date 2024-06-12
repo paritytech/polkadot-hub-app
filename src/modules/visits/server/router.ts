@@ -446,7 +446,7 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
     '/free-desks',
     async (
       req: FastifyRequest<{
-        Querystring: { 'dates[]': string[] }
+        Querystring: { 'dates[]': string[]; guestMode: string }
         Reply: Array<{ areaId: string; deskId: string }>
       }>,
       reply
@@ -460,6 +460,7 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
           `The ${req.office.name} office doesn't support desk reservation`
         )
       }
+      const guestMode = req.query.guestMode === 'true'
       let dateStrings = req.query['dates[]']
       if (!Array.isArray(dateStrings)) {
         dateStrings = [dateStrings]
@@ -521,7 +522,7 @@ const userRouter: FastifyPluginCallback = async (fastify, opts) => {
             return false
           }
           // prevent users from booking desks other than the ones they are assigned to
-          if (userDeskRoles.length) {
+          if (!guestMode && userDeskRoles.length) {
             if (x.permittedRoles?.some(fp.isIn(userDeskRoles))) {
               return true
             }

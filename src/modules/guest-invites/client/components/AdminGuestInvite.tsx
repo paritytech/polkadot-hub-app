@@ -56,7 +56,8 @@ export const AdminGuestInvite: React.FC = () => {
 
   const { data: availableDesks = [] } = useAvailableDesks(
     office?.id || '',
-    invite?.dates || []
+    invite?.dates || [],
+    true
   )
   const availableAreaDeskIds = React.useMemo(() => {
     return availableDesks

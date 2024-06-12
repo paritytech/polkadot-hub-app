@@ -96,10 +96,14 @@ export const useCreateVisit = (cb: () => void) =>
     { onSuccess: cb }
   )
 
-export const useAvailableDesks = (officeId: string, dates: string[]) => {
+export const useAvailableDesks = (
+  officeId: string,
+  dates: string[],
+  guestMode: boolean = false
+) => {
   const path = '/user-api/visits/free-desks'
   return useQuery<Array<{ areaId: string; deskId: string }>, AxiosError>(
-    [path, { office: officeId, dates }],
+    [path, { office: officeId, dates, guestMode }],
     async ({ queryKey }) =>
       (
         await api.get<Array<{ areaId: string; deskId: string }>>(path, {

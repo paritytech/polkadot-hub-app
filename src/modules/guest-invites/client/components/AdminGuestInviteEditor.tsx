@@ -112,8 +112,7 @@ export const AdminGuestInviteEditor = () => {
       : createInvite(formData)
   }
 
-  const { data: officeConfig, isFetching: isOfficeConfigFetching } =
-    useVisitConfig(officeId || null)
+  const { data: officeConfig = null } = useVisitConfig(officeId || null)
 
   const formIsValid = React.useMemo<boolean>(() => {
     return requiredFields.every((field) => Boolean(formData[field]))
@@ -176,7 +175,7 @@ export const AdminGuestInviteEditor = () => {
               <div>
                 <DatePicker
                   workingDays={officeConfig?.workingDays}
-                  availableDateRange={officeConfig?.bookableDays ?? []}
+                  availableDateRange={officeConfig?.bookableDays ?? 0}
                   selectedDates={formData.dates ?? []}
                   onToggleDate={onToggleDate}
                   preReservedDates={[]}
@@ -199,6 +198,7 @@ export const AdminGuestInviteEditor = () => {
                 selectedAreaId={formData.areaId}
                 onSelectDesk={onFormChange('deskId')}
                 onSelectArea={onFormChange('areaId')}
+                guestMode={true}
               />
             </div>
           </div>

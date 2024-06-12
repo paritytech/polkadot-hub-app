@@ -12,6 +12,7 @@ type Props = {
   onSelectDesk: (desk: any) => void
   selectedAreaId: string | null
   onSelectArea?: (id: string) => void
+  guestMode?: boolean
 }
 
 export const DeskPicker: React.FC<Props> = ({
@@ -21,6 +22,7 @@ export const DeskPicker: React.FC<Props> = ({
   onSelectDesk,
   selectedAreaId,
   onSelectArea,
+  guestMode = false,
 }) => {
   ///////// Area /////////
   const { data: areas = [] } = useVisitsAreas(officeId)
@@ -50,7 +52,7 @@ export const DeskPicker: React.FC<Props> = ({
 
   ///////// Available Area /////////
   const { data: availableDesks = [], isLoading: isAvailableDesksLoading } =
-    useAvailableDesks(officeId, selectedDates)
+    useAvailableDesks(officeId, selectedDates, guestMode)
 
   const availableAreaDeskIds = React.useMemo(() => {
     const available = availableDesks
