@@ -72,6 +72,7 @@ export const Home: React.FC = () => {
           <div>
             {config.layout.desktop.main.map((row) => (
               <div
+                key={row.map((c) => `${c[0]}-${c[1]}`).join('_')}
                 className={cn(
                   'grid items-stretch',
                   row.length == 2 ? 'grid grid-cols-2 gap-2' : 'grid-cols-1'
