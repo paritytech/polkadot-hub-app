@@ -94,6 +94,10 @@ const unitToPlanck = (units: string, decimals: number) => {
 
 // @todo add this to admin side
 const receiverAddress = '5CVU2zUE5AmdHXRUEy8RopoMP4ZgFMm4bNF8fRyovnCFEcE5'
+// const providerSocket =
+//   process.env.NODE_ENV === 'production'
+//     ? 'wss://rpc.polkadot.io'
+//     : 'wss://westend-rpc.polkadot.io'
 
 export const makePaymentTransaction = async (
   senderAddress: string,
@@ -107,7 +111,6 @@ export const makePaymentTransaction = async (
   if (!!api && !!signer) {
     // amountToSend = amountToSend * 100
     const amount = unitToPlanck(amountToSend, api.registry.chainDecimals[0])
-
     await api.tx.balances
       .transferKeepAlive(receiverAddress, amount)
       .signAndSend(senderAddress, { signer }, (res) => {

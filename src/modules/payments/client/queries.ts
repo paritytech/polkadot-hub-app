@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from 'react-query'
 import { AxiosError, AxiosResponse } from 'axios'
 import { api } from '#client/utils/api'
-// import { Entity } from '#shared/types'
+import { PaymentItemWithUser } from '../types'
 
 export const useCreatePaymentIntent = (cb: () => void) =>
   useMutation<AxiosResponse, AxiosError, any>(
@@ -10,7 +10,7 @@ export const useCreatePaymentIntent = (cb: () => void) =>
   )
 
 export const useCreatePayment = () =>
-  useMutation<AxiosResponse, AxiosError, any>((data: any) =>
+  useMutation<AxiosResponse, AxiosError, PaymentItem>((data: PaymentItem) =>
     api.post('/user-api/payments/payments', data)
   )
 
@@ -21,9 +21,9 @@ export const useUpdatePayment = () =>
 
 export const useGetPayment = (paymentId: string) => {
   const path = `/user-api/payments/payments/${paymentId}`
-  return useQuery<any, AxiosError>(
+  return useQuery<PaymentItemWithUser, AxiosError>(
     path,
-    async () => (await api.get<any>(path)).data,
+    async () => (await api.get<PaymentItemWithUser>(path)).data,
     { enabled: !!paymentId }
   )
 }
@@ -36,11 +36,37 @@ export const useCurrencyPrice = (currency: string) => {
   )
 }
 
+export const useGetPayments = (searchQuery: string) => {
+  const path = `/admin-api/payments/payments?q=${searchQuery}`
+  return useQuery<any, AxiosError>(
+    path,
+    async () => (await api.get<any>(path)).data
+  )
+}
+
+export const useGetInvoice = (paymentId: string) => {
+  const path = `/admin-api/payments/payments/invoice/${paymentId}`
+  return useQuery<any, AxiosError>(
+    path,
+    async () => (await api.get<any>(path)).data,
+    { enabled: !!paymentId }
+  )
+}
+
+export const useSendInvoice = (cb: () => void) =>
+  useMutation<AxiosResponse, AxiosError, any>(
+    (data: any) => api.post(`/user-api/payments/invoices`, data),
+    { onSuccess: cb }
+  )
+
+// @todo: temporary, for testing only
 export const useMembership = (membershipId: string) => {
   return {
     data: {
+      id: '1231231',
       name: 'Casual',
-      length: '30 days',
+      duration: '30',
+      type: 'day', // type 'hour' ?
       amount: 1,
       currency: 'EUR',
       description: 'Casual access to the space, without a desk.',

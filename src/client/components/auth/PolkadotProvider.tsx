@@ -125,8 +125,16 @@ export const PolkadotProvider: React.FC = () => {
   }, [step])
 
   useEffect(() => {
-    if (isValidSignature && step === AuthSteps.Redirect) {
+    const disconnectAndProcess = async () => {
+      try {
+        await chosenWallet?.disconnect()
+      } catch (e) {
+        console.log(e)
+      }
       window.location.href = '/'
+    }
+    if (isValidSignature && step === AuthSteps.Redirect) {
+      disconnectAndProcess()
     }
   }, [isValidSignature, step])
 

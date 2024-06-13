@@ -8,6 +8,7 @@ import {
   showNotification,
 } from '#client/components/ui'
 import { PaymentItem } from '#shared/types'
+import config from '#client/config'
 
 export const StripePaymentForm: React.FC<{
   paymentRecord: PaymentItem
@@ -70,7 +71,7 @@ export const StripePaymentForm: React.FC<{
       elements,
       confirmParams: {
         // Make sure to change this to your payment completion page
-        return_url: `http://127.0.0.1:3000/payments/confirmation?id=${paymentRecord.id}`,
+        return_url: `${config.appHost}/payments/confirmation?id=${paymentRecord.id}`,
       },
     })
 

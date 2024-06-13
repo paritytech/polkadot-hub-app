@@ -24,6 +24,7 @@ export type ClientOfficeConfig = Pick<
   | 'address'
   | 'country'
   | 'city'
+  | 'supportContact'
   | 'coordinates'
   | 'directions'
   | 'workingHours'

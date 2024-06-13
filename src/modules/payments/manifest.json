@@ -2,8 +2,8 @@
   "id": "payments",
   "name": "Payments",
   "dependencies": ["users", "events"],
-  "requiredIntegrations": [],
-  "recommendedIntegrations": ["stripe"],
+  "requiredIntegrations": ["email-smtp", "stripe"],
+  "recommendedIntegrations": [],
   "models": ["Payment"],
   "clientRouter": {
     "public": {
@@ -23,7 +23,22 @@
         "fullScreen": true
       }
     },
-    "user": {},
-    "admin": {}
+    "user": {
+      "invoice": {
+        "path": "/payments/invoice/:invoiceId",
+        "componentId": "PaymentInvoice",
+        "fullScreen": true
+      }
+    },
+    "admin": {
+      "adminPayments": {
+        "path": "/admin/payments",
+        "componentId": "AdminPayments"
+      },
+      "adminPaymentsDetail": {
+        "path": "/admin/payments/detail/:paymentId",
+        "componentId": "AdminPaymentsDetail"
+      }
+    }
   }
 }

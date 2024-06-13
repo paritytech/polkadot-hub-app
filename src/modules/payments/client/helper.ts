@@ -1,3 +1,6 @@
+import { FRIENDLY_DATE_FORMAT } from '#client/constants'
+import dayjs from 'dayjs'
+
 export const appearance = {
   theme: 'stripe',
   variables: {
@@ -29,4 +32,12 @@ export const appearance = {
       textTransform: 'lowercase',
     },
   },
+}
+
+export const hasMembershipExpired = (
+  paymentDate: Date,
+  type: 'day' | 'hour',
+  length: number
+) => {
+  return dayjs().isAfter(dayjs(paymentDate).add(length, type))
 }

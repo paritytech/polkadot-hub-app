@@ -5,7 +5,7 @@ import { loadStripe } from '@stripe/stripe-js'
 import { Elements } from '@stripe/react-stripe-js'
 import { StripePaymentForm } from './StripePaymentForm'
 import { useCreatePaymentIntent } from '../queries'
-import { PaymentItem } from '#shared/types'
+import { PaymentItem, PaymentProvider } from '#shared/types'
 import { appearance } from '../helper'
 
 // @todo add to env vars
@@ -30,7 +30,7 @@ export const StripePayment: React.FC<{
   useEffect(() => {
     if (!!paymentRecord) {
       const setup = async () => {
-        if (paymentRecord.provider === 'stripe') {
+        if (paymentRecord.provider === PaymentProvider.Stripe) {
           await createPaymentIntent({
             paymentRecordId: paymentRecord.id,
           })

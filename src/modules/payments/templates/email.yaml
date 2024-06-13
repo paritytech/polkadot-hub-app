@@ -1,0 +1,12 @@
+invoiceSubject: |
+  Membership invoice from {{ companyName }}
+invoiceHtml: |
+  Hello {{ user.fullName }}, <br><br>
+
+
+  Please find your payment invoice at <a href='{{ invoiceLink }}'>this link</a>. <br><br>
+  We value your membership and are here to support you. Should you have any questions or need assistance, please contact our member services team.
+
+  <br><br>
+
+  {{ companyName }}

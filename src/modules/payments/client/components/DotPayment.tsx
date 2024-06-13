@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import {
-  CopyToClipboard,
   FButton,
   HR,
   LabelWrapper,
@@ -9,7 +8,6 @@ import {
   LoadingPolkadotWithText,
   P,
   Select,
-  Tag,
 } from '#client/components/ui'
 
 import { Decimal } from 'decimal.js'
@@ -28,20 +26,16 @@ import { useUpdatePayment } from '../queries'
 import { PaymentStatus, PaymentSteps } from '#shared/types'
 import dayjs from 'dayjs'
 import { getDiscountValue } from '#modules/payments/helper'
-import { appConfig } from '#server/app-config'
 
 export const DotPayment: React.FC<{
-  // amount: string
   paymentRecord: any
-  currency: string
   onTxStatusChange: (status: string) => void
 }> = ({ paymentRecord, onTxStatusChange }) => {
   const [loading, setLoading] = useState(false)
   const [txId, setTxId] = useState<string>('')
-  const [txProcessInfo, setTxProcessInfo] = useState('')
 
   const [wallets, setWallets] = useState<BaseWallet[]>([])
-  const [selectedAddress, setSelectedAddress] = useState()
+  const [selectedAddress, setSelectedAddress] = useState<string>()
   const [chosenWallet, setChosenWallet] = useState<BaseWallet>()
   const [accounts, setAccounts] = useState<ExtensionAccount[]>([])
 
@@ -89,8 +83,8 @@ export const DotPayment: React.FC<{
       wallets.map((wallet: BaseWallet) => {
         const isWC = isWalletConnect(wallet)
         return {
-          label: isWC ? 'WalletConenct' : wallet.metadata.title,
-          value: isWC ? 'WalletConenct' : wallet.metadata.id,
+          label: isWC ? 'Wallet Connect' : wallet.metadata.title,
+          value: isWC ? 'wallet-connect' : wallet.metadata.id,
         }
       }),
     [wallets]
@@ -110,10 +104,19 @@ export const DotPayment: React.FC<{
   )
 
   useEffect(() => {
-    if (!!txId && !!updatedRecord) {
+    const disconnectAndRedirect = async () => {
+      try {
+        await chosenWallet?.disconnect()
+      } catch (e) {
+        console.log(e)
+      }
       const url = new URL('http://127.0.0.1:3000/payments/confirmation')
       url.searchParams.set('id', paymentRecord.id)
       window.location.href = url.toString()
+    }
+
+    if (!!txId && !!updatedRecord) {
+      disconnectAndRedirect()
     }
   }, [txId, updatedRecord])
 
@@ -136,6 +139,7 @@ export const DotPayment: React.FC<{
         console.error('Invalid account.')
         return
       }
+      console.log('selectedAddress ', selectedAddress)
       makePaymentTransaction(
         selectedAddress,
         chosenWallet?.signer,
@@ -249,30 +253,31 @@ export const DotPayment: React.FC<{
         </div>
       )}
       {!txInProgress && !txFinalized && (
-        <div className="flex flex-col w-1/2 mt-4">
+        <div className="flex flex-col w-full md:w-1/2 mt-4">
           <LabelWrapper label="wallet" className="sm:flex-col sm:gap-1">
             <Select
               placeholder="select wallet"
               containerClassName="w-full mb-4"
               value={chosenWallet?.metadata.title}
-              onChange={(v) => {
+              onChange={async (v) => {
                 try {
                   const wallet = wallets.find(
                     (w: BaseWallet) => w.metadata.id === v
                   )
                   setChosenWallet(wallet)
-                  wallet
-                    .connect()
-                    .then(() => {
-                      return getAccountsByType[
-                        wallet.type as
-                          | WalletType.INJECTED
-                          | WalletType.WALLET_CONNECT
-                      ](wallet)
-                    })
-                    .then((accounts) => {
-                      setAccounts(accounts)
-                    })
+                  !!wallet &&
+                    wallet
+                      .connect()
+                      .then(() => {
+                        return getAccountsByType[
+                          wallet.type as
+                            | WalletType.INJECTED
+                            | WalletType.WALLET_CONNECT
+                        ](wallet)
+                      })
+                      .then((accounts) => {
+                        setAccounts(accounts)
+                      })
                 } catch (e) {
                   console.error(e)
                   setError(<p>{GENERIC_ERROR}</p>)
@@ -338,54 +343,53 @@ export const DotPayment: React.FC<{
             size="small"
             onClick={async () => {
               if (selectedAccount) {
-                setStep(PaymentSteps.TransactionInProgress)
-                setLoaderText('Transaction is being prepared')
-                onTxStatusChange('in_progress')
-                await makeDotPayment((result) => {
-                  if (result.status.isInBlock) {
-                    setLoaderText(
-                      `Transaction status: ${result.status.type}. Please allow up to 30 seconds to process.`
-                    )
-                  } else {
-                    setLoaderText(`Transaction status: ${result.status.type}`)
-                  }
-                  if (result.status.isInBlock) {
-                    setTxProcessInfo(
-                      `Transaction is in block hash #${result.status.asInBlock.toString()}`
-                    )
-                  }
-                  if (result?.status?.isFinalized) {
-                    const human = result.toHuman()
-                    const txHashHex = Array.from(result.txHash)
-                      .map((byte) =>
-                        ('0' + (byte & 0xff).toString(16)).slice(-2)
+                try {
+                  setStep(PaymentSteps.TransactionInProgress)
+                  setLoaderText('Transaction is being prepared')
+                  onTxStatusChange('in_progress')
+                  await makeDotPayment((result) => {
+                    if (result.status.isInBlock) {
+                      setLoaderText(
+                        `Transaction status: ${result.status.type}. Please allow up to 30 seconds to process.`
                       )
-                      .join('')
-                    const txHashWithPrefix = '0x' + txHashHex
-                    setTxId(txHashWithPrefix)
-                    // @todo when is it success?
-                    let transactionResult = PaymentStatus.Success
-                    if (!!human.dispatchError) {
-                      transactionResult = PaymentStatus.Error
+                    } else {
+                      setLoaderText(`Transaction status: ${result.status.type}`)
                     }
-                    updatePayment({
-                      id: paymentRecord.id,
-                      providerReferenceId: txHashWithPrefix,
-                      reference: [
-                        {
-                          id: paymentRecord.id,
-                          amount: priceInDot,
-                          txId: txHashWithPrefix,
-                          result: result,
-                          created: dayjs().unix(),
-                        },
-                      ],
-                      status: transactionResult,
-                    })
-                    onTxStatusChange('success')
-                    setStep(PaymentSteps.TransactionFinalized)
-                  }
-                })
+                    if (result?.status?.isFinalized) {
+                      const human = result.toHuman()
+                      const txHashHex = Array.from(result.txHash)
+                        .map((byte) =>
+                          ('0' + (byte & 0xff).toString(16)).slice(-2)
+                        )
+                        .join('')
+                      const txHashWithPrefix = '0x' + txHashHex
+                      setTxId(txHashWithPrefix)
+                      // @todo when is it success?
+                      let transactionResult = PaymentStatus.Success
+                      if (!!human.dispatchError) {
+                        transactionResult = PaymentStatus.Error
+                      }
+                      updatePayment({
+                        id: paymentRecord.id,
+                        providerReferenceId: txHashWithPrefix,
+                        reference: [
+                          {
+                            id: paymentRecord.id,
+                            amount: priceInDot,
+                            txId: txHashWithPrefix,
+                            result: result,
+                            created: dayjs().unix(),
+                          },
+                        ],
+                        status: transactionResult,
+                      })
+                      onTxStatusChange('success')
+                      setStep(PaymentSteps.TransactionFinalized)
+                    }
+                  })
+                } catch (e) {
+                  console.log(e)
+                }
               }
             }}
             disabled={

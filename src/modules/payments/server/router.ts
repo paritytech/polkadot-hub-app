@@ -3,6 +3,10 @@ import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Payment } from './models'
 import { PaymentProvider, PaymentStatus } from '../types'
 import { getDotPrice, getPriceInDot } from '../helper'
+import { Op } from 'sequelize'
+import { User } from '#modules/users/server/models'
+import { appConfig } from '#server/app-config'
+import config from '#server/config'
 
 const publicRouter: FastifyPluginCallback = async function (fastify, opts) {}
 
@@ -67,15 +71,61 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         return reply.throw.notFound()
       }
 
-      const paymentRecord = await fastify.db.Payment.findByPk(
-        req.params.paymentId
-      )
+      const paymentRecord = await fastify.db.Payment.findOne({
+        where: {
+          id: req.params.paymentId,
+        },
+        include: {
+          model: User,
+          required: true,
+          attributes: ['email', 'fullName', 'id', 'avatar', 'isInitialised'],
+        },
+      })
       if (!paymentRecord) {
         return reply.throw.notFound()
       }
       return paymentRecord
     }
   )
+
+  fastify.post(
+    '/invoices',
+    async (
+      req: FastifyRequest<{
+        Body: { paymentId: string }
+        Reply: any
+      }>,
+      reply
+    ) => {
+      if (fastify.integrations.EmailSMTP) {
+        const paymentRecord = await fastify.db.Payment.findByPk(
+          req.body.paymentId
+        )
+        if (!paymentRecord) {
+          return reply.throw.notFound()
+        }
+        const user = await fastify.db.User.findByPk(paymentRecord.userId)
+        if (!user) {
+          return reply.throw.notFound()
+        }
+        const emailMessage = appConfig.templates.email('payments', 'invoice', {
+          companyName: appConfig.config.company.name,
+          invoiceLink: `${config.appHost}/payments/invoice/${req.body?.paymentId}`,
+          user: {
+            fullName: user.fullName,
+          },
+        })
+        if (emailMessage?.html) {
+          fastify.integrations.EmailSMTP.sendEmailDeferred({
+            to: req.user.email,
+            html: emailMessage.html,
+            subject: emailMessage.subject,
+          })
+        }
+      }
+    }
+  )
+
   fastify.post(
     '/payments',
     async (
@@ -144,7 +194,30 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 }
 
-const adminRouter: FastifyPluginCallback = async function (fastify, opts) {}
+const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
+  fastify.get(
+    '/payments',
+    async (
+      req: FastifyRequest<{
+        Querystring: { q?: string }
+      }>,
+      reply
+    ) => {
+      const paymentRecords = await fastify.db.Payment.findAll({
+        where: {
+          status: { [Op.ne]: 'intent' },
+        },
+        order: [['createdAt', 'DESC']],
+        include: {
+          model: User,
+          required: true,
+          attributes: ['email', 'fullName'],
+        },
+      })
+      return paymentRecords
+    }
+  )
+}
 
 module.exports = {
   publicRouter,

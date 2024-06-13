@@ -4,16 +4,12 @@ import { LoaderSpinner, RadioGroup, WidgetWrapper } from '#client/components/ui'
 import { StripePayment } from './StripePayment'
 import { DotPayment } from './DotPayment'
 import { useCreatePayment, useMembership } from '../queries'
-
-enum PaymentType {
-  Stripe = 'stripe',
-  Dot = 'dot',
-}
+import { PaymentProvider } from '#shared/types'
 
 export const PaymentWidget: React.FC<{
   membershipId: string
 }> = ({ membershipId }) => {
-  const [type, setType] = useState<string>(PaymentType.Stripe)
+  const [type, setType] = useState<string>(PaymentProvider.Stripe)
   const [txStatus, setTxStatus] = useState(false)
   const { data: paymentRecord, mutate: createPaymentRecord } =
     useCreatePayment()
@@ -46,20 +42,20 @@ export const PaymentWidget: React.FC<{
           onChange={(value) => setType(value)}
           value={type}
           options={[
-            { value: PaymentType.Stripe, label: 'Credit card' },
-            { value: PaymentType.Dot, label: 'DOT (-20%)' },
+            { value: PaymentProvider.Stripe, label: 'Credit card' },
+            { value: PaymentProvider.Polkadot, label: 'DOT (-20%)' },
           ]}
           required={true}
         />
       )}
       {loading && <LoaderSpinner />}
-      {!loading && type === PaymentType.Stripe && (
+      {!loading && type === PaymentProvider.Stripe && (
         <StripePayment
           paymentRecord={paymentRecord?.data}
           onTxStatusChange={setTxStatus}
         />
       )}
-      {!loading && type === PaymentType.Dot && (
+      {!loading && type === PaymentProvider.Polkadot && (
         <DotPayment
           paymentRecord={paymentRecord?.data}
           onTxStatusChange={setTxStatus}

@@ -1,4 +1,4 @@
-import { EntityVisibility } from '#shared/types'
+import { EntityVisibility, User } from '#shared/types'
 
 export enum PaymentProvider {
   Polkadot = 'polkadot',
@@ -17,13 +17,25 @@ export type PaymentItemCreateFields = Pick<
   | 'provider'
 >
 
+export type PaymentItemWithUser = PaymentItem & { User: User }
 export type PaymentItem = {
   id: string
   userId: string
   status: string
   provider: PaymentProvider
   reference: [any]
-  purchasedProductReference: any
+  purchasedProductReference: {
+    id: string
+    name: string
+    url: string
+    amount: string
+    duration: number
+    type: 'day' | 'hour'
+    currency: string
+    location: string
+    description: string
+  }
+
   amount: number
   currency: string
   providerReferenceId: string

@@ -54,6 +54,7 @@ function getBuildConfig(): BuildOptions {
             'address',
             'coordinates',
             'city',
+            'supportContact',
             'directions',
             'workingHours',
             'workingDays',
