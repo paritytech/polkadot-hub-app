@@ -12,8 +12,14 @@ export const roleConfigSchema = z
     weeklyOvertimeHoursNotice: z.number().min(1).default(2),
     weeklyOvertimeHoursWarning: z.number().min(1).default(6),
     editablePeriod: z.object({
-      current: z.enum(['isoWeek', 'month', 'day']),
-      extraDaysAtEdges: z.tuple([z.number(), z.number()]),
+      /*
+        Editable period:
+          + current month
+          + prev month (if now.date() > {prevMonthBefore})
+          + {nextWeeks} whole weeks from now
+      */
+      prevMonthBefore: z.number().min(1).max(28),
+      nextWeeks: z.number().min(0).max(18),
     }),
     publicHolidayCalendarId: z.string().optional(),
   })
