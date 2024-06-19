@@ -35,14 +35,20 @@ import {
   calculateTotalWorkingHours,
   getDurationString,
   getEditableDaysSet,
+  getEditablePeriod,
   getTimeOffByDate,
   getTimeOffNotation,
 } from '../../shared-helpers'
 
-const PREV_WEEKS_NUMBER = 4
-const NEXT_WEEKS_NUMBER = 2
+export const WorkingHoursWidget = () => {
+  const { data: moduleConfig = null } = useConfig()
+  if (!moduleConfig) return null
+  return <_WorkingHoursWidget moduleConfig={moduleConfig} />
+}
 
-export const WorkingHoursWidget: React.FC = () => {
+export const _WorkingHoursWidget: React.FC<{
+  moduleConfig: WorkingHoursConfig
+}> = ({ moduleConfig }) => {
   const containerRef = React.useRef<HTMLDivElement>(null)
   const weekRefs = React.useRef<Record<string, HTMLDivElement>>({})
 
@@ -59,19 +65,19 @@ export const WorkingHoursWidget: React.FC = () => {
   const todayDate = React.useMemo(() => getTodayDate(), [])
 
   const weeks = React.useMemo(() => {
-    const currentWeekStart = dayjs().startOf('isoWeek')
-    const periodStart = currentWeekStart.subtract(PREV_WEEKS_NUMBER, 'week')
-    return Array(PREV_WEEKS_NUMBER + 1 + NEXT_WEEKS_NUMBER)
+    let [from, to] = getEditablePeriod(moduleConfig)!
+    from = from.startOf('isoWeek')
+    to = to.endOf('isoWeek')
+    const days = Array(to.diff(from, 'day') + 1)
       .fill(null)
-      .map((w, i) => {
-        const weekStart = periodStart.add(i, 'week')
-        return Array(7)
-          .fill(null)
-          .map((d, j) => {
-            return weekStart.add(j, 'day')
-          })
-      })
-  }, [todayDate])
+      .map((x, i) => from.add(i, 'day'))
+    return days.reduce<Dayjs[][]>((acc, x, i) => {
+      if (i % 7 === 0) {
+        acc.push(days.slice(i, i + 7))
+      }
+      return acc
+    }, [])
+  }, [todayDate, moduleConfig])
 
   const weekStarts = React.useMemo(
     () => weeks.map((x) => x[0].format(DATE_FORMAT)),
@@ -85,7 +91,6 @@ export const WorkingHoursWidget: React.FC = () => {
     ]
   }, [weeks])
 
-  const { data: moduleConfig = null } = useConfig()
   const {
     data: entries = [],
     refetch: refetchEntries,

@@ -98,14 +98,17 @@ export function getEditablePeriod(
   config: WorkingHoursConfig | null
 ): [Dayjs, Dayjs] | null {
   if (!config) return null
+  const now = dayjs()
   const period = config.editablePeriod
-  const start = dayjs()
-    .startOf(period.current)
-    .subtract(period.extraDaysAtEdges[0], 'day')
-  const end = dayjs()
-    .endOf(period.current)
-    .add(period.extraDaysAtEdges[1], 'day')
-  return [start, end]
+  const result: [Dayjs, Dayjs] = [now.startOf('month'), now.endOf('month')]
+  const additionalWeeks = now.add(period.nextWeeks, 'week').endOf('isoWeek')
+  if (additionalWeeks.isAfter(result[1])) {
+    result[1] = additionalWeeks
+  }
+  if (now.date() < period.prevMonthBefore) {
+    result[0] = result[0].subtract(1, 'month').startOf('month')
+  }
+  return result
 }
 
 export function getEditableDaysSet(
