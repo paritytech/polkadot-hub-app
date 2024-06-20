@@ -94,18 +94,21 @@ export function formatTimeString(time: string): string {
   return (hour % 12 || 12) + ':' + minute + (hour < 12 ? 'AM' : 'PM')
 }
 
-export function getWeekLabel(offset: number): string {
+export function getPeriodLabel(
+  unit: 'week' | 'month' | 'day',
+  offset: number
+): string {
   switch (true) {
     case offset === 0:
-      return 'Current week'
+      return `Current ${unit}`
     case offset === 1:
-      return 'Next week'
+      return `Next ${unit}`
     case offset === -1:
-      return 'Previous week'
+      return `Previous ${unit}`
     case offset < -1:
-      return `${-1 * offset} weeks ago`
+      return `${-1 * offset} ${unit}s ago`
     case offset > 1:
-      return `In ${offset} weeks`
+      return `In ${offset} ${unit}s`
     default:
       return ''
   }

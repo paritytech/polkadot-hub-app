@@ -1,45 +1,38 @@
 import * as React from 'react'
-import dayjs from 'dayjs'
-import dayjsIsoWeek from 'dayjs/plugin/isoWeek'
-import dayjsAdvancedFormat from 'dayjs/plugin/advancedFormat'
-import {
-  Modal,
-  Input,
-  Table,
-  Tag,
-  UserLabel,
-  Button,
-} from '#client/components/ui'
-import { formatDateRange } from '#client/utils'
+import dayjs, { Dayjs } from 'dayjs'
+import { H2, Input, RoundButton, Table, Tag } from '#client/components/ui'
+import * as fp from '#shared/utils/fp'
+import { cn, formatDateRange } from '#client/utils'
 import { DATE_FORMAT } from '#client/constants'
 import {
   PublicHoliday,
-  UserCompact,
   WorkingHoursConfig,
   WorkingHoursEntry,
 } from '#shared/types'
-import * as fp from '#shared/utils/fp'
+import { useEntries, useTimeOffRequests, usePublicHolidays } from '../queries'
+import { getPeriodLabel } from '../helpers'
 import {
-  useAdminEntries,
-  useAdminPublicHolidays,
-  useAdminTimeOffRequests,
-  useAdminUserConfigs,
-} from '../queries'
-import {
+  OverworkLevel,
+  calculateOverwork,
+  calculateTotalPublicHolidaysTime,
+  calculateTotalTimeOffTime,
   calculateTotalWorkingHours,
   getDurationString,
-  calculateOverwork,
-  OverworkLevel,
-  calculateTotalTimeOffTime,
-  getTimeOffByDate,
-  sumTime,
   getIntervalDates,
+  getTimeOffByDate,
   getWeekIndexesRange,
-  calculateTotalPublicHolidaysTime,
+  sumTime,
 } from '../../shared-helpers'
 
-dayjs.extend(dayjsIsoWeek)
-dayjs.extend(dayjsAdvancedFormat)
+function extractDateFromUrlHash(): string | null {
+  const hash = window.location.hash
+  const date = hash.slice(1)
+  const dateFormatRegex = /^\d{4}\-(0[1-9]|1[012])\-(0[1-9]|[12][0-9]|3[01])$/
+  if (!dateFormatRegex.test(date)) {
+    return null
+  }
+  return date
+}
 
 type WeeklyWorkingHours = {
   weekIndex: string
@@ -58,29 +51,51 @@ type WeeklyWorkingHours = {
 
 type TimeOffRef = { weekIndex: string; userId: string; id: string }
 
-export const WorkingHoursUserModal: React.FC<{
-  onClose: () => void
-  user: UserCompact
+export const WorkingHoursEditorMonth: React.FC<{
   moduleConfig: WorkingHoursConfig
-}> = ({ user, moduleConfig, onClose }) => {
+}> = ({ moduleConfig }) => {
   const [showEntries, setShowEntries] = React.useState(false)
-  const { data: entries = [] } = useAdminEntries(null, null, user.id)
-  const { data: timeOffRequests = [] } = useAdminTimeOffRequests(
-    null,
-    null,
-    user.id
+  const [offset, setOffset] = React.useState<number>(
+    (() => {
+      const date = extractDateFromUrlHash()
+      if (!date) return 0
+      const targetMonth = dayjs(date).startOf('month')
+      const currentMonth = dayjs().startOf('month')
+      return targetMonth.diff(currentMonth, 'month')
+    })()
   )
-  const { data: publicHolidays = [] } = useAdminPublicHolidays(
-    null,
-    null,
-    moduleConfig?.publicHolidayCalendarId || null,
-    { enabled: !!moduleConfig.publicHolidayCalendarId }
-  )
-  const { data: userConfigs = [] } = useAdminUserConfigs({
-    userId: user.id,
-  })
 
-  const userConfig = React.useMemo(() => userConfigs[0] || null, [userConfigs])
+  const startOfMonth = React.useMemo<Dayjs>(
+    () => dayjs().add(offset, 'month').startOf('month'),
+    [offset]
+  )
+
+  const period = React.useMemo<[Dayjs, Dayjs]>(() => {
+    const start = dayjs().startOf('month').add(offset, 'month')
+    const end = start.endOf('month')
+    return [start, end]
+  }, [offset])
+
+  const { data: entries = [] } = useEntries(
+    period[0].format(DATE_FORMAT),
+    period[1].format(DATE_FORMAT),
+    { enabled: !!moduleConfig }
+  )
+  const { data: timeOffRequests = [] } = useTimeOffRequests(
+    period[0].format(DATE_FORMAT),
+    period[1].format(DATE_FORMAT),
+    {
+      enabled: !!moduleConfig,
+    }
+  )
+  const { data: publicHolidays = [] } = usePublicHolidays(
+    period[0].format(DATE_FORMAT),
+    period[1].format(DATE_FORMAT),
+    {
+      enabled: !!moduleConfig,
+    }
+  )
+
   const timeOffRequestsById = React.useMemo(
     () => timeOffRequests.reduce(fp.by('id'), {}),
     [timeOffRequests]
@@ -137,18 +152,10 @@ export const WorkingHoursUserModal: React.FC<{
 
   const weekIndexes = React.useMemo<string[]>(() => {
     return getWeekIndexesRange([
-      ...entries.map(fp.prop('date')),
-      ...timeOffRequests.map(fp.prop('dates')).flat(),
-    ])
-  }, [entries, timeOffRequests])
-
-  const mergedModuleConfig = React.useMemo<WorkingHoursConfig>(
-    () => ({
-      ...moduleConfig,
-      ...(userConfig?.value || {}),
-    }),
-    [userConfig, moduleConfig]
-  )
+      startOfMonth.format(DATE_FORMAT),
+      startOfMonth.endOf('month').format(DATE_FORMAT),
+    ]).reverse()
+  }, [startOfMonth])
 
   const weeks = React.useMemo<WeeklyWorkingHours[]>(() => {
     const currentWeekIndex = dayjs().startOf('isoWeek').format(DATE_FORMAT)
@@ -194,7 +201,7 @@ export const WorkingHoursUserModal: React.FC<{
       const timeOffTime = calculateTotalTimeOffTime(
         [startOfWeek, endOfWeek],
         timeOffRequests,
-        mergedModuleConfig
+        moduleConfig
       )
       const timeOffByDate = getTimeOffByDate(timeOffRequests)
       const timeOffEntries = daysOfWeek
@@ -214,7 +221,7 @@ export const WorkingHoursUserModal: React.FC<{
       const publicHolidays = publicHolidaysByWeekIndex[weekIndex] || []
       const publicHolidaysTime = calculateTotalPublicHolidaysTime(
         publicHolidays,
-        mergedModuleConfig
+        moduleConfig
       )
       const publicHolidayEntries = publicHolidays
         .map((x) => `${dayjs(x.date, DATE_FORMAT).format('D MMMM')}: ${x.name}`)
@@ -222,7 +229,7 @@ export const WorkingHoursUserModal: React.FC<{
 
       const { time: overworkTime, level: overworkLevel } = calculateOverwork(
         sumTime(totalWorkingHours, timeOffTime, publicHolidaysTime),
-        mergedModuleConfig
+        moduleConfig
       )
 
       return {
@@ -245,8 +252,7 @@ export const WorkingHoursUserModal: React.FC<{
     timeOffRefsByWeekIndex,
     publicHolidaysByWeekIndex,
     weekIndexes,
-    showEntries,
-    mergedModuleConfig,
+    moduleConfig,
   ])
 
   const columns = React.useMemo(
@@ -334,32 +340,48 @@ export const WorkingHoursUserModal: React.FC<{
     [showEntries]
   )
 
-  if (!user) return null
+  const monthLabel = React.useMemo(
+    () => getPeriodLabel('month', offset),
+    [offset]
+  )
+
+  const onNavigate = React.useCallback(
+    (direction: -1 | 1) => () => setOffset((x) => x + direction),
+    [offset]
+  )
+
   return (
-    <Modal onClose={onClose} title="User working hours" size="wide">
-      <div className="flex flex-col gap-y-6">
-        <UserLabel user={user} />
-        <div>Agreed working week: {mergedModuleConfig.weeklyWorkingHours}h</div>
-        <div className="flex">
-          <div className="flex-1">
-            <Input
-              name="show_entries"
-              type="checkbox"
-              checked={showEntries}
-              onChange={(v) => setShowEntries(Boolean(v))}
-              inlineLabel="Verbose"
-            />
+    <div>
+      <div
+        className={cn(
+          'flex items-center gap-x-2 rounded-tiny',
+          '-mx-4 sm:-mx-6 px-4 py-2 mb-4 sm:px-6 sm:py-4',
+          'bg-fill-6/[0.025]'
+        )}
+      >
+        <div className="flex-1 flex items-center h-12">
+          <div className="flex gap-x-2 mr-4">
+            <RoundButton onClick={onNavigate(-1)} icon="ArrowBack" />
+            <RoundButton onClick={onNavigate(1)} icon="ArrowForward" />
           </div>
-          <div>
-            <Button
-              kind="secondary"
-              href={`/admin-api/working-hours/export/user/${user.id}`}
-              size="small"
-              rel="external"
-            >
-              CSV Export
-            </Button>
+          <H2 className="m-0 my-2 font-primary font-medium">
+            {startOfMonth.format('MMMM YYYY')}
+          </H2>
+          <div className="hidden sm:block ml-3 font-primary text-base text-text-tertiary whitespace-nowrap">
+            {monthLabel}
           </div>
+        </div>
+      </div>
+      <div className="rounded-tiny bg-bg-primary flex flex-col gap-y-4 mb-4">
+        <div>Agreed working week: {moduleConfig.weeklyWorkingHours}h</div>
+        <div>
+          <Input
+            name="show_entries"
+            type="checkbox"
+            checked={showEntries}
+            onChange={(v) => setShowEntries(Boolean(v))}
+            inlineLabel="Verbose"
+          />
         </div>
         <div className="-mx-6 sm:-mx-8">
           <Table
@@ -369,6 +391,6 @@ export const WorkingHoursUserModal: React.FC<{
           />
         </div>
       </div>
-    </Modal>
+    </div>
   )
 }

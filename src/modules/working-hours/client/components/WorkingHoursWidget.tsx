@@ -27,7 +27,7 @@ import {
 import {
   formatTimeString,
   getTodayDate,
-  getWeekLabel,
+  getPeriodLabel,
   prefillWithDefaults,
 } from '../helpers'
 import {
@@ -505,7 +505,10 @@ const Week: React.FC<WeekProps> = (props) => {
     () => dayjs(props.days[0]).diff(dayjs().startOf('isoWeek'), 'week'),
     []
   )
-  const weekLabel = React.useMemo(() => getWeekLabel(offset), [offset])
+  const weekLabel = React.useMemo(
+    () => getPeriodLabel('week', offset),
+    [offset]
+  )
 
   return (
     <div ref={ref} className={cn('flex gap-x-1 relative')}>

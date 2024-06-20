@@ -888,7 +888,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       })
       const dateRange = getDateRangeEdges([
         ...entries.map(fp.prop('date')),
-        ...timeOffRequests.map((x) => x.dates).flat(),
+        ...timeOffRequests.map(fp.prop('dates')).flat(),
       ])
       const publicHolidays = dateRange
         ? await fastify.db.PublicHoliday.findAll({
