@@ -26,7 +26,7 @@ function getBuildConfig(): BuildOptions {
     bundle: true,
     sourcemap: buildConfig.env === 'development',
     logLevel: 'error' as LogLevel,
-    target: 'es2016',
+    target: 'es2020',
     loader: { '.js': 'jsx' } as { '.js': Loader },
     incremental: !!buildConfig.watch,
     preserveSymlinks: true,
