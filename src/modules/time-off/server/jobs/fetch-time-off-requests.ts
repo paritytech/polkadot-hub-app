@@ -8,6 +8,7 @@ import {
   TimeOffRequestUnit,
   TimeOffRequest,
 } from '#shared/types'
+import { Metadata } from '../../metadata-schema'
 
 export const cronJob: CronJob = {
   name: 'fetch-time-off-requests',
@@ -165,6 +166,9 @@ async function fetchHumaansTimeAways(ctx: CronJobContext) {
     declined: TimeOffRequestStatus.Rejected,
   } as Record<string, TimeOffRequestStatus>
 
+  const metadata = ctx.appConfig.getModuleMetadata('time-off') as Metadata
+  const excludedTypes = metadata.excludeTimeOffTypes
+
   const interval = [
     dayjs().format(DATE_FORMAT),
     dayjs().add(INTERVAL_DAYS, 'day').format(DATE_FORMAT),
@@ -172,7 +176,9 @@ async function fetchHumaansTimeAways(ctx: CronJobContext) {
   const requests = await ctx.integrations.Humaans.getTimeAways(
     interval[0],
     interval[1]
-  ).then((xs) => xs.filter((x) => x.isTimeOff))
+  ).then((xs) =>
+    xs.filter((x) => x.isTimeOff && !excludedTypes.includes(x.timeAwayTypeId))
+  )
 
   if (!requests.length) {
     ctx.log.info('No time aways found in the specified interval')

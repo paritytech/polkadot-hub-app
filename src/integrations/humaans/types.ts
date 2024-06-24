@@ -38,6 +38,7 @@ export type TimeAway = {
   days: number
   requestStatus: TimeAwayRequestStatus
   workingDays: { day: DayOfWeek }[]
+  timeAwayTypeId: string
   createdAt: Date
   updatedAt: Date
 }
