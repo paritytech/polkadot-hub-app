@@ -40,6 +40,15 @@ export const cronJob: CronJob = {
       attributes: ['userId'],
     }).then(fp.map(fp.prop('userId')))
 
+    const publicHolidays = await ctx.models.PublicHoliday.findAll({
+      where: {
+        date: { [Op.in]: ignoreDates },
+      },
+    })
+    const publicHolidaysCalendarIdsToExclude = Array.from(
+      new Set(publicHolidays.map(fp.prop('calendarId')))
+    )
+
     const recentEntriesUserIds = await ctx.models.WorkingHoursEntry.findAll({
       where: {
         userId: { [Op.notIn]: timeOffUserIds },
@@ -85,13 +94,22 @@ export const cronJob: CronJob = {
       const userRole = user.roles.find((x) => allowedRoles.includes(x))
       const config = configByRole[userRole || '']
       if (!config) continue
+      if (
+        config.publicHolidayCalendarId &&
+        publicHolidaysCalendarIdsToExclude.includes(
+          config.publicHolidayCalendarId
+        )
+      ) {
+        ctx.log.info(`Skipping user ${user.email} due to public holiday`)
+        continue
+      }
       const response = await ctx.integrations.Matrix.sendMessageToUser(
         user,
         message
       )
       if (response.success) {
         report.succeeded++
-        ctx.log.warn(`sent to user ${user.email}`)
+        ctx.log.info(`Sent Matrix notification to ${user.email}`)
       } else {
         ctx.log.error(
           response.error,
