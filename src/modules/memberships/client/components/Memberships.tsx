@@ -15,39 +15,11 @@ import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import { useOffice } from '#client/utils/hooks'
 
-const collectionId = '658726c1-6dab-47fc-9e19-8397a0beaa89'
-const makeAuthGet = (url: string) => {
-  return axios.get(url, {
-    headers: {
-      Authorization:
-        'Basic ZjkwYTJhZjYtZDZlNC00OWYyLWIxMWUtNzg3ZDkyZWQ0MGRmOlE1TGNuIzV2JUlzOA==',
-    },
-  })
-}
-
 export const Memberships: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const { data: memberships } = useMemberships()
   const officeId = useStore(stores.officeId)
   const office = useOffice(officeId)
-
-  useEffect(() => {
-    // setLoading(true)
-    // makeAuthGet(`https://api.apillon.io/nfts/collections/${collectionId}`)
-    //   .then((res) => {
-    //     setCollection(res.data.data)
-    //     console.log(res.data.data)
-    //     setLoading(false)
-    //     // return axios.get(
-    //     //   `${res.data.data.baseUri}/1${res.data.data.baseExtension}`
-    //     // )
-    //     return makeAuthGet(
-    //       `https://api.apillon.io/storage/buckets/${res.data.data.bucketUuid}/files`
-    //     )
-    //   })
-    //   .then((res) => console.log(res.data.image))
-    //   .catch((e) => console.log(e))
-  }, [])
 
   return (
     <Background>
