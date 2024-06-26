@@ -7,7 +7,7 @@
     "mobile": {
       "fixed": [
         ["users", "NewjoinerDetector"],
-        ["users", "NewjoinerDetector"]
+        ["users", "UserStatus"]
       ],
       "office": [
         [
