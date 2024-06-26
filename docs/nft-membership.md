@@ -1,6 +1,7 @@
 # NFT Membership concept
 
-![NFTs](./images/nfts.png)
+<img width="172" alt="monthly" src="https://github.com/paritytech/polkadot-hub-app/assets/2395326/2966d9d7-f6ba-4f79-b7d6-3e1ed20be624">
+
 
 ## Why?
 
@@ -9,17 +10,7 @@
 - Personalized touch to the membership - people own the NFT, NFTs can have unique imagery created by each hub if they wish to add their creative touch to it.
 - This concept can be developed further and gamified in the future. We can award special NFTs which can allow specific actions to their owners, etc. If the main collection is created as nestable, we can allow futher modifications to the original NFT.
 
-## Membership NFT
-
-Polkadot Hubs is a network of hubs. Each member of this network will get 1 free unique soulbound NFT. This NFT serves as member's main identification. Soulbound NFTs cannot be moved to another wallet, they will always stay in the wallet they were minted to.
-
-The main reasoning behind having Soulbound NFTs is to avoid multiple people using the same membership ID, and posing as one member. If we do not use Soulbound NFTs then people can share the Memberhips NFT and pose as 1 person, attending the same hub.
-
-The minting costs are covered by the hub.
-
-Ownership of a Membership NFT will not allow physical access to a hub. In order to access the hub a Time based voucher NFT has to be purchased. However the hub owner can have exceptions. E.g. members with no time vouchers can access certain public events, etc.
-
-## Time voucher NFT
+## Time based Membership NFT
 
 Each hub will decide on their own membership structure and can configure their own membership roles. Access to the member parts of the app and physical access to the hub is only possible if a member owns a "time based voucher" or an NFT with metadata defining the access.
 
@@ -71,4 +62,4 @@ These types of memeberships will not be freely accessible, they will be granted 
 
 ## Membership purchase flow
 
-![NFTs](./images/flow.png)
+https://www.loom.com/share/dd817a80326a462f89c151ec4f72a788?sid=41d48c15-1403-4161-b713-39dc7d21abaa

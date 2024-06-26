@@ -282,13 +282,18 @@ export const RadioGroup: React.FC<RadioGroupProps> = ({
       />
     ))
   return (
-    <div className={containerClassName}>
+    <div>
       {label ? (
-        <LabelWrapper label={label} required={required} name={name}>
+        <LabelWrapper
+          label={label}
+          required={required}
+          name={name}
+          className={containerClassName}
+        >
           <div>{getOptions()}</div>
         </LabelWrapper>
       ) : (
-        <div>{getOptions()}</div>
+        <div className={containerClassName}>{getOptions()}</div>
       )}
     </div>
   )

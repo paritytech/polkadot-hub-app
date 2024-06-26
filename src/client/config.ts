@@ -24,6 +24,7 @@ export type ClientOfficeConfig = Pick<
   | 'address'
   | 'country'
   | 'city'
+  | 'supportContact'
   | 'coordinates'
   | 'directions'
   | 'workingHours'
@@ -47,6 +48,8 @@ export type ClientUserRoleGroup = UserRoleGroup & {
 type ClientAppConfig = {
   modules: ClientModuleConfig[]
   offices: ClientOfficeConfig[]
+  dotDiscount: string
+  invoiceInformation: string[]
   appName: string
   appIcon: string
   companyName: string
@@ -65,6 +68,8 @@ type ClientAuthConfig = { providers: string[] }
 const config: ClientAppConfig = {
   modules: process.env.APP_MODULES as unknown as ClientModuleConfig[],
   offices: process.env.APP_OFFICES as unknown as ClientOfficeConfig[],
+  dotDiscount: process.env.DOT_DISCOUNT as unknown as string,
+  invoiceInformation: process.env.INVOICE_INFORMATION as unknown as string[],
   appName: process.env.APP_NAME as unknown as string,
   companyName: process.env.COMPANY_NAME as unknown as string,
   appHost: process.env.APP_HOST as unknown as string,

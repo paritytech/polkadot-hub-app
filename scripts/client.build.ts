@@ -26,7 +26,7 @@ function getBuildConfig(): BuildOptions {
     bundle: true,
     sourcemap: buildConfig.env === 'development',
     logLevel: 'error' as LogLevel,
-    target: 'es2016',
+    target: 'es2020',
     loader: { '.js': 'jsx' } as { '.js': Loader },
     incremental: !!buildConfig.watch,
     preserveSymlinks: true,
@@ -42,6 +42,12 @@ function getBuildConfig(): BuildOptions {
         }))
       ),
       // TODO: add .env.COMPONENT_ID_BY_ROUTE
+      'process.env.DOT_DISCOUNT': JSON.stringify(
+        appConfig.config.company.dotDiscount
+      ),
+      'process.env.INVOICE_INFORMATION': JSON.stringify(
+        appConfig.config.company.invoiceInformation
+      ),
       'process.env.AUTH': JSON.stringify(appConfig.config.application.auth),
       'process.env.APP_OFFICES': JSON.stringify(
         appConfig.config.company.offices.map(
@@ -54,6 +60,7 @@ function getBuildConfig(): BuildOptions {
             'address',
             'coordinates',
             'city',
+            'supportContact',
             'directions',
             'workingHours',
             'workingDays',

@@ -8,18 +8,20 @@ import {
   AuthSteps,
   Errors,
   ErrorComponent,
-  GENERIC_ERROR,
   WhiteWindow,
   providerUrls,
   ExtendedMetadata,
-  ExtensionAccount,
-  isWalletConnect,
-  getAccountsByType,
-  getWallets,
 } from './helper'
 import { sign, verify } from '#client/utils/polkadot'
 import { AuthStepsComponent } from './steps'
 import { WarningModal } from './WarningModal'
+import {
+  ExtensionAccount,
+  GENERIC_ERROR,
+  getAccountsByType,
+  getWallets,
+  isWalletConnect,
+} from '#client/utils/polkadot-onboard'
 
 const LoaderWithText = ({ text = 'Connecting' }: { text?: string }) => (
   <div className="flex flex-col justify-center items-center">
@@ -29,16 +31,16 @@ const LoaderWithText = ({ text = 'Connecting' }: { text?: string }) => (
 )
 
 export const PolkadotProvider: React.FC = () => {
-  const [wallets, setWallets] = useState<any>([])
-  const [chosenWallet, setChosenWallet] = useState<any>()
+  const [wallets, setWallets] = useState<BaseWallet[]>([])
+  const [chosenWallet, setChosenWallet] = useState<BaseWallet>()
   const [accounts, setAccounts] = useState<Array<ExtensionAccount>>([])
   const [selectedAddress, setSelectedAddress] = useState('')
   const [isValidSignature, setIsValidSignature] = useState(false)
   const [userSignature, setUserSignature] = useState<string | null>(null)
-  const [step, setStep] = useState(AuthSteps.Connecting)
+  const [step, setStep] = useState<AuthSteps>(AuthSteps.Connecting)
 
-  const [showModal, setShowModal] = useState<any>(false)
-  const [showTryAgain, setShowTryAgain] = useState<any>(false)
+  const [showModal, setShowModal] = useState<boolean>(false)
+  const [showTryAgain, setShowTryAgain] = useState<boolean>(false)
   const [modalShown, setModalShown] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -123,8 +125,16 @@ export const PolkadotProvider: React.FC = () => {
   }, [step])
 
   useEffect(() => {
-    if (isValidSignature && step === AuthSteps.Redirect) {
+    const disconnectAndProcess = async () => {
+      try {
+        await chosenWallet?.disconnect()
+      } catch (e) {
+        console.log(e)
+      }
       window.location.href = '/'
+    }
+    if (isValidSignature && step === AuthSteps.Redirect) {
+      disconnectAndProcess()
     }
   }, [isValidSignature, step])
 
@@ -199,7 +209,7 @@ export const PolkadotProvider: React.FC = () => {
         console.error('Invalid account.')
         return
       }
-      if (!isWalletConnect(chosenWallet)) {
+      if (!!chosenWallet && !isWalletConnect(chosenWallet)) {
         setLoaderText('Please sign the request')
       } else {
         setLoaderText('Connecting to your wallet...')
@@ -283,10 +293,12 @@ export const PolkadotProvider: React.FC = () => {
             if (!modalShown) {
               setShowModal(true)
             }
-            const accounts = await getAccountsByType[WalletType.WALLET_CONNECT](
-              chosenWallet
-            )
-            setAccounts(accounts)
+            if (!!chosenWallet) {
+              const accounts = await getAccountsByType[
+                WalletType.WALLET_CONNECT
+              ](chosenWallet)
+              setAccounts(accounts)
+            }
           },
           onBack: () => setStep(AuthSteps.ChooseWallet),
           onContinue: () => handleLogin(),

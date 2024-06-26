@@ -24,19 +24,27 @@ import { signatureVerify } from '@polkadot/util-crypto'
 }
  */
 
-export const connectToPolkadot = async (): Promise<WsProvider> => {
+export const connectToPolkadot = async (): Promise<ApiPromise> => {
   const provider = new WsProvider('wss://rpc.polkadot.io')
-  await ApiPromise.create({ provider })
-  return provider
+  const api = await ApiPromise.create({ provider })
+  await api.isReady
+  return api
 }
 
-export const enablePolkadotExtension = async (): Promise<InjectedExtension[]> =>
-  // this call fires up the authorization popup
-  web3Enable(`${config.appName} | ${config.companyName}`)
+export const connectToWestend = async (): Promise<ApiPromise> => {
+  const provider = new WsProvider('wss://westend-rpc.polkadot.io')
+  const api = await ApiPromise.create({ provider })
+  await api.isReady
+  return api
+}
 
-// get a list of extensions from users's browser and suggest user which one to pick
-export const getAccountsList = (): Promise<InjectedAccountWithMeta[]> =>
-  web3Accounts()
+// export const enablePolkadotExtension = async (): Promise<InjectedExtension[]> =>
+//   // this call fires up the authorization popup
+//   web3Enable(`${config.appName} | ${config.companyName}`)
+
+// // get a list of extensions from users's browser and suggest user which one to pick
+// export const getAccountsList = (): Promise<InjectedAccountWithMeta[]> =>
+//   web3Accounts()
 
 export const verify = (address: string, signature: string) => {
   try {
@@ -75,4 +83,72 @@ export const sign = async (address: string, signer) => {
     console.error(e)
   }
   return null
+}
+const unitToPlanck = (units: string, decimals: number) => {
+  let [whole, decimal] = units.toString().split('.')
+
+  if (typeof decimal === 'undefined') {
+    decimal = ''
+  }
+
+  return `${whole}${decimal.padEnd(decimals, '0')}`.replace(/^0+/, '')
+}
+
+// @todo add this to admin side
+const receiverAddress = '5CURyEXsS6UFpe3w6bvELw9m7X6BtbTXcJs1jifxfxs8msHv'
+// const providerSocket =
+//   process.env.NODE_ENV === 'production'
+//     ? 'wss://rpc.polkadot.io'
+//     : 'wss://westend-rpc.polkadot.io'
+
+export const makePaymentTransaction = async (
+  senderAddress: string,
+  signer,
+  amountToSend: string,
+  callback: (value: any) => void
+) => {
+  const api = await connectToPolkadot()
+  if (!!api && !!signer) {
+    // amountToSend = amountToSend * 100
+    const amount = unitToPlanck(
+      amountToSend,
+      api?.registry?.chainDecimals[0] || 10
+    )
+    try {
+      await api.tx.balances
+        .transferKeepAlive(receiverAddress, amount)
+        .signAndSend(
+          '5F7aECSMP77dwPYMjyHAbN1FHbxQGMFFCi5pcYQC7CYdouQs',
+          { signer },
+          (res) => {
+            callback(res)
+            if (res.status.isInBlock) {
+              console.log(
+                `Completed at block hash #${res.status.asInBlock.toString()}`
+              )
+            } else {
+              console.log(`Current status: ${res.status.type}`)
+            }
+          }
+        )
+    } catch (e) {
+      throw new Error(e?.message)
+    }
+  }
+}
+
+export const getAddressType = (address: string) => {
+  if (address.startsWith('5')) {
+    return 'substrate'
+  }
+  if (address.startsWith('1')) {
+    return 'polkadot'
+  }
+
+  const regex = /^[CDFGHJ]/i
+  if (regex.test(address)) {
+    return 'kusama'
+  }
+
+  return ''
 }

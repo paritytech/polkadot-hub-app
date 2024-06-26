@@ -1,19 +1,8 @@
 import config from '#client/config'
 import { cn } from '#client/utils'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Background, H1, Icons, Link, P } from '../ui'
-import {
-  BaseWallet,
-  WalletType,
-  Account,
-  WalletAggregator,
-} from '@polkadot-onboard/core'
-import {
-  WalletConnectProvider,
-  WalletConnectConfiguration,
-} from '@polkadot-onboard/wallet-connect/packages/wallet-connect/src'
-import { extensionConfig, walletConnectConfig } from './config'
-import { InjectedWalletProvider } from '@polkadot-onboard/injected-wallets'
+import { BaseWallet, WalletType } from '@polkadot-onboard/core'
 export const LoginIcons: Record<string, JSX.Element> = {
   google: <Icons.Gmail />,
   polkadot: <Icons.Polkadot />,
@@ -37,14 +26,6 @@ export type ExtendedMetadata = {
   urls?: { main?: string; browsers?: Record<string, string> } & {
     reference: string
   }
-}
-
-export type ExtensionAccount = {
-  address: string
-  addressType: string
-  name: string
-  source: string
-  wallet: BaseWallet
 }
 
 export const ErrorComponent = {
@@ -85,21 +66,17 @@ export const WhiteWindow: React.FC<{ children: React.ReactNode }> = ({
   )
 }
 
-export const AuthSteps = {
-  Connecting: 'Connecting',
-  ReConnecting: 'Reconnecting',
-  ChooseAccount: 'ChooseAccount',
-  ChooseWallet: 'ChooseWallet',
-  Warning: 'Warning',
-  BasicSetting: 'BasicSetting',
-  Redirect: 'Redirect',
-  Error: 'Error',
+export enum AuthSteps {
+  Connecting = 'Connecting',
+  ReConnecting = 'Reconnecting',
+  ChooseAccount = 'ChooseAccount',
+  ChooseWallet = 'ChooseWallet',
+  Warning = 'Warning',
+  BasicSetting = 'BasicSetting',
+  Redirect = 'Redirect',
+  Error = 'Error',
 }
 
-export const isWalletConnect = (w: BaseWallet) =>
-  w.type === WalletType.WALLET_CONNECT && !!config.walletConnectProjectId
-
-export const GENERIC_ERROR = 'There has been an error. Please try again later'
 const MAX_RECONNECT = 3
 
 function timeout(ms: number) {
@@ -238,72 +215,4 @@ export const getSubstrateAddress = (address: string) => {
       return ''
     }
   }
-}
-
-export const getAddressType = (address: string) => {
-  if (address.startsWith('5')) {
-    return 'substrate'
-  }
-  if (address.startsWith('1')) {
-    return 'polkadot'
-  }
-
-  const regex = /^[CDFGHJ]/i
-  if (regex.test(address)) {
-    return 'kusama'
-  }
-
-  return ''
-}
-
-export const getAccountsByType: Record<
-  WalletType.WALLET_CONNECT | WalletType.INJECTED,
-  (walletInfo: BaseWallet) => Promise<ExtensionAccount[] | []>
-> = {
-  [WalletType.WALLET_CONNECT]: async (walletInfo: BaseWallet) => {
-    let accounts = await walletInfo.getAccounts()
-    const uniqueAccounts = Array.from(new Set(accounts.map((a) => a.address)))
-    const formattedAccounts = []
-    for (const address of uniqueAccounts) {
-      formattedAccounts.push({
-        name: `${address.slice(0, 6)}...${address.slice(-12)}`,
-        address: address,
-        addressType: getAddressType(address),
-        source: walletInfo.session.peer.metadata.name,
-        wallet: walletInfo,
-      })
-    }
-    return formattedAccounts
-  },
-  [WalletType.INJECTED]: async (walletInfo: BaseWallet) => {
-    let accounts: Account[] = await walletInfo.getAccounts()
-    if (!accounts.length) {
-      throw new Error(
-        'No accounts were injected: browser extension ' + walletInfo.metadata.id
-      )
-    }
-    return accounts.map((account: Account) => ({
-      ...account,
-      source: walletInfo.metadata.id,
-      wallet: walletInfo,
-    }))
-  },
-}
-
-export const getWallets = async () => {
-  const aggregatedProviders = []
-  aggregatedProviders.push(
-    new InjectedWalletProvider(extensionConfig, config.appName)
-  )
-
-  if (!!config.walletConnectProjectId) {
-    aggregatedProviders.push(
-      new WalletConnectProvider(
-        walletConnectConfig as WalletConnectConfiguration,
-        config.appName
-      )
-    )
-  }
-  const walletAggregator = new WalletAggregator(aggregatedProviders)
-  return walletAggregator.getWallets()
 }

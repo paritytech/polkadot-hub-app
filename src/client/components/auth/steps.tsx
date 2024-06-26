@@ -9,16 +9,13 @@ import {
   P,
   Select,
 } from '../ui'
-import { extensionConfig } from './config'
-import {
-  AuthSteps,
-  ButtonWrapper,
-  ExtensionAccount,
-  StepWrapper,
-  WalletTab,
-  isWalletConnect,
-} from './helper'
+import { extensionConfig } from '../../utils/config'
+import { AuthSteps, ButtonWrapper, StepWrapper, WalletTab } from './helper'
 import { BaseWallet } from '@polkadot-onboard/core'
+import {
+  ExtensionAccount,
+  isWalletConnect,
+} from '#client/utils/polkadot-onboard'
 
 type ChooseWalletProps = {
   wallets: BaseWallet[]
@@ -33,16 +30,6 @@ const ChooseWalletStep: React.FC<ChooseWalletProps> = ({
     title="Choose Wallet"
     subtitle={
       <div className="hidden sm:block mb-4">
-        {!wallets.length && (
-          <p className="text-black mb-2 hidden sm:block">
-            Please install a browser wallet to continue.
-          </p>
-        )}
-        {!wallets.length && (
-          <p className="text-black mb-2 block sm:hidden">
-            Please contact administrator.
-          </p>
-        )}
         {(wallets.length === 1 && isWalletConnect(wallets[0])) ||
           (!wallets.length && (
             <div>

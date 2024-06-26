@@ -22,19 +22,12 @@ import {
   Filters,
   LabelWrapper,
   Input,
-  ComponentWrapper,
   WidgetWrapper,
   Placeholder,
 } from '#client/components/ui'
 import { showNotification } from '#client/components/ui/Notifications'
 import { PermissionsValidator } from '#client/components/PermissionsValidator'
-import {
-  pick,
-  prop,
-  propNotEq,
-  hasIntersection,
-  propEq,
-} from '#shared/utils/fp'
+import { pick, prop, hasIntersection } from '#shared/utils/fp'
 import { User, ImportedTagGroup, Tag } from '#shared/types'
 import { FRIENDLY_DATE_FORMAT, USER_ROLES } from '#client/constants'
 import { useDebounce, useDocumentTitle } from '#client/utils/hooks'

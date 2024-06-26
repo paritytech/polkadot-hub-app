@@ -1,0 +1,44 @@
+{
+  "id": "payments",
+  "name": "Payments",
+  "dependencies": ["users", "events"],
+  "requiredIntegrations": ["email-smtp", "stripe"],
+  "recommendedIntegrations": [],
+  "models": ["Payment"],
+  "clientRouter": {
+    "public": {
+      "paymentPage": {
+        "path": "/payments",
+        "componentId": "PaymentPage",
+        "fullScreen": true
+      },
+      "paymentResultPage": {
+        "path": "/payments/confirmation",
+        "componentId": "PaymentResultPage",
+        "fullScreen": true
+      },
+      "howToDotPage": {
+        "path": "/how-to-pay-with-dot",
+        "componentId": "HowToPayWithDot",
+        "fullScreen": true
+      }
+    },
+    "user": {
+      "invoice": {
+        "path": "/payments/invoice/:paymentId",
+        "componentId": "PaymentInvoice",
+        "fullScreen": true
+      }
+    },
+    "admin": {
+      "adminPayments": {
+        "path": "/admin/payments",
+        "componentId": "AdminPayments"
+      },
+      "adminPaymentsDetail": {
+        "path": "/admin/payments/detail/:paymentId",
+        "componentId": "AdminPaymentsDetail"
+      }
+    }
+  }
+}

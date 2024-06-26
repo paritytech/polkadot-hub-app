@@ -108,6 +108,7 @@ export const office = z
     timezone: z.string(),
     country: z.string(),
     city: z.string(),
+    supportContact: z.string(),
     coordinates: z.tuple([z.number(), z.number()]).optional(),
     directions: z.string().optional(),
     workingHours: z
@@ -177,6 +178,9 @@ export const office = z
 
 export const companyConfig = z.object({
   name: z.string().nonempty(),
+  currency: z.string().nonempty(),
+  dotDiscount: z.string().optional(),
+  invoiceInformation: z.array(z.string()).nonempty(),
   offices: z.array(office).min(1),
 })
 
