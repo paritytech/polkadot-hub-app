@@ -1,0 +1,28 @@
+{
+  "id": "Memberships",
+  "name": "memberships",
+  "dependencies": ["users"],
+  "requiredIntegrations": [],
+  "recommendedIntegrations": [],
+  "models": ["Membership"],
+  "clientRouter": {
+    "public": {
+      "membership": {
+        "path": "/memberships",
+        "componentId": "Memberships",
+        "fullScreen": true
+      }
+    },
+    "user": {},
+    "admin": {
+      "adminMemberships": {
+        "path": "/admin/memberships",
+        "componentId": "AdminMemberships"
+      },
+      "adminMembership": {
+        "path": "/admin/memberships/:membershipId",
+        "componentId": "AdminMembershipEditor"
+      }
+    }
+  }
+}
