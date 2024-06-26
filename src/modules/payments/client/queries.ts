@@ -28,8 +28,8 @@ export const useGetPayment = (paymentId: string) => {
   )
 }
 
-export const useCurrencyPrice = (currency: string) => {
-  const path = `/user-api/payments/price/dot/${currency}`
+export const useCurrencyPrice = () => {
+  const path = `/user-api/payments/price/dot`
   return useQuery<any, AxiosError>(
     path,
     async () => (await api.get<any>(path)).data

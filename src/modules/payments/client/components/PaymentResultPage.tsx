@@ -16,8 +16,6 @@ import { useGetPayment } from '../queries'
 import { PaymentStatus } from '#shared/types'
 import { DotTransactionError } from './DotTransactionErorr'
 import { useOffice } from '#client/utils/hooks'
-import { useStore } from '@nanostores/react'
-import * as stores from '#client/stores'
 import { FRIENDLY_DATE_FORMAT } from '#client/constants'
 import dayjs from 'dayjs'
 
@@ -25,8 +23,6 @@ export const PaymentResultPage: React.FC<{}> = () => {
   const [paymentId, setPaymentId] = useState('')
   const { data: payment } = useGetPayment(paymentId)
   const office = useOffice(payment?.purchasedProductReference?.location ?? '')
-  console.log(office)
-  const me = useStore(stores.me)
 
   useEffect(() => {
     const url = new URL(document.location.href)
@@ -63,6 +59,15 @@ export const PaymentResultPage: React.FC<{}> = () => {
                   src={payment.purchasedProductReference.url}
                 ></img>{' '}
                 <LabelWrapper label="Receiving address">XXXXX</LabelWrapper>
+                <LabelWrapper label="Transaction">
+                  {' '}
+                  <Link
+                    target="_blank"
+                    href={`https://polkadot.subscan.io/extrinsic/${payment.providerReferenceId}`}
+                  >
+                    Transaction link
+                  </Link>
+                </LabelWrapper>
                 <P>
                   Please allow a few moments for your NFT to be minted and sent
                   to the specified address.

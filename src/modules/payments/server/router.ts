@@ -2,11 +2,14 @@ import axios from 'axios'
 import { FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Payment } from './models'
 import { PaymentProvider, PaymentStatus } from '../types'
-import { getDotPrice, getPriceInDot } from '../helper'
+import { getDotPrice, getPriceInDot } from './helper'
 import { Op } from 'sequelize'
 import { User } from '#modules/users/server/models'
 import { appConfig } from '#server/app-config'
 import config from '#server/config'
+
+import { Permissions } from '../permissions'
+import { Decimal } from 'decimal.js'
 
 const publicRouter: FastifyPluginCallback = async function (fastify, opts) {}
 
@@ -21,16 +24,18 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
+      req.check(Permissions.Create)
       const record = await Payment.findByPk(req.body.paymentRecordId)
       if (!record) {
         return reply.throw.badParams()
       }
       const paymentIntent =
         await fastify.integrations.Stripe.createPaymentIntent(
-          record.purchasedProductReference.amount * 100,
-          'EUR'
+          new Decimal(record?.purchasedProductReference?.amount)
+            .mul(new Decimal(100))
+            .toNumber(),
+          appConfig.config.company.currency
         )
-      // @todo do we need to save the whole reference object? omit some values?
       record.update({
         providerReferenceId: paymentIntent.id,
         provider: PaymentProvider.Stripe,
@@ -43,7 +48,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   )
 
   fastify.get(
-    '/price/dot/:currency',
+    '/price/dot',
     async (
       req: FastifyRequest<{
         Params: { currency: string }
@@ -51,7 +56,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      const dotPrice = await getDotPrice(req.params.currency)
+      const dotPrice = await getDotPrice(appConfig.config.company.currency)
       if (!dotPrice) {
         return reply.throw.notFound()
       }
@@ -138,9 +143,9 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      const isProviderDot = req.body.provider === 'dot'
-      const currency = isProviderDot ? 'DOT' : 'EUR' // @todo add default currency
-      const amount = isProviderDot
+      const isPolkadot = req.body.provider === PaymentProvider.Polkadot
+      const currency = isPolkadot ? 'DOT' : appConfig.config.company.currency // @todo add default currency
+      const amount = isPolkadot
         ? await getPriceInDot(req.body.amount)
         : req.body.amount
       const payload = {

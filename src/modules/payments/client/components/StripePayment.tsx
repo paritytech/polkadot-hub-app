@@ -9,9 +9,7 @@ import { PaymentItem, PaymentProvider } from '#shared/types'
 import { appearance } from '../helper'
 
 // @todo add to env vars
-const stripePromise = loadStripe(
-  'pk_test_51P1Km1P4RQeZqTUKGTpLJq0Kwjr4ySnjjekez8qMHe5TCiMIRKe8CZQt1se1DBlCgdAtCY5AKswnNH4JVigYqJ1H00PD8UqibP'
-)
+const stripePromise = loadStripe('stripe-priv-key')
 
 export const StripePayment: React.FC<{
   paymentRecord: PaymentItem

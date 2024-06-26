@@ -104,7 +104,9 @@ export const StripePaymentForm: React.FC<{
       <div className="">
         <div className="flex justify-between">
           <P textType="additional">Total</P>
-          <P textType="additionalBold">{paymentRecord?.amount} EUR</P>
+          <P textType="additionalBold">
+            {paymentRecord?.amount} {paymentRecord.currency}
+          </P>
         </div>
       </div>
       {isLoading ? (

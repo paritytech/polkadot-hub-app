@@ -1,5 +1,7 @@
-import { FRIENDLY_DATE_FORMAT } from '#client/constants'
+import config from '#client/config'
 import dayjs from 'dayjs'
+import Decimal from 'decimal.js'
+Decimal.set({ precision: 10 })
 
 export const appearance = {
   theme: 'stripe',
@@ -40,4 +42,13 @@ export const hasMembershipExpired = (
   length: number
 ) => {
   return dayjs().isAfter(dayjs(paymentDate).add(length, type))
+}
+
+export const getDiscountValue = (price: string) => {
+  if (!price || !config.dotDiscount) {
+    return 0
+  }
+  return new Decimal(price)
+    .mul(new Decimal(config.dotDiscount).div(new Decimal(100)))
+    .toString()
 }

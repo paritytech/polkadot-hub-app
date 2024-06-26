@@ -178,6 +178,9 @@ export const office = z
 
 export const companyConfig = z.object({
   name: z.string().nonempty(),
+  currency: z.string().nonempty(),
+  dotDiscount: z.string().optional(),
+  invoiceInformation: z.array(z.string()).nonempty(),
   offices: z.array(office).min(1),
 })
 

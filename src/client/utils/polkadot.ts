@@ -24,25 +24,27 @@ import { signatureVerify } from '@polkadot/util-crypto'
 }
  */
 
-export const connectToPolkadot = async (): Promise<WsProvider> => {
+export const connectToPolkadot = async (): Promise<ApiPromise> => {
   const provider = new WsProvider('wss://rpc.polkadot.io')
-  await ApiPromise.create({ provider })
-  return provider
+  const api = await ApiPromise.create({ provider })
+  await api.isReady
+  return api
 }
 
 export const connectToWestend = async (): Promise<ApiPromise> => {
   const provider = new WsProvider('wss://westend-rpc.polkadot.io')
   const api = await ApiPromise.create({ provider })
+  await api.isReady
   return api
 }
 
-export const enablePolkadotExtension = async (): Promise<InjectedExtension[]> =>
-  // this call fires up the authorization popup
-  web3Enable(`${config.appName} | ${config.companyName}`)
+// export const enablePolkadotExtension = async (): Promise<InjectedExtension[]> =>
+//   // this call fires up the authorization popup
+//   web3Enable(`${config.appName} | ${config.companyName}`)
 
-// get a list of extensions from users's browser and suggest user which one to pick
-export const getAccountsList = (): Promise<InjectedAccountWithMeta[]> =>
-  web3Accounts()
+// // get a list of extensions from users's browser and suggest user which one to pick
+// export const getAccountsList = (): Promise<InjectedAccountWithMeta[]> =>
+//   web3Accounts()
 
 export const verify = (address: string, signature: string) => {
   try {
@@ -93,7 +95,7 @@ const unitToPlanck = (units: string, decimals: number) => {
 }
 
 // @todo add this to admin side
-const receiverAddress = '5CVU2zUE5AmdHXRUEy8RopoMP4ZgFMm4bNF8fRyovnCFEcE5'
+const receiverAddress = '5CURyEXsS6UFpe3w6bvELw9m7X6BtbTXcJs1jifxfxs8msHv'
 // const providerSocket =
 //   process.env.NODE_ENV === 'production'
 //     ? 'wss://rpc.polkadot.io'
@@ -105,24 +107,33 @@ export const makePaymentTransaction = async (
   amountToSend: string,
   callback: (value: any) => void
 ) => {
-  const provider = new WsProvider('wss://westend-rpc.polkadot.io')
-  const api = await ApiPromise.create({ provider })
-  await api.isReady
+  const api = await connectToPolkadot()
   if (!!api && !!signer) {
     // amountToSend = amountToSend * 100
-    const amount = unitToPlanck(amountToSend, api.registry.chainDecimals[0])
-    await api.tx.balances
-      .transferKeepAlive(receiverAddress, amount)
-      .signAndSend(senderAddress, { signer }, (res) => {
-        callback(res)
-        if (res.status.isInBlock) {
-          console.log(
-            `Completed at block hash #${res.status.asInBlock.toString()}`
-          )
-        } else {
-          console.log(`Current status: ${res.status.type}`)
-        }
-      })
+    const amount = unitToPlanck(
+      amountToSend,
+      api?.registry?.chainDecimals[0] || 10
+    )
+    try {
+      await api.tx.balances
+        .transferKeepAlive(receiverAddress, amount)
+        .signAndSend(
+          '5F7aECSMP77dwPYMjyHAbN1FHbxQGMFFCi5pcYQC7CYdouQs',
+          { signer },
+          (res) => {
+            callback(res)
+            if (res.status.isInBlock) {
+              console.log(
+                `Completed at block hash #${res.status.asInBlock.toString()}`
+              )
+            } else {
+              console.log(`Current status: ${res.status.type}`)
+            }
+          }
+        )
+    } catch (e) {
+      throw new Error(e?.message)
+    }
   }
 }
 

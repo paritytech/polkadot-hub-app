@@ -25,7 +25,7 @@
     },
     "user": {
       "invoice": {
-        "path": "/payments/invoice/:invoiceId",
+        "path": "/payments/invoice/:paymentId",
         "componentId": "PaymentInvoice",
         "fullScreen": true
       }

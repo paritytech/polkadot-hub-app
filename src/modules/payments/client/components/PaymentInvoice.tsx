@@ -22,7 +22,7 @@ export const PaymentInvoice: React.FC<{}> = ({}) => {
   const me = useStore(stores.me)
   const officeId = useStore(stores.officeId)
   const office = useOffice(officeId)
-  const { data: paymentRecord } = useGetPayment(page?.params.invoiceId ?? '')
+  const { data: paymentRecord } = useGetPayment(page?.params.paymentId ?? '')
   const { mutate: sendInvoice } = useSendInvoice(() => {
     showNotification('Invoice sent', 'success')
   })
@@ -145,11 +145,9 @@ export const PaymentInvoice: React.FC<{}> = ({}) => {
               >
                 <div style={{ marginBottom: '24px' }}>
                   <p style={{ fontWeight: 'bold' }}>Supplier</p>
-                  <p>{config.companyName}</p>
-                  <p>{office?.address}</p>
-                  <p>
-                    {office?.city}, {office?.country}
-                  </p>
+                  {config.invoiceInformation?.map((row) => (
+                    <p>{row}</p>
+                  ))}
                 </div>
                 <div style={{ marginBottom: '24px' }}>
                   <p style={{ fontWeight: 'bold' }}>Customer</p>

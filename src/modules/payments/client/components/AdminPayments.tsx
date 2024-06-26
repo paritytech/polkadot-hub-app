@@ -68,7 +68,6 @@ export const _AdminPayments = () => {
     })
   }, [payments, debouncedSearchQuery])
 
-  console.log(users)
   const columns = React.useMemo(
     () => [
       {

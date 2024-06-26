@@ -28,7 +28,7 @@ export type PaymentItem = {
     id: string
     name: string
     url: string
-    amount: string
+    amount: number
     duration: number
     type: 'day' | 'hour'
     currency: string

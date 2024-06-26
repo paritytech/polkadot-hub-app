@@ -1,6 +1,5 @@
 import axios from 'axios'
 import Decimal from 'decimal.js'
-
 Decimal.set({ precision: 10 })
 
 // @todo move this to some sort of admin config
@@ -13,13 +12,6 @@ export const getPriceInDot = async (fiatAmount: string | number) => {
     return 0
   }
   return new Decimal(fiatAmount).div(new Decimal(dotPrice)).toString()
-}
-
-export const getDiscountValue = (price: string) => {
-  if (!price) {
-    return 0
-  }
-  return new Decimal(price).mul(DISCOUNT_COEFFICIENT).toString()
 }
 
 export const getDotPrice = async (currency: string) => {

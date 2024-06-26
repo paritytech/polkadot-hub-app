@@ -22,10 +22,14 @@ import {
   getWallets,
   isWalletConnect,
 } from '#client/utils/polkadot-onboard'
-import { useUpdatePayment } from '../queries'
+import { useCurrencyPrice, useUpdatePayment } from '../queries'
 import { PaymentStatus, PaymentSteps } from '#shared/types'
 import dayjs from 'dayjs'
-import { getDiscountValue } from '#modules/payments/helper'
+import { useStore } from '@nanostores/react'
+import * as stores from '#client/stores'
+import { useOffice } from '#client/utils/hooks'
+import config from '#client/config'
+import { getDiscountValue } from '../helper'
 
 export const DotPayment: React.FC<{
   paymentRecord: any
@@ -34,35 +38,50 @@ export const DotPayment: React.FC<{
   const [loading, setLoading] = useState(false)
   const [txId, setTxId] = useState<string>('')
 
+  const officeId = useStore(stores.officeId)
+  const office = useOffice(officeId)
+
   const [wallets, setWallets] = useState<BaseWallet[]>([])
   const [selectedAddress, setSelectedAddress] = useState<string>()
   const [chosenWallet, setChosenWallet] = useState<BaseWallet>()
   const [accounts, setAccounts] = useState<ExtensionAccount[]>([])
 
   const [error, setError] = useState<JSX.Element | string>()
-  const [step, setStep] = useState<PaymentSteps>()
+  const [step, setStep] = useState<PaymentSteps | ''>()
   const [loaderText, setLoaderText] = useState<string>('')
 
   const { mutate: updatePayment, data: updatedRecord } = useUpdatePayment()
+  const { data: fiatPerDot } = useCurrencyPrice()
 
   const selectedAccount = useMemo(
     () => accounts.find((a) => a.address === selectedAddress),
     [selectedAddress]
   )
   // @todo recalculated DOT price every few seconds
-  const priceInDot = React.useMemo(() => paymentRecord.amount, [paymentRecord])
+  const priceInDot = React.useMemo(
+    () =>
+      fiatPerDot
+        ? new Decimal(paymentRecord.amount)
+            .div(new Decimal(fiatPerDot * 10))
+            .toString()
+        : 0,
+    [paymentRecord, fiatPerDot]
+  )
+
   const discountValue = React.useMemo(
-    () => getDiscountValue(priceInDot),
+    () => (!!config.dotDiscount ? getDiscountValue(priceInDot.toString()) : 0),
     [priceInDot]
   )
 
-  const total = React.useMemo(
-    () =>
-      !!priceInDot
-        ? new Decimal(priceInDot).sub(new Decimal(discountValue)).toString()
-        : 0,
-    [discountValue, priceInDot]
-  )
+  const total = React.useMemo(() => {
+    if (!config.dotDiscount) {
+      return priceInDot
+    }
+    return !!priceInDot
+      ? new Decimal(priceInDot).sub(new Decimal(discountValue)).toString()
+      : 0
+  }, [discountValue, priceInDot])
+
   const txInProgress = React.useMemo(
     () => step == PaymentSteps.TransactionInProgress,
     [step]
@@ -139,19 +158,25 @@ export const DotPayment: React.FC<{
         console.error('Invalid account.')
         return
       }
-      console.log('selectedAddress ', selectedAddress)
-      makePaymentTransaction(
+      return makePaymentTransaction(
         selectedAddress,
         chosenWallet?.signer,
-        priceInDot,
+        total,
         cb
       )
     } catch (e: any) {
       if (e?.message === 'Cancelled') {
         console.error('The user cancelled signing process')
+        setLoading(false)
+        setLoaderText('')
+        setStep('')
+        setChosenWallet(undefined)
+        setSelectedAddress(undefined)
       } else {
         console.error('Payment error')
-        console.error(e)
+        setLoading(false)
+        setLoaderText('')
+        setError(e?.message)
       }
     }
   }
@@ -165,9 +190,9 @@ export const DotPayment: React.FC<{
           </div>
         )
       case PaymentSteps.TransactionFinalized:
-        // const url = new URL('http://localhost:3000/payments/confirmation')
-        // url.searchParams.set('id', paymentRecord.id)
-        // window.location.href = url.toString()
+        const url = new URL(`${config.appHost}/payments/confirmation`)
+        url.searchParams.set('id', paymentRecord.id)
+        window.location.href = url.toString()
         break
         // return (
         // <div>
@@ -246,7 +271,7 @@ export const DotPayment: React.FC<{
             </a>
           </div>
           <div>
-            <Link href="/how-to-pay-with-dot" className="mt-6">
+            <Link href="/how-to-pay-with-dot" className="mt-6" target="_blank">
               How to Pay with DOT
             </Link>
           </div>
@@ -314,14 +339,16 @@ export const DotPayment: React.FC<{
                 <P textType="detail" className="text- text-"></P>
               </div>
             </div>
-            <div className="flex justify-between">
-              <P textType="additional" className="text-accents-pink mb-0">
-                Discount
-              </P>
-              <P textType="additional" className="text-accents-pink mb-0">
-                -20% (-{discountValue} DOT)
-              </P>
-            </div>
+            {!!config.dotDiscount && discountValue && (
+              <div className="flex justify-between">
+                <P textType="additional" className="text-accents-pink mb-0">
+                  Discount
+                </P>
+                <P textType="additional" className="text-accents-pink mb-0">
+                  -{config.dotDiscount}% (-{discountValue} DOT)
+                </P>
+              </div>
+            )}
             <div className="flex justify-between">
               <P textType="additional">Total</P>
               <P textType="additionalBold">{total} DOT</P>
@@ -329,7 +356,7 @@ export const DotPayment: React.FC<{
 
             <P textType="detail">
               All sales are charged in DOT and all sales are final. The current
-              EUR to DOT conversion rate is taken from{' '}
+              {paymentRecord.currency} to DOT conversion rate is taken from{' '}
               <Link href="https://www.coingecko.com/en/coins/polkadot">
                 Coingecko
               </Link>{' '}
@@ -355,6 +382,11 @@ export const DotPayment: React.FC<{
                     } else {
                       setLoaderText(`Transaction status: ${result.status.type}`)
                     }
+                    console.log('result status', result.status)
+                    console.log(
+                      'result status final',
+                      result.status.isFinalized
+                    )
                     if (result?.status?.isFinalized) {
                       const human = result.toHuman()
                       const txHashHex = Array.from(result.txHash)
@@ -364,11 +396,12 @@ export const DotPayment: React.FC<{
                         .join('')
                       const txHashWithPrefix = '0x' + txHashHex
                       setTxId(txHashWithPrefix)
-                      // @todo when is it success?
+                      console.log('tx hash ', txHashWithPrefix)
                       let transactionResult = PaymentStatus.Success
                       if (!!human.dispatchError) {
                         transactionResult = PaymentStatus.Error
                       }
+                      console.log('will update')
                       updatePayment({
                         id: paymentRecord.id,
                         providerReferenceId: txHashWithPrefix,
@@ -401,7 +434,27 @@ export const DotPayment: React.FC<{
         </div>
       )}
 
-      <div>{error}</div>
+      {error && (
+        <div>
+          <P className="text-red-600">Error: {error}</P>
+          <P>
+            Please contact support in case you are experiencing any issues:{' '}
+            {office.supportContact}
+          </P>
+          <div className="flex justify-center mt-10">
+            <FButton
+              onClick={() => {
+                setChosenWallet(undefined)
+                setSelectedAddress('')
+                setError('')
+                setStep('')
+              }}
+            >
+              Try again
+            </FButton>
+          </div>
+        </div>
+      )}
 
       <div>{!loading && !!step && (getStep(step) as React.ReactNode)}</div>
 

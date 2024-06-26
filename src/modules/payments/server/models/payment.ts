@@ -15,8 +15,6 @@ export class Payment
   declare providerReferenceId: PaymentItem['providerReferenceId']
   declare purchasedProductReference: PaymentItem['purchasedProductReference']
   declare provider: PaymentItem['provider']
-  // declare allowedRoles: PaymentItem['allowedRoles']
-  // declare visibility: PaymentItem['visibility']
   declare createdAt: CreationOptional<Date>
   declare updatedAt: CreationOptional<Date>
 }
@@ -50,7 +48,6 @@ Payment.init(
       defaultValue: {},
     },
     provider: {
-      // Stripe/ DOT
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -66,15 +63,6 @@ Payment.init(
       type: DataTypes.JSONB,
       defaultValue: {},
     },
-    // visibility: {
-    //   type: DataTypes.STRING,
-    //   allowNull: false,
-    // },
-    // allowedRoles: {
-    //   type: DataTypes.ARRAY(DataTypes.STRING),
-    //   defaultValue: [],
-    //   allowNull: false,
-    // },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },

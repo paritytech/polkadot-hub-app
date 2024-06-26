@@ -42,6 +42,12 @@ function getBuildConfig(): BuildOptions {
         }))
       ),
       // TODO: add .env.COMPONENT_ID_BY_ROUTE
+      'process.env.DOT_DISCOUNT': JSON.stringify(
+        appConfig.config.company.dotDiscount
+      ),
+      'process.env.INVOICE_INFORMATION': JSON.stringify(
+        appConfig.config.company.invoiceInformation
+      ),
       'process.env.AUTH': JSON.stringify(appConfig.config.application.auth),
       'process.env.APP_OFFICES': JSON.stringify(
         appConfig.config.company.offices.map(
