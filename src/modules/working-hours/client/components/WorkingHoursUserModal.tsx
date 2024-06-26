@@ -347,7 +347,7 @@ export const WorkingHoursUserModal: React.FC<{
               type="checkbox"
               checked={showEntries}
               onChange={(v) => setShowEntries(Boolean(v))}
-              inlineLabel="Verbose"
+              inlineLabel="Show More Details"
             />
           </div>
           <div>

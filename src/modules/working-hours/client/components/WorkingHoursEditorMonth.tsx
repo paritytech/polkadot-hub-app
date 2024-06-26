@@ -409,7 +409,7 @@ export const WorkingHoursEditorMonth: React.FC<{
             type="checkbox"
             checked={showEntries}
             onChange={(v) => setShowEntries(Boolean(v))}
-            inlineLabel="Verbose"
+            inlineLabel="Show More Details"
           />
         </div>
         <div className="-mx-6 sm:-mx-8">
