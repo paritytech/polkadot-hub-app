@@ -22,7 +22,7 @@ export const cronJob: CronJob = {
   },
 }
 
-const INTERVAL_DAYS = 28
+const INTERVAL_DAYS = [7, 28]
 
 async function fetchBamboHRTimeOffRequests(ctx: CronJobContext) {
   const STATUS_MAP = {
@@ -34,8 +34,8 @@ async function fetchBamboHRTimeOffRequests(ctx: CronJobContext) {
   } as Record<string, TimeOffRequestStatus>
 
   const interval = [
-    dayjs().format(DATE_FORMAT),
-    dayjs().add(INTERVAL_DAYS, 'day').format(DATE_FORMAT),
+    dayjs().subtract(INTERVAL_DAYS[0], 'day').format(DATE_FORMAT),
+    dayjs().add(INTERVAL_DAYS[1], 'day').format(DATE_FORMAT),
   ]
   const requests = await ctx.integrations.BambooHR.getTimeOffRequests({
     startDate: interval[0],
@@ -170,8 +170,8 @@ async function fetchHumaansTimeAways(ctx: CronJobContext) {
   const excludedTypes = metadata.excludeTimeOffTypes
 
   const interval = [
-    dayjs().format(DATE_FORMAT),
-    dayjs().add(INTERVAL_DAYS, 'day').format(DATE_FORMAT),
+    dayjs().subtract(INTERVAL_DAYS[0], 'day').format(DATE_FORMAT),
+    dayjs().add(INTERVAL_DAYS[1], 'day').format(DATE_FORMAT),
   ]
   const requests = await ctx.integrations.Humaans.getTimeAways(
     interval[0],
