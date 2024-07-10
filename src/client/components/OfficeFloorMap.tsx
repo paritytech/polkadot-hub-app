@@ -72,13 +72,11 @@ const PointComponent: Record<
           : 'text-black bg-green-200 border-green-200 hover:bg-cta-jade hover:border-cta-hover-jadeNoOpacity hover:text-white',
         'sm:p-4',
         pointCommonStyle,
-        'absolute'
+        'absolute whitespace-nowrap'
       )}
       onClick={onClick(item.id, VisitType.RoomReservation)}
     >
-      <p className="font-bold">
-        {!isSelected && 'Book'} {item.name}
-      </p>
+      <p className="font-bold">{item.name}</p>
     </Button>
   ),
 }
