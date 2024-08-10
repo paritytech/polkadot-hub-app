@@ -62,46 +62,56 @@ async function fetchHumaansDefaultWorkingHours(ctx: CronJobContext) {
     const dailyWorkingHours = config.workingDays.length
       ? config.weeklyWorkingHours / config.workingDays.length
       : 0
-    const workingDaysNumber = employee.workingDays.length
-    const workingDays = employee.workingDays
+    const baseConfig = {
+      workingDays: config.workingDays,
+      weeklyWorkingHours: config.weeklyWorkingHours,
+    }
+
+    const employeeWorkingDaysNumber = employee.workingDays.length
+    const employeeWorkingDays = employee.workingDays
       .map((x) => WORKING_DAY_INDEX_BY_NAME[x.day])
       .filter((x) => x !== undefined)
-    const weeklyWorkingHours = dailyWorkingHours * workingDaysNumber
+    const employeeWeeklyWorkingHours =
+      dailyWorkingHours * employeeWorkingDaysNumber
+    const employeeConfig = {
+      workingDays: employeeWorkingDays,
+      weeklyWorkingHours: employeeWeeklyWorkingHours,
+    }
 
     const userConfig = userConfigByUserId[user.id]
 
-    if (
-      userConfig &&
-      weeklyWorkingHours !== userConfig.value.weeklyWorkingHours
-    ) {
-      // Update config
-      try {
-        await userConfig
-          .set({
-            value: {
-              weeklyWorkingHours,
-              workingDays,
-            },
-          })
-          .save()
-        ctx.log.info(`Updated time tracking user config for ${user.email}`)
-        report.succeeded++
-      } catch (err) {
-        ctx.log.error(err, `Failed to update user config`)
-        report.failed++
+    if (userConfig) {
+      if (compareConfigs(userConfig.value, employeeConfig)) {
+        // Delete config
+        try {
+          await userConfig.destroy()
+          ctx.log.info(`Deleted time tracking user config for ${user.email}`)
+          report.succeeded++
+        } catch (err) {
+          ctx.log.error(err, `Failed to delete user config`)
+          report.failed++
+        }
+      } else if (!compareConfigs(userConfig.value, employeeConfig)) {
+        // Update config
+        try {
+          await userConfig
+            .set({
+              value: employeeConfig,
+            })
+            .save()
+          ctx.log.info(`Updated time tracking user config for ${user.email}`)
+          report.succeeded++
+        } catch (err) {
+          ctx.log.error(err, `Failed to update user config`)
+          report.failed++
+        }
       }
-    } else if (
-      !userConfig &&
-      weeklyWorkingHours !== config.weeklyWorkingHours
-    ) {
-      // Create new config
+    } else if (!compareConfigs(baseConfig, employeeConfig)) {
+      // Create config
       try {
         await ctx.models.WorkingHoursUserConfig.create({
           userId: user.id,
-          value: {
-            weeklyWorkingHours,
-            workingDays,
-          },
+          value: employeeConfig,
         })
         ctx.log.info(`Created new time tracking user config for ${user.email}`)
         report.succeeded++
@@ -111,6 +121,7 @@ async function fetchHumaansDefaultWorkingHours(ctx: CronJobContext) {
       }
     }
   }
+
   if (report.succeeded || report.failed) {
     ctx.log.info(
       `Successfully processed ${report.succeeded} working-hours configs. ${report.failed} failed.`
@@ -198,4 +209,17 @@ async function fetchBamboHRDefaultWorkingHours(ctx: CronJobContext) {
       `Successfully processed ${report.succeeded} working-hours configs. ${report.failed} failed.`
     )
   }
+}
+
+function compareArrays(a: any[] = [], b: any[] = []): boolean {
+  return a.length === b.length && a.every((x) => b.includes(x))
+}
+
+function compareConfigs<
+  T extends { workingDays: number[]; weeklyWorkingHours: number }
+>(a: T, b: T): boolean {
+  return (
+    a.weeklyWorkingHours === b.weeklyWorkingHours &&
+    compareArrays(a.workingDays, b.workingDays)
+  )
 }

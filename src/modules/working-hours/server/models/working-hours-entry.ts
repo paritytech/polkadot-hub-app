@@ -19,6 +19,7 @@ export class WorkingHoursEntry
   declare date: WorkingHoursEntryModel['date']
   declare startTime: WorkingHoursEntryModel['startTime']
   declare endTime: WorkingHoursEntryModel['endTime']
+  declare metadata: WorkingHoursEntryModel['metadata']
 }
 
 WorkingHoursEntry.init(
@@ -49,6 +50,10 @@ WorkingHoursEntry.init(
     endTime: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    metadata: {
+      type: DataTypes.JSONB,
+      defaultValue: {},
     },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,

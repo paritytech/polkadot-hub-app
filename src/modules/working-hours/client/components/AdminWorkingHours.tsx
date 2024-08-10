@@ -1,10 +1,8 @@
 import * as React from 'react'
 import dayjs, { Dayjs } from 'dayjs'
-import config from '#client/config'
 import {
   Button,
   H1,
-  Icons,
   Placeholder,
   RoundButton,
   Select,
@@ -222,7 +220,7 @@ export const AdminWorkingHours: React.FC = () => {
                       !!x.overworkLevel &&
                       !!x.overworkTime && (
                         <Tag size="small" color={x.overworkLevel}>
-                          Overwork {getDurationString(x.overworkTime)}
+                          Additional {getDurationString(x.overworkTime)}
                         </Tag>
                       )}
                   </div>

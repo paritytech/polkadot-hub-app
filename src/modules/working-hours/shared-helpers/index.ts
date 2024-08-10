@@ -165,8 +165,12 @@ export function calculateTotalPublicHolidaysTime(
   if (!config || !holidays.length) {
     return null
   }
+  const dates = holidays.filter((x) => {
+    const date = dayjs(x.date, DATE_FORMAT)
+    return config.workingDays.includes(date.day())
+  })
   const hoursPerDay = config.weeklyWorkingHours / config.workingDays.length
-  const resultHours = holidays.length * hoursPerDay
+  const resultHours = dates.length * hoursPerDay
   const resultMinutes = (resultHours % 1) * 60
   return !!resultHours
     ? [Math.floor(resultHours), Math.floor(resultMinutes)]

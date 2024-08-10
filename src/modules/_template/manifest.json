@@ -4,6 +4,7 @@
   "dependencies": ["<DEPENDENCY_MODULE_ID>"],
   "requiredIntegrations": [],
   "recommendedIntegrations": [],
+  "availableCronJobs": [],
   "models": [],
   "clientRouter": {
     "public": {},

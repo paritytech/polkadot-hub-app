@@ -308,7 +308,7 @@ export const WorkingHoursEditorMonth: React.FC<{
                     {getDurationString(x.workingHours)}
                     {!!x.overworkLevel && !!x.overworkTime && (
                       <Tag size="small" color={x.overworkLevel}>
-                        Overwork {getDurationString(x.overworkTime)}
+                        Additional {getDurationString(x.overworkTime)}
                       </Tag>
                     )}
                   </div>
@@ -402,14 +402,14 @@ export const WorkingHoursEditorMonth: React.FC<{
         </div>
       </div>
       <div className="rounded-tiny bg-bg-primary flex flex-col gap-y-4 mb-4">
-        <div>Agreed working week: {moduleConfig.weeklyWorkingHours}h</div>
+        {/* <div>Agreed working week: {moduleConfig.weeklyWorkingHours}h</div> */}
         <div>
           <Input
             name="show_entries"
             type="checkbox"
             checked={showEntries}
             onChange={(v) => setShowEntries(Boolean(v))}
-            inlineLabel="Show More Details"
+            inlineLabel="Show more details"
           />
         </div>
         <div className="-mx-6 sm:-mx-8">
@@ -434,7 +434,7 @@ export const WorkingHoursEditorMonth: React.FC<{
                       : '–',
                 },
                 {
-                  Header: 'Overwork',
+                  Header: 'Additional hours',
                   accessor: () =>
                     totalPerMonth.overworkTime
                       ? getDurationString(totalPerMonth.overworkTime)

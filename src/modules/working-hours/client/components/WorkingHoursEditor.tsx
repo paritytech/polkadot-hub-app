@@ -1,11 +1,14 @@
 import * as React from 'react'
+import dayjs from 'dayjs'
 import {
   ComponentWrapper,
   FButton,
+  HR,
   HeaderWrapper,
   Icons,
   LoaderSpinner,
 } from '#client/components/ui'
+import { renderMarkdown } from '#client/utils/markdown'
 import { WorkingHoursEditorWeek } from './WorkingHoursEditorWeek'
 import { WorkingHoursEditorMonth } from './WorkingHoursEditorMonth'
 import { DefaultEntriesModal } from './DefaultEntriesModal'
@@ -16,7 +19,16 @@ import { useConfig } from '../queries'
 import { formatTimeString } from '../helpers'
 
 export const WorkingHoursEditor: React.FC = () => {
-  const [viewMode, setViewMode] = React.useState<'week' | 'month'>('week')
+  const [viewMode, setViewMode] = React.useState<'week' | 'month'>(
+    (() => {
+      const url = new URL(window.location.href)
+      const view = url.searchParams.get('view')
+      if (view === 'month') {
+        return 'month'
+      }
+      return 'week'
+    })()
+  )
   const [showDefaultEntriesModal, setShowDefaultEntriesModal] =
     React.useState(false)
 
@@ -34,20 +46,43 @@ export const WorkingHoursEditor: React.FC = () => {
 
   React.useEffect(() => {
     const url = new URL(window.location.href)
-    if (url.searchParams.get('view') === 'month') {
-      setViewMode('month')
+    const view = url.searchParams.get('view')
+    if (view !== viewMode) {
+      url.searchParams.set('view', viewMode)
+      window.history.replaceState({}, '', url.toString())
     }
-  }, [])
+  }, [viewMode])
 
   return !!moduleConfig ? (
     <div className="flex flex-col gap-y-2">
       {/* header */}
       <ComponentWrapper>
         <HeaderWrapper title="Working Hours">
+          {moduleConfig.policyText && (
+            <>
+              <div
+                className="phq_markdown-content "
+                dangerouslySetInnerHTML={{
+                  __html: renderMarkdown(moduleConfig.policyText),
+                }}
+              />
+              <HR className="my-6" />
+            </>
+          )}
+
+          <div className="my-4 text-text-tertiary">
+            Your agreed working week: {moduleConfig.weeklyWorkingHours}h (
+            {moduleConfig.workingDays
+              .map((x) => dayjs().day(x).format('dddd'))
+              .join(', ')}
+            )
+          </div>
+
+          {/* {moduleConfig.policyText && <></>} */}
           <div>
             {moduleConfig.personalDefaultEntries.length ? (
               <div className="-my-2">
-                Your default working hours:{' '}
+                Your schedule:{' '}
                 {moduleConfig.personalDefaultEntries
                   .sort(
                     fp.sortWith((x) => {
@@ -76,7 +111,7 @@ export const WorkingHoursEditor: React.FC = () => {
                   onClick={() => setShowDefaultEntriesModal(true)}
                   className="w-full"
                 >
-                  Configure your default working hours
+                  Configure your default working schedule
                 </FButton>
               </div>
             )}

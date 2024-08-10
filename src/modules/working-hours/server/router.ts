@@ -82,6 +82,15 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         x.endTime,
       ])
     }
+
+    const userConfig = await fastify.db.WorkingHoursUserConfig.findOne({
+      where: { userId: req.user.id },
+    })
+    if (userConfig) {
+      result.workingDays = userConfig.value.workingDays
+      result.weeklyWorkingHours = userConfig.value.weeklyWorkingHours
+    }
+
     return result
   })
 
@@ -177,7 +186,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         return reply.throw.accessDenied()
       }
       const newEntries: Array<
-        Omit<WorkingHoursEntry, 'id' | 'createdAt' | 'updatedAt'>
+        Pick<WorkingHoursEntry, 'userId' | 'date' | 'startTime' | 'endTime'>
       > = req.body.map((x) => ({ ...x, userId: req.user.id }))
       let error: string | null = null
 
@@ -716,7 +725,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         'Week end',
         'Working time',
         // 'Working hours',
-        'Overwork',
+        'Additional hours',
         'Entries',
         'Entry creation date',
         'Time Off',
@@ -954,7 +963,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         'Week end',
         'Working time',
         // 'Working hours',
-        'Overwork',
+        'Additional hours',
         'Entries',
         'Entry creation date',
         'Time Off',

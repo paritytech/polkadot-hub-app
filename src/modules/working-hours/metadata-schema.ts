@@ -22,6 +22,7 @@ export const roleConfigSchema = z
       nextWeeks: z.number().min(0).max(18),
     }),
     publicHolidayCalendarId: z.string().optional(),
+    policyText: z.string().optional(),
   })
   .strict()
 
