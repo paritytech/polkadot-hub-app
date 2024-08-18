@@ -81,7 +81,7 @@ export const DefaultEntriesModal: React.FC<DefaultEntriesModalProps> = ({
   }, [newEntryTime])
 
   return (
-    <Modal title="Your default working hours" onClose={onClose}>
+    <Modal title="Your default working schedule" onClose={onClose}>
       <div className="flex flex-col gap-y-6">
         <div>
           <P>Specify your usual working schedule and use it for prefilling.</P>
@@ -136,11 +136,7 @@ export const DefaultEntriesModal: React.FC<DefaultEntriesModalProps> = ({
           </div>
         )}
         {!showNewEntryInput ? (
-          <FButton
-            kind="secondary"
-            onClick={onAddEntry}
-            className="w-full mb-2"
-          >
+          <FButton kind="primary" onClick={onAddEntry} className="w-full mb-2">
             {sortedEntries.length ? 'Add one more entry' : 'Add entry'}
           </FButton>
         ) : (

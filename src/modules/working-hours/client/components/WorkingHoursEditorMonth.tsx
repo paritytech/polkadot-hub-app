@@ -1,6 +1,6 @@
 import * as React from 'react'
 import dayjs, { Dayjs } from 'dayjs'
-import { H2, Input, RoundButton, Table, Tag } from '#client/components/ui'
+import { H2, H3, Input, RoundButton, Table, Tag } from '#client/components/ui'
 import * as fp from '#shared/utils/fp'
 import { cn, formatDateRange } from '#client/utils'
 import { DATE_FORMAT } from '#client/constants'
@@ -32,6 +32,13 @@ function extractDateFromUrlHash(): string | null {
     return null
   }
   return date
+}
+
+type TotalPerMonth = {
+  workingHours: [number, number] | null
+  overworkTime: [number, number] | null
+  timeOffTime: [number, number] | null
+  publicHolidaysTime: [number, number] | null
 }
 
 type WeeklyWorkingHours = {
@@ -255,6 +262,28 @@ export const WorkingHoursEditorMonth: React.FC<{
     moduleConfig,
   ])
 
+  const totalPerMonth = React.useMemo<TotalPerMonth>(() => {
+    return weeks.reduce<TotalPerMonth>(
+      (acc, x) => {
+        return {
+          workingHours: sumTime(acc.workingHours, x.workingHours),
+          overworkTime: sumTime(acc.overworkTime, x.overworkTime),
+          timeOffTime: sumTime(acc.timeOffTime, x.timeOffTime),
+          publicHolidaysTime: sumTime(
+            acc.publicHolidaysTime,
+            x.publicHolidaysTime
+          ),
+        }
+      },
+      {
+        workingHours: null,
+        overworkTime: null,
+        timeOffTime: null,
+        publicHolidaysTime: null,
+      }
+    )
+  }, [weeks])
+
   const columns = React.useMemo(
     () =>
       [
@@ -279,7 +308,7 @@ export const WorkingHoursEditorMonth: React.FC<{
                     {getDurationString(x.workingHours)}
                     {!!x.overworkLevel && !!x.overworkTime && (
                       <Tag size="small" color={x.overworkLevel}>
-                        Overwork {getDurationString(x.overworkTime)}
+                        Additional {getDurationString(x.overworkTime)}
                       </Tag>
                     )}
                   </div>
@@ -373,14 +402,14 @@ export const WorkingHoursEditorMonth: React.FC<{
         </div>
       </div>
       <div className="rounded-tiny bg-bg-primary flex flex-col gap-y-4 mb-4">
-        <div>Agreed working week: {moduleConfig.weeklyWorkingHours}h</div>
+        {/* <div>Agreed working week: {moduleConfig.weeklyWorkingHours}h</div> */}
         <div>
           <Input
             name="show_entries"
             type="checkbox"
             checked={showEntries}
             onChange={(v) => setShowEntries(Boolean(v))}
-            inlineLabel="Verbose"
+            inlineLabel="Show more details"
           />
         </div>
         <div className="-mx-6 sm:-mx-8">
@@ -389,6 +418,47 @@ export const WorkingHoursEditorMonth: React.FC<{
             data={weeks}
             paddingClassName="px-6 sm:px-8"
           />
+        </div>
+        <div className="mt-8">
+          <div className="mb-4">
+            Total for {startOfMonth.format('MMMM YYYY')}
+          </div>
+          <div className="-mx-6 sm:-mx-8">
+            <Table
+              columns={[
+                {
+                  Header: 'Working hours',
+                  accessor: () =>
+                    totalPerMonth.workingHours
+                      ? getDurationString(totalPerMonth.workingHours)
+                      : '–',
+                },
+                {
+                  Header: 'Additional hours',
+                  accessor: () =>
+                    totalPerMonth.overworkTime
+                      ? getDurationString(totalPerMonth.overworkTime)
+                      : '–',
+                },
+                {
+                  Header: 'Time Off',
+                  accessor: () =>
+                    totalPerMonth.timeOffTime
+                      ? getDurationString(totalPerMonth.timeOffTime)
+                      : '–',
+                },
+                {
+                  Header: 'Public Holidays',
+                  accessor: () =>
+                    totalPerMonth.publicHolidaysTime
+                      ? getDurationString(totalPerMonth.publicHolidaysTime)
+                      : '–',
+                },
+              ]}
+              data={[totalPerMonth]}
+              paddingClassName="px-6 sm:px-8"
+            />
+          </div>
         </div>
       </div>
     </div>

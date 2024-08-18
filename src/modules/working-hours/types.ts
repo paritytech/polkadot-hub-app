@@ -6,6 +6,7 @@ export interface WorkingHoursEntry {
   date: string
   startTime: string
   endTime: string
+  metadata: Record<string, unknown>
   createdAt: Date
   updatedAt: Date
 }

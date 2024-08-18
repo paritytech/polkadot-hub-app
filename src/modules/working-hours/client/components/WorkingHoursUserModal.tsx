@@ -273,7 +273,7 @@ export const WorkingHoursUserModal: React.FC<{
                     {getDurationString(x.workingHours)}
                     {!!x.overworkLevel && !!x.overworkTime && (
                       <Tag size="small" color={x.overworkLevel}>
-                        Overwork {getDurationString(x.overworkTime)}
+                        Additional {getDurationString(x.overworkTime)}
                       </Tag>
                     )}
                   </div>
@@ -347,7 +347,7 @@ export const WorkingHoursUserModal: React.FC<{
               type="checkbox"
               checked={showEntries}
               onChange={(v) => setShowEntries(Boolean(v))}
-              inlineLabel="Verbose"
+              inlineLabel="Show more details"
             />
           </div>
           <div>

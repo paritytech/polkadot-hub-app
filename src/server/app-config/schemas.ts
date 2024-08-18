@@ -97,8 +97,8 @@ export const officeArea = z.object({
   capacity: z.number().min(1),
   map: z.string(),
   bookable: z.boolean().default(false),
-  desks: z.array(officeAreaDesk).min(1),
-  meetingRooms: z.array(officeRoom).min(1).optional(),
+  desks: z.array(officeAreaDesk),
+  meetingRooms: z.array(officeRoom).optional(),
 })
 export const office = z
   .object({
