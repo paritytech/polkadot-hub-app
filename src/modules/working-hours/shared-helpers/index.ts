@@ -66,11 +66,11 @@ export function calculateOverwork(
   const overtimeNotice =
     config.weeklyWorkingHours + config.weeklyOvertimeHoursNotice
   const level =
-    hours > overtimeWarning
+    hours >= overtimeWarning
       ? 'red'
-      : hours > overtimeNotice
+      : hours >= overtimeNotice
       ? 'yellow'
-      : hours > config.weeklyWorkingHours
+      : hours >= config.weeklyWorkingHours
       ? 'gray'
       : null
   const time = workingTime
