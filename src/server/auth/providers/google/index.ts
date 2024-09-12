@@ -61,13 +61,20 @@ export const plugin: FastifyPluginCallback = async (
       if (user?.deletedAt) {
         return reply.redirect('/')
       }
-      if (!!data.picture) {
-        // should be used only for userpic provided from Google Account!
-        // -c parameter means the image was cropped
-        // e.g will match =s96-c =s128
-        data.picture = data.picture.replace(/=s\d+(-c)?$/, `=s${312}$1`)
-      }
+      // if (!!data.picture) {
+      //   // should be used only for userpic provided from Google Account!
+      //   // -c parameter means the image was cropped
+      //   // e.g will match =s96-c =s128
+      //   data.picture = data.picture.replace(/=s\d+(-c)?$/, `=s${312}$1`)
+      // }
       if (!user) {
+        fastify.log.info({
+          fullName: data.name,
+          email: data.email,
+          avatar: data.picture,
+          avatarChanged: data.picture.replace(/=s\d+(-c)?$/, `=s${312}$1`),
+          roles: [appConfig.getDefaultUserRoleByEmail(data.email)],
+        }, 'Creating new user')
         user = await fastify.db.User.create({
           fullName: data.name,
           email: data.email,
