@@ -67,15 +67,19 @@ export const plugin: FastifyPluginCallback = async (
         // e.g will match =s96-c =s128
         data.picture = data.picture.replace(/=s\d+(-c)?$/, `=s${312}$1`)
       }
+
+      const sanitizeInput = (x: string) =>
+        x.replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+
       if (!user) {
         user = await fastify.db.User.create({
-          fullName: data.name,
-          email: data.email,
-          avatar: data.picture,
+          fullName: sanitizeInput(data.name),
+          email: sanitizeInput(data.email),
+          avatar: sanitizeInput(data.picture),
           roles: [appConfig.getDefaultUserRoleByEmail(data.email)],
         })
       } else {
-        await user.set({ avatar: data.picture }).save()
+        await user.set({ avatar: sanitizeInput(data.picture) }).save()
       }
 
       // add type to show which parameters are allowed
