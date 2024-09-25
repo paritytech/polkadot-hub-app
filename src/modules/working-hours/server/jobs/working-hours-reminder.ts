@@ -66,8 +66,6 @@ export const cronJob: CronJob = {
         id: { [Op.notIn]: excludedUserIds },
         roles: { [Op.overlap]: allowedRoles },
         isInitialised: true,
-        // NOTE: test mode
-        email: { [Op.in]: config.workingHoursTestGroup },
       },
     })
 
