@@ -70,13 +70,14 @@ export const plugin: FastifyPluginCallback = async (
 
       const sanitizeInput = (x: string) =>
         x.replace(/[\u0000-\u001F\u007F-\u009F]/g, '')
+      const email = data.email.toLowerCase()
 
       if (!user) {
         user = await fastify.db.User.create({
           fullName: sanitizeInput(data.name),
-          email: sanitizeInput(data.email),
+          email: sanitizeInput(email),
           avatar: sanitizeInput(data.picture),
-          roles: [appConfig.getDefaultUserRoleByEmail(data.email)],
+          roles: [appConfig.getDefaultUserRoleByEmail(email)],
         })
       } else {
         await user.set({ avatar: sanitizeInput(data.picture) }).save()
