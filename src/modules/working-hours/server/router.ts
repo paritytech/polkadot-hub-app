@@ -186,7 +186,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
       const newEntries: Array<
         Pick<WorkingHoursEntry, 'userId' | 'date' | 'startTime' | 'endTime'>
-      > = req.body.map((x) => ({ ...x, userId: req.user.id }))
+      > = req.body.map((x) => ({
+        ...x,
+        userId: req.user.id,
+      }))
       let error: string | null = null
 
       // validate each entry
