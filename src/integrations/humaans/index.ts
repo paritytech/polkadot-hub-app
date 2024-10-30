@@ -113,12 +113,13 @@ class Humaans extends Integration {
     personId: string,
     customFieldId: string
   ): Promise<CustomValue | null> {
-    return (
-      (await this.makePaginatedRequest<CustomValue>('/custom-values', {
-        personId,
-        customFieldId,
-      }).then(fp.first)) || null
-    )
+    return await this.makePaginatedRequest<CustomValue>('/custom-values', {
+      personId,
+      customFieldId,
+    }).then((xs) => {
+      if (!xs.length) return null
+      return xs.sort(fp.sortBy('updatedAt', 'desc'))[0]
+    })
   }
 }
 

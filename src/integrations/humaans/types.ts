@@ -77,4 +77,6 @@ export type CustomValue = {
   value: string
   personId: string
   customFieldId: string
+  createdAt: Date
+  updatedAt: Date
 }
