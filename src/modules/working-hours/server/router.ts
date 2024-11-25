@@ -288,7 +288,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       })
       const mergedEntries = existingEntries.map((x) =>
         x.id === entry.id
-          ? { ...x, startTime: entry.startTime, endTime: entry.endTime }
+          ? { ...x, startTime: req.body.startTime, endTime: req.body.endTime }
           : x
       )
 
