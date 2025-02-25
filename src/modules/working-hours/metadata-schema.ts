@@ -23,6 +23,7 @@ export const roleConfigSchema = z
     }),
     publicHolidayCalendarId: z.string().optional(),
     policyText: z.string().optional(),
+    maxConsecutiveWorkingHours: z.number().min(2).max(24).optional(),
   })
   .strict()
 

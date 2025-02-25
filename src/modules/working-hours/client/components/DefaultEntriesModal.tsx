@@ -19,6 +19,7 @@ import {
   useUpdateDefaultEntry,
 } from '../queries'
 import { formatTimeString } from '../helpers'
+import { MaxConsecutiveHoursWarning } from './MaxConsecutiveHoursWarning'
 
 type DefaultEntriesModalProps = {
   onClose: () => void
@@ -107,29 +108,38 @@ export const DefaultEntriesModal: React.FC<DefaultEntriesModalProps> = ({
                 updateEntry={updateDefaultEntry}
                 deleteEntry={deleteDefaultEntry}
                 editable={true}
+                maxConsecutiveWorkingHours={
+                  moduleConfig.maxConsecutiveWorkingHours
+                }
               />
             ))}
             {showNewEntryInput && (
-              <div
-                ref={newEntryRef}
-                className={cn('flex gap-x-1 items-center')}
-              >
-                <Icons.EntryArrow
-                  fillClassName="fill-fill-18"
-                  className="-mt-1 mr-1 hidden sm:block"
-                />
-                <TimeRangePicker
-                  from={newEntryTime[0]}
-                  to={newEntryTime[1]}
-                  inputClassName="px-0 py-[8px] w-28 text-center no-input-buttons"
-                  onChange={onChangeNewEntryTime}
-                />
-                <FButton kind="primary" size="small" onClick={onSaveNewEntry}>
-                  Save
-                </FButton>
-                <RoundButton
-                  onClick={() => setShowNewEntryInput(false)}
-                  icon="Cross"
+              <div>
+                <div
+                  ref={newEntryRef}
+                  className={cn('flex gap-x-1 items-center')}
+                >
+                  <Icons.EntryArrow
+                    fillClassName="fill-fill-18"
+                    className="-mt-1 mr-1 hidden sm:block"
+                  />
+                  <TimeRangePicker
+                    from={newEntryTime[0]}
+                    to={newEntryTime[1]}
+                    inputClassName="px-0 py-[8px] w-28 text-center no-input-buttons"
+                    onChange={onChangeNewEntryTime}
+                  />
+                  <FButton kind="primary" size="small" onClick={onSaveNewEntry}>
+                    Save
+                  </FButton>
+                  <RoundButton
+                    onClick={() => setShowNewEntryInput(false)}
+                    icon="Cross"
+                  />
+                </div>
+                <MaxConsecutiveHoursWarning
+                  maxHours={moduleConfig.maxConsecutiveWorkingHours}
+                  time={newEntryTime}
                 />
               </div>
             )}

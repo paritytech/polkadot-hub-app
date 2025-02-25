@@ -39,6 +39,7 @@ import {
   getTimeOffByDate,
   getTimeOffNotation,
 } from '../../shared-helpers'
+import { MaxConsecutiveHoursWarning } from './MaxConsecutiveHoursWarning'
 
 function extractDateFromUrlHash(): string | null {
   const hash = window.location.hash
@@ -428,6 +429,9 @@ const DayRow: React.FC<DayRowProps> = ({
                 entry={x}
                 deleteEntry={deleteEntry}
                 updateEntry={updateEntry}
+                maxConsecutiveWorkingHours={
+                  moduleConfig.maxConsecutiveWorkingHours
+                }
               />
             ))}
           </div>
@@ -436,29 +440,35 @@ const DayRow: React.FC<DayRowProps> = ({
         )}
 
         {showNewEntryInput && (
-          <div
-            data-new-entry
-            className={cn(
-              'flex gap-x-1 items-center',
-              hasEntries ? 'mt-1' : 'mt-4'
-            )}
-          >
-            <Icons.EntryArrow
-              fillClassName="fill-fill-18"
-              className="-mt-1 mr-1 hidden sm:block"
-            />
-            <TimeRangePicker
-              from={newEntryTime[0]}
-              to={newEntryTime[1]}
-              inputClassName="px-0 py-[8px] w-28 text-center no-input-buttons"
-              onChange={onChangeNewEntryTime}
-            />
-            <FButton kind="primary" size="small" onClick={onSaveNewEntry}>
-              Save
-            </FButton>
-            <RoundButton
-              onClick={() => setShowNewEntryInput(false)}
-              icon="Cross"
+          <div>
+            <div
+              data-new-entry
+              className={cn(
+                'flex gap-x-1 items-center',
+                hasEntries ? 'mt-1' : 'mt-4'
+              )}
+            >
+              <Icons.EntryArrow
+                fillClassName="fill-fill-18"
+                className="-mt-1 mr-1 hidden sm:block"
+              />
+              <TimeRangePicker
+                from={newEntryTime[0]}
+                to={newEntryTime[1]}
+                inputClassName="px-0 py-[8px] w-28 text-center no-input-buttons"
+                onChange={onChangeNewEntryTime}
+              />
+              <FButton kind="primary" size="small" onClick={onSaveNewEntry}>
+                Save
+              </FButton>
+              <RoundButton
+                onClick={() => setShowNewEntryInput(false)}
+                icon="Cross"
+              />
+            </div>
+            <MaxConsecutiveHoursWarning
+              maxHours={moduleConfig.maxConsecutiveWorkingHours}
+              time={newEntryTime}
             />
           </div>
         )}
