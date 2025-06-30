@@ -304,7 +304,8 @@ const ResultItem: React.FC<ResultItemProps> = ({
   className,
 }) => {
   const areaName = area?.name
-  const deskName = area?.desks.find(propEq('id', result.deskId))?.name
+  const deskName =
+    area?.desks.find(propEq('id', result.deskId))?.name || result.deskId
   const onRemoveItem = React.useCallback(
     (id: string | null) => (ev: React.MouseEvent<HTMLButtonElement>) => {
       ev.preventDefault()

@@ -50,7 +50,9 @@ export const _GuestInviteDetail = () => {
     () => areas.find(propEq('id', guestInivite?.areaId || '')),
     [areas]
   )
-  const desk = area?.desks.find((x) => x.id === guestInivite?.deskId)
+  const deskName =
+    area?.desks.find((x) => x.id === guestInivite?.deskId)?.name ||
+    guestInivite?.deskId
 
   const office = React.useMemo(
     () =>
@@ -104,7 +106,7 @@ export const _GuestInviteDetail = () => {
                     <P className="font-extra text-sm">
                       {guestInivite.fullName}
                     </P>
-                    <P className="m-0">Desk {desk?.name}</P>
+                    <P className="m-0">Desk {deskName}</P>
                     <P className="m-0">{area?.name}</P>
                     <P className="m-0">
                       {' '}
