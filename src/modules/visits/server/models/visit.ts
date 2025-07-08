@@ -76,7 +76,7 @@ Visit.init(
         const area = (office.areas || []).find((x) => x.id === this.areaId)
         if (!area) return null
         const desk = area.desks.find((x) => x.id === this.deskId)
-        return desk?.name || null
+        return desk?.name || this.deskId
       },
     },
     officeId: {

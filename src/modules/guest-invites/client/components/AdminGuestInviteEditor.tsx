@@ -183,7 +183,7 @@ export const AdminGuestInviteEditor = () => {
                 />
                 <div className="mt-10 hidden md:block">
                   <ReservationSummary
-                    deskName={desk?.name}
+                    deskName={desk?.name || formData.deskId}
                     areaName={area?.name}
                     dates={formData.dates}
                   />

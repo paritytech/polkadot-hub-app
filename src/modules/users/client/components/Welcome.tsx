@@ -266,7 +266,7 @@ const GeneralInfo: React.FC<{
           <FormLabel>General Information</FormLabel>
           <P className="text-text-tertiary mb-4">
             Specify what you're working on for hub members who'll be interested
-            in collaborating on new projects
+            in collaborating on new projects.
           </P>
 
           {EDITABLE_ROLE_GROUPS.filter((g) =>
@@ -328,10 +328,10 @@ const GeneralInfo: React.FC<{
         </div>
       )}
       <div className="my-10">
-        <FormLabel>What is you permanent Location?</FormLabel>
+        <FormLabel>What is your permanent location?</FormLabel>
         <P className="text-text-tertiary mb-4">
-          By knowing your timezone hub members would better adjust teamwork and
-          meetings time
+          By knowing your time zone, hub members can better adjust teamwork and
+          meeting times.
         </P>
         <InputsWrapper
           inputs={[

@@ -22,7 +22,7 @@ const publicRouter: FastifyPluginCallback = async function (fastify, opts) {}
 
 const userRouter: FastifyPluginCallback = async function (fastify, opts) {
   fastify.get(
-    '/',
+    '/entries',
     async (
       req: FastifyRequest<{
         Querystring: { date: string; limit: number; officeId: string }

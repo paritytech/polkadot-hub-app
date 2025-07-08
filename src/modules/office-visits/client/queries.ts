@@ -11,7 +11,7 @@ type OfficeVisitParms = {
 }
 
 export const useOfficeVisits = (officeId: string, date: string) => {
-  const path = '/user-api/office-visits/'
+  const path = '/user-api/office-visits/entries'
   return useQuery<OfficeVisitParms, AxiosError>(
     [path, { officeId, date: dayjs(date).format(DATE_FORMAT) }],
     async ({ queryKey }) =>

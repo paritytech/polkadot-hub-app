@@ -83,30 +83,6 @@ class Matrix extends Integration {
       .then((res) => Object.keys(res.data?.joined || {}))
   }
 
-  private async sendMessageInRoom(
-    roomId: MatrixRoomId,
-    message: string
-  ): Promise<void> {
-    if (config.debug) {
-      console.log(`Matrix notification skipped (debug mode): ${message}`)
-      return
-    }
-    return axios
-      .post(
-        `https://${this.credentials.host}/_matrix/client/r0/rooms/${roomId}/send/m.room.message?access_token=${this.credentials.token}`,
-        {
-          msgtype: 'm.text',
-          format: 'org.matrix.custom.html',
-          body: message.replace(this.tagsRe, ''),
-          formatted_body: message,
-        },
-        {
-          headers: this.headers,
-        }
-      )
-      .then(() => {})
-  }
-
   private async ensureUserRoom(user: User): Promise<MatrixRoomId | null> {
     if (config.debug) {
       console.log(
@@ -138,6 +114,30 @@ class Matrix extends Integration {
       }
     }
     return user.externalIds.matrixRoomId
+  }
+
+  public async sendMessageInRoom(
+    roomId: MatrixRoomId,
+    message: string
+  ): Promise<void> {
+    if (config.debug) {
+      console.log(`Matrix notification skipped (debug mode): ${message}`)
+      return
+    }
+    return axios
+      .post(
+        `https://${this.credentials.host}/_matrix/client/r0/rooms/${roomId}/send/m.room.message?access_token=${this.credentials.token}`,
+        {
+          msgtype: 'm.text',
+          format: 'org.matrix.custom.html',
+          body: message.replace(this.tagsRe, ''),
+          formatted_body: message,
+        },
+        {
+          headers: this.headers,
+        }
+      )
+      .then(() => {})
   }
 
   public async inviteUserInRoom(

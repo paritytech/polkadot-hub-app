@@ -47,8 +47,12 @@ import { WorkingHoursUserConfig } from './models'
 
 dayjs.extend(dayjsIsoWeek)
 
-function isOutOfTestGroup(user: User): boolean {
-  return !config.workingHoursTestGroup.includes(user.email)
+const MODULE_METADATA = appConfig.getModuleMetadata('working-hours') as Metadata
+
+function getTargetRole(user: User): string | null {
+  return (
+    Object.keys(MODULE_METADATA.configByRole).find(fp.isIn(user.roles)) || null
+  )
 }
 
 const userRouter: FastifyPluginCallback = async function (fastify, opts) {
@@ -56,17 +60,12 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     if (!req.can(Permissions.Create)) {
       return null
     }
-    if (isOutOfTestGroup(req.user)) {
-      return null
-    }
-    const metadata = appConfig.getModuleMetadata('working-hours') as Metadata
-    if (!metadata) return null
+    if (!MODULE_METADATA) return null
 
-    const allowedRoles = Object.keys(metadata.configByRole)
-    const userRole = req.user.roles.find((x) => allowedRoles.includes(x))
+    const userRole = getTargetRole(req.user)
     if (!userRole) return null
 
-    const roleConfig = metadata.configByRole[userRole] || null
+    const roleConfig = MODULE_METADATA.configByRole[userRole] || null
     if (!roleConfig) return null
     const result: WorkingHoursConfig = {
       ...roleConfig,
@@ -103,7 +102,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       req.check(Permissions.Create)
-      if (isOutOfTestGroup(req.user)) {
+      if (!getTargetRole(req.user)) {
         return reply.throw.accessDenied()
       }
       const entries = await fastify.db.WorkingHoursEntry.findAll({
@@ -129,7 +128,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       req.check(Permissions.Create)
-      if (isOutOfTestGroup(req.user)) {
+      if (!getTargetRole(req.user)) {
         return reply.throw.accessDenied()
       }
       const startDate = dayjs(req.query.startDate, DATE_FORMAT)
@@ -154,7 +153,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       req.check(Permissions.Create)
-      if (isOutOfTestGroup(req.user)) {
+      if (!getTargetRole(req.user)) {
         return reply.throw.accessDenied()
       }
       const roleConfig = getModuleRoleConfig(req.user.roles, appConfig)
@@ -182,12 +181,15 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       req.check(Permissions.Create)
-      if (isOutOfTestGroup(req.user)) {
+      if (!getTargetRole(req.user)) {
         return reply.throw.accessDenied()
       }
       const newEntries: Array<
         Pick<WorkingHoursEntry, 'userId' | 'date' | 'startTime' | 'endTime'>
-      > = req.body.map((x) => ({ ...x, userId: req.user.id }))
+      > = req.body.map((x) => ({
+        ...x,
+        userId: req.user.id,
+      }))
       let error: string | null = null
 
       // validate each entry
@@ -231,6 +233,9 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     '/entries/:entryId',
     async (req: FastifyRequest<{ Params: { entryId: string } }>, reply) => {
       req.check(Permissions.Create)
+      if (!getTargetRole(req.user)) {
+        return reply.throw.accessDenied()
+      }
       const entry = await fastify.db.WorkingHoursEntry.findOne({
         where: {
           userId: req.user.id,
@@ -255,6 +260,9 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       req.check(Permissions.Create)
+      if (!getTargetRole(req.user)) {
+        return reply.throw.accessDenied()
+      }
       const entry = await fastify.db.WorkingHoursEntry.findOne({
         where: {
           userId: req.user.id,
@@ -280,7 +288,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       })
       const mergedEntries = existingEntries.map((x) =>
         x.id === entry.id
-          ? { ...x, startTime: entry.startTime, endTime: entry.endTime }
+          ? { ...x, startTime: req.body.startTime, endTime: req.body.endTime }
           : x
       )
 
@@ -301,7 +309,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 
   fastify.get('/default-entries', async (req, reply) => {
     req.check(Permissions.Create)
-    if (isOutOfTestGroup(req.user)) {
+    if (!getTargetRole(req.user)) {
       return reply.throw.accessDenied()
     }
     const entries = await fastify.db.DefaultWorkingHoursEntry.findAll({
@@ -319,7 +327,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       req.check(Permissions.Create)
-      if (isOutOfTestGroup(req.user)) {
+      if (!getTargetRole(req.user)) {
         return reply.throw.accessDenied()
       }
       const newEntry = {
@@ -355,6 +363,9 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
     '/default-entries/:entryId',
     async (req: FastifyRequest<{ Params: { entryId: string } }>, reply) => {
       req.check(Permissions.Create)
+      if (!getTargetRole(req.user)) {
+        return reply.throw.accessDenied()
+      }
       const entry = await fastify.db.DefaultWorkingHoursEntry.findOne({
         where: {
           userId: req.user.id,
@@ -379,6 +390,9 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       req.check(Permissions.Create)
+      if (!getTargetRole(req.user)) {
+        return reply.throw.accessDenied()
+      }
       const entry = await fastify.db.DefaultWorkingHoursEntry.findOne({
         where: {
           userId: req.user.id,
@@ -428,8 +442,7 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
 const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
   fastify.get('/config', async (req: FastifyRequest, reply) => {
     req.check(Permissions.AdminList)
-    const metadata = appConfig.getModuleMetadata('working-hours') as Metadata
-    return metadata.configByRole
+    return MODULE_METADATA.configByRole
   })
 
   fastify.get(
@@ -541,9 +554,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       reply
     ) => {
       req.check(Permissions.AdminList)
-      const metadata = appConfig.getModuleMetadata('working-hours') as Metadata
-      const allowedRoles = Object.keys(metadata.configByRole)
-
+      const allowedRoles = Object.keys(MODULE_METADATA.configByRole)
       const where: WhereOptions<WorkingHoursUserConfig> = {}
       if (req.query.userId) {
         where['userId'] = req.query.userId
@@ -582,15 +593,14 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       if (!req.query.role || !req.query.from || !req.query.to) {
         return reply.throw.badParams('Missing parameters')
       }
-      const metadata = appConfig.getModuleMetadata('working-hours') as Metadata
       if (
-        !metadata ||
+        !MODULE_METADATA ||
         !req.query.role ||
-        !metadata.configByRole[req.query.role]
+        !MODULE_METADATA.configByRole[req.query.role]
       ) {
         return reply.throw.misconfigured('Unsuported role')
       }
-      const moduleConfig = metadata.configByRole[
+      const moduleConfig = MODULE_METADATA.configByRole[
         req.query.role
       ] as WorkingHoursConfig
 
@@ -867,13 +877,14 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
         return reply.throw.notFound()
       }
 
-      const metadata = appConfig.getModuleMetadata('working-hours') as Metadata
-      const allowedRoles = Object.keys(metadata.configByRole)
+      const allowedRoles = Object.keys(MODULE_METADATA.configByRole)
       const userRole = user.roles.find((x) => allowedRoles.includes(x))
       if (!userRole) {
         return reply.throw.misconfigured('Unsuported role')
       }
-      const moduleConfig = metadata.configByRole[userRole] as WorkingHoursConfig
+      const moduleConfig = MODULE_METADATA.configByRole[
+        userRole
+      ] as WorkingHoursConfig
 
       const userConfig = await fastify.db.WorkingHoursUserConfig.findOne({
         where: { userId: user.id },
