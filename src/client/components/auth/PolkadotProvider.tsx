@@ -155,6 +155,7 @@ export const PolkadotProvider: React.FC = () => {
       } catch (e) {
         console.log(e)
         setStep(AuthSteps.Warning)
+        return
       }
 
       setIsValidSignature(true)
