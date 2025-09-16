@@ -219,6 +219,7 @@ export const _HubMap = () => {
                           setAreaId(v.areaId)
                           resetOfficeVisits()
                         }}
+                        title={v.fullName}
                       >
                         <Avatar
                           size="medium"
