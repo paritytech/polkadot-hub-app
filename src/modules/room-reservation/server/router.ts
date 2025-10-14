@@ -436,7 +436,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       }>,
       reply
     ) => {
-      req.check(Permissions.Create)
+      if (!req.office) {
+        return reply.throw.badParams('Invalid office ID')
+      }
+      req.check(Permissions.Create, req.office.id)
       if (!req.office) {
         return reply.throw.badParams('Invalid office ID')
       }
@@ -576,7 +579,10 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
       req: FastifyRequest<{ Querystring: { allRooms: 'true' | undefined } }>,
       reply
     ) => {
-      req.check(Permissions.Create)
+      if (!req.office) {
+        return reply.throw.badParams('Invalid office ID')
+      }
+      req.check(Permissions.Create, req.office.id)
       if (req.office) {
         const rooms = getRooms(req.office)
         return req.query.allRooms ? rooms : rooms.filter((x) => x.available)
