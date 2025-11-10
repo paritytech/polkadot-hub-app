@@ -868,6 +868,7 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
     async (
       req: FastifyRequest<{
         Params: { userId: string }
+        Querystring: { role?: string }
       }>,
       reply
     ) => {
@@ -878,7 +879,10 @@ const adminRouter: FastifyPluginCallback = async function (fastify, opts) {
       }
 
       const allowedRoles = Object.keys(MODULE_METADATA.configByRole)
-      const userRole = user.roles.find((x) => allowedRoles.includes(x))
+      let userRole = user.roles.find((x) => allowedRoles.includes(x))
+      if (req.query.role) {
+        userRole = req.query.role
+      }
       if (!userRole) {
         return reply.throw.misconfigured('Unsuported role')
       }
