@@ -75,7 +75,7 @@ const useMe = () => {
   const path = '/user-api/users/me'
   return useQuery<Me, AxiosError>(
     path,
-    async () => (await api.get<Me>(path)).data,
+    async () => (await api.get<Me>(path))?.data,
     {
       staleTime: 5 * 60 * 1000,
       retry: 0,
