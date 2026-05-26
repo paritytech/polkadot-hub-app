@@ -118,7 +118,7 @@ class Humaans extends Integration {
       customFieldId,
     }).then((xs) => {
       if (!xs.length) return null
-      return xs.sort(fp.sortBy('updatedAt', 'desc'))[0]
+      return xs.sort(fp.sortBy('createdAt', 'desc'))[0]
     })
   }
 }
