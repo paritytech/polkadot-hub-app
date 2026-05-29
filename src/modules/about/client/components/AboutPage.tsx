@@ -58,10 +58,13 @@ export const AboutPage: React.FC = () => {
     if (!office || office.workingHours?.length !== 2) {
       return ''
     }
-    return `${dayjs(office.workingHours[0], 'HH:mm').format('hA')} - ${dayjs(
-      office.workingHours[1],
-      'HH:mm'
-    ).format('hA')} ${!!office.workingDays ? `, ${office.workingDays}` : ''}`
+    const formatHour = (time: string) => {
+      const t = dayjs(time, 'HH:mm')
+      return t.format(t.minute() ? 'h:mmA' : 'hA')
+    }
+    return `${formatHour(office.workingHours[0])} - ${formatHour(
+      office.workingHours[1]
+    )} ${!!office.workingDays ? `, ${office.workingDays}` : ''}`
   }, [office])
 
   if (!office) {
