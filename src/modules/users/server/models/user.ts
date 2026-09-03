@@ -15,7 +15,6 @@ import {
   UserMe,
   AuthProvider,
   AuthAddressPair,
-  AuthExtension,
 } from '../../types'
 import { Tag } from './tag'
 import { appConfig } from '#server/app-config'
@@ -134,10 +133,10 @@ export class User
   getAuthAddresses(this: User): string[] {
     const addresses: string[] = []
     for (const provider in this.authIds) {
-      for (const extension in this.authIds[provider as AuthProvider]) {
-        this.authIds[provider as AuthProvider][
-          extension as AuthExtension
-        ].forEach((x) => {
+      const extensions = this.authIds[provider as AuthProvider]
+      if (!extensions) continue
+      for (const extension in extensions) {
+        extensions[extension].forEach((x) => {
           addresses.push(x.address)
         })
       }
@@ -147,13 +146,13 @@ export class User
   addAuthId(
     this: User,
     provider: AuthProvider,
-    extensionName: AuthExtension,
+    extensionName: string,
     authId: AuthAddressPair
   ): User {
     const authIds = { ...this.toJSON().authIds }
     authIds[provider] = authIds[provider] || {}
-    authIds[provider][extensionName] = authIds[provider][extensionName] || []
-    authIds[provider][extensionName].push(authId)
+    authIds[provider]![extensionName] = authIds[provider]![extensionName] || []
+    authIds[provider]![extensionName].push(authId)
     return this.set('authIds', authIds)
   }
 

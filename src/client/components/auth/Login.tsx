@@ -1,15 +1,31 @@
-import { FButton, H1 } from '#client/components/ui'
+import { FButton, H1, P } from '#client/components/ui'
 import { useStore } from '@nanostores/react'
 import * as stores from '#client/stores'
 import * as React from 'react'
 import { LoginButton } from './LoginButton'
-import { WhiteWindow } from './helper'
+import { WhiteWindow, oidcErrorMessages } from './helper'
 import config from '#client/config'
 
 export const Login: React.FC = () => {
   const me = useStore(stores.me)
   const [currentState, setCurrentState] = React.useState('Login')
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const providers = config.auth.providers
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const error = params.get('error')
+    if (error) {
+      setErrorMessage(
+        oidcErrorMessages[error] || 'An authentication error occurred.'
+      )
+      params.delete('error')
+      const clean = params.toString()
+        ? `${window.location.pathname}?${params}`
+        : window.location.pathname
+      window.history.replaceState({}, '', clean)
+    }
+  }, [])
 
   if (me) {
     stores.goTo('home')
@@ -23,6 +39,11 @@ export const Login: React.FC = () => {
             ? `Login to ${config.appName}`
             : 'Create new account'}
         </H1>
+        {errorMessage && (
+          <P className="text-accents-red text-center mt-0 mx-4">
+            {errorMessage}
+          </P>
+        )}
         <div className="flex flex-col gap-2 m-auto w-[300px]">
           {providers.includes('google') && (
             <LoginButton
@@ -55,6 +76,14 @@ export const Login: React.FC = () => {
                 />
               </div>
             )}
+          {providers.includes('oidc') && (
+            <LoginButton
+              icon="oidc"
+              label="Login with Polkadot SSO"
+              className="bg-black hover:opacity-80 hover:bg-black w-full"
+              provider="oidc"
+            />
+          )}
         </div>
 
         {!!providers.length && (

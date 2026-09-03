@@ -27,6 +27,7 @@ export interface User {
 
 export enum AuthProvider {
   Polkadot = 'polkadot',
+  Oidc = 'oidc',
 }
 
 export enum AuthExtension {
@@ -38,9 +39,8 @@ export enum AuthExtension {
   WalletConnect = 'walletConnect',
 }
 
-export type AuthIds = Record<
-  AuthProvider,
-  Record<AuthExtension, Array<AuthAddressPair>>
+export type AuthIds = Partial<
+  Record<AuthProvider, Record<string, Array<AuthAddressPair>>>
 >
 
 export type AuthAccount = {

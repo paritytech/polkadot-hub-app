@@ -231,6 +231,12 @@ export const useUnlinkAccount = (cb: () => void) =>
     }
   )
 
+export const useUnlinkOidcAccount = (cb: () => void) =>
+  useMutation<AxiosResponse, AxiosError, { issuer: string; sub: string }>(
+    (data) => api.put(`/user-api/users/settings/unlink-oidc`, data),
+    { onSuccess: cb }
+  )
+
 export const useDeleteMyAccount = (cb: () => void) =>
   useMutation<AxiosResponse, AxiosError>(
     () => api.delete(`/user-api/users/me`),

@@ -15,7 +15,8 @@ import { api } from '#client/utils/api'
 import { getComponentInstance } from '#client/utils/portal'
 import { PermissionsSet } from '#shared/utils'
 import { PolkadotProvider } from '#client/components/auth/PolkadotProvider'
-import { WidgetWrapper } from './components/ui'
+import { WidgetWrapper, showNotification } from './components/ui'
+import { oidcErrorMessages } from '#client/components/auth/helper'
 
 const routeGroups: Record<
   'admin' | 'public' | 'extra' | 'extraLayout',
@@ -98,6 +99,41 @@ export const App = () => {
     }
   }, [fetchedMe])
 
+  // Handle OIDC enrolment return: show notification and navigate to settings
+  React.useEffect(() => {
+    if (fetchedMe) {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('oidc_enrol') === 'ok') {
+        showNotification('Identity successfully linked', 'success')
+        params.delete('oidc_enrol')
+        const clean = params.toString()
+          ? `${window.location.pathname}?${params}`
+          : window.location.pathname
+        window.history.replaceState({}, '', clean)
+        stores.goTo('settings')
+      }
+    }
+  }, [fetchedMe])
+
+  // Surface OIDC errors for authenticated users (e.g. enrolment failures)
+  React.useEffect(() => {
+    if (fetchedMe) {
+      const params = new URLSearchParams(window.location.search)
+      const error = params.get('error')
+      if (error) {
+        showNotification(
+          oidcErrorMessages[error] || 'An authentication error occurred.',
+          'error'
+        )
+        params.delete('error')
+        const clean = params.toString()
+          ? `${window.location.pathname}?${params}`
+          : window.location.pathname
+        window.history.replaceState({}, '', clean)
+      }
+    }
+  }, [fetchedMe])
+
   const me = useStore(stores.me)
   const page = useStore(stores.router)
   const route = React.useMemo(() => page?.route || null, [page])
@@ -121,6 +157,14 @@ export const App = () => {
   }
 
   if (!me && !isMeFetching && isMeFetchingError) {
+    // Forward any error query param so the login page can display it
+    const errorParam = new URLSearchParams(window.location.search).get('error')
+    if (errorParam) {
+      window.location.replace(
+        '/login?error=' + encodeURIComponent(errorParam)
+      )
+      return null
+    }
     stores.goTo('login')
     return null
   }

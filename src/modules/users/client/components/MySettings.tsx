@@ -17,6 +17,7 @@ import * as stores from '#client/stores'
 import {
   useDeleteMyAccount,
   useUnlinkAccount,
+  useUnlinkOidcAccount,
   useUpdateLinkedAccounts,
 } from '../queries'
 import { sign, verify } from '#client/utils/polkadot'
@@ -50,6 +51,10 @@ export const MySettings: React.FC = () => {
   })
   const { mutate: unlinkAccount } = useUnlinkAccount(() => {
     showNotification('Account successfully removed', 'success')
+    setTimeout(() => (window.location.href = '/settings'), 1000)
+  })
+  const { mutate: unlinkOidc } = useUnlinkOidcAccount(() => {
+    showNotification('Identity successfully removed', 'success')
     setTimeout(() => (window.location.href = '/settings'), 1000)
   })
 
@@ -181,6 +186,64 @@ export const MySettings: React.FC = () => {
           )}
       </AuthAccount>
     ),
+    oidc: (() => {
+      const oidcIds = me?.authIds?.oidc
+      const hasOidcIdentity =
+        oidcIds && Object.values(oidcIds).some((arr) => arr.length > 0)
+      return (
+        <AuthAccount
+          icon={<Icons.Polkadot />}
+          title="Polkadot SSO"
+          subtitle="Link your Polkadot identity to sign in with the Polkadot Mobile App."
+          connected={!!hasOidcIdentity}
+          onConnect={() => {
+            window.location.href = '/auth/oidc/enrol'
+          }}
+        >
+          {oidcIds &&
+            Object.entries(oidcIds).map(([issuer, entries]) => (
+              <div key={issuer}>
+                {entries.map((entry) => (
+                  <div
+                    className="grid grid-rows-3 sm:grid-rows-1 sm:grid-cols-8 items-center mb-4"
+                    key={`${issuer}-${entry.address}`}
+                  >
+                    <P
+                      textType="additional"
+                      className="text-text-secondary mb-1 mt-1 sm:col-span-4"
+                    >
+                      {entry.name || 'Unknown'}
+                    </P>
+                    <P
+                      textType="additional"
+                      className="text-text-tertiary my-0 sm:col-span-3"
+                    >
+                      {entry.address.length > 20
+                        ? `${entry.address.slice(0, 16)}...`
+                        : entry.address}
+                    </P>
+                    <FButton
+                      kind="link"
+                      className="text-sm justify-self-start -ml-2 sm:justify-self-end"
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            `Are you sure you want to unlink ${entry.name || 'this identity'}?`
+                          )
+                        ) {
+                          unlinkOidc({ issuer, sub: entry.address })
+                        }
+                      }}
+                    >
+                      Unlink
+                    </FButton>
+                  </div>
+                ))}
+              </div>
+            ))}
+        </AuthAccount>
+      )
+    })(),
   }
 
   return (

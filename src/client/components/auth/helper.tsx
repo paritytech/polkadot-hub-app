@@ -17,12 +17,31 @@ import { InjectedWalletProvider } from '@polkadot-onboard/injected-wallets'
 export const LoginIcons: Record<string, JSX.Element> = {
   google: <Icons.Gmail />,
   polkadot: <Icons.Polkadot />,
+  oidc: <Icons.Polkadot />,
 }
 const { encodeAddress } = require('@polkadot/util-crypto')
 
 export const providerUrls: Record<string, string> = {
   google: `${config.appHost}/auth/google/login`,
   polkadot: `${config.appHost}/polkadot`,
+  oidc: `${config.appHost}/auth/oidc/login`,
+}
+
+export const oidcErrorMessages: Record<string, string> = {
+  oidc_unknown_identity:
+    'This Polkadot SSO identity is not linked to an account. Sign in with another method first, then link it under Connected accounts in Settings.',
+  oidc_identity_taken:
+    'This identity is already linked to a different account.',
+  oidc_unavailable:
+    'The identity provider is currently unavailable. Please try again later.',
+  oidc_idp_error:
+    'The identity provider returned an error. Please try again.',
+  oidc_state_missing: 'Authentication session expired. Please try again.',
+  oidc_state_invalid: 'Authentication session expired. Please try again.',
+  oidc_state_mismatch: 'Authentication state mismatch. Please try again.',
+  oidc_code_missing: 'Authentication failed. Please try again.',
+  oidc_verification_failed: 'Token verification failed. Please try again.',
+  unauthenticated: 'You must be logged in to link an identity.',
 }
 
 export const Errors = {

@@ -10,10 +10,14 @@ import { sequelize } from '#server/db'
 
 export const getSession = async (
   userId: string,
-  fastify: FastifyInstance
+  fastify: FastifyInstance,
+  opts?: { expiresInHours?: number }
 ): Promise<Session> => {
   const now = dayjs()
-  const expiresAt = now.add(config.jwtExpiresInDays, 'day').endOf('day')
+  const expiresAt =
+    opts?.expiresInHours && opts.expiresInHours > 0
+      ? now.add(opts.expiresInHours, 'hour')
+      : now.add(config.jwtExpiresInDays, 'day').endOf('day')
   const expiresIn = expiresAt.diff(now, 'second')
   const signRequest = await jwt.sign({ id: userId }, expiresIn)
   if (!signRequest.success) {
@@ -46,6 +50,23 @@ export const getUserByProvider = async (provider: string, address: string) =>
       replacements: { provider, address },
     }
   )
+
+export const getUserByOidcIdentity = async (
+  issuer: string,
+  sub: string
+): Promise<User | null> => {
+  const [user] = await sequelize.query(
+    `SELECT * FROM "users" AS "User"
+     WHERE "User"."deletedAt" IS NULL
+     AND EXISTS (
+       SELECT 1
+       FROM jsonb_array_elements("User"."authIds" -> 'oidc' -> :issuer) AS elem
+       WHERE elem ->> 'address' = :sub
+     )`,
+    { model: User, mapToModel: true, replacements: { issuer, sub } }
+  )
+  return user ?? null
+}
 
 export const isValidSignature = (address: string, signature: string) => {
   try {

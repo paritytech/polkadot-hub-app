@@ -22,6 +22,10 @@ type Config = {
   superusers: string[]
   allowedWallets: string[]
   workingHoursTestGroup: string[]
+  oidcIssuer: string
+  oidcClientId: string
+  oidcClientSecret: string
+  oidcSessionLifetimeHours: number
 }
 
 const config: Config = {
@@ -44,6 +48,10 @@ const config: Config = {
     process.env.WORKING_HOURS_TEST_GROUP || '[]'
   ),
   walletConnectProjectId: process.env.WALLET_CONNECT_PROJECT_ID,
+  oidcIssuer: process.env.OIDC_ISSUER || '',
+  oidcClientId: process.env.OIDC_CLIENT_ID || '',
+  oidcClientSecret: process.env.OIDC_CLIENT_SECRET || '',
+  oidcSessionLifetimeHours: parseInt(process.env.OIDC_SESSION_LIFETIME_HOURS || '') || 8,
 }
 
 export default config

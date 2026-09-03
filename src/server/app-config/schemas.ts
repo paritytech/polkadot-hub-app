@@ -34,7 +34,7 @@ export const layout = z.object({
 export const applicationConfig = z.object({
   name: z.string().nonempty(),
   auth: z.object({
-    providers: z.array(z.enum(['google', 'polkadot'])),
+    providers: z.array(z.enum(['google', 'polkadot', 'oidc'])),
   }),
   layout: layout,
 })

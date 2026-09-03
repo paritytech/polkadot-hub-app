@@ -486,8 +486,9 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
         return reply.throw.badParams()
       }
       const filteredData = removeAuthId(authIds, req.body.address)
+      const currentAuthIds = req.user.toJSON().authIds
       await fastify.db.User.update(
-        { authIds: { polkadot: filteredData } },
+        { authIds: { ...currentAuthIds, [PROVIDER_NAME]: filteredData } },
         { where: { id: req.user.id } }
       )
       return reply.ok()
@@ -546,6 +547,48 @@ const userRouter: FastifyPluginCallback = async function (fastify, opts) {
           address: req.body.address,
         })
         .save()
+      return reply.ok()
+    }
+  )
+
+  fastify.put(
+    '/settings/unlink-oidc',
+    async (
+      req: FastifyRequest<{
+        Body: { issuer: string; sub: string }
+      }>,
+      reply
+    ) => {
+      const oidcIds = req.user.authIds?.[AuthProvider.Oidc]
+      if (!oidcIds) {
+        return reply.throw.badParams('No OIDC identity linked')
+      }
+      const issuerIds = oidcIds[req.body.issuer]
+      if (!issuerIds) {
+        return reply.throw.badParams('No identity from this issuer')
+      }
+      const found = issuerIds.find((id) => id.address === req.body.sub)
+      if (!found) {
+        return reply.throw.badParams('Identity not found')
+      }
+      const filtered = issuerIds.filter((id) => id.address !== req.body.sub)
+      const updatedOidcIds = { ...oidcIds }
+      if (filtered.length > 0) {
+        updatedOidcIds[req.body.issuer] = filtered
+      } else {
+        delete updatedOidcIds[req.body.issuer]
+      }
+      const currentAuthIds = req.user.toJSON().authIds
+      const updatedAuthIds = { ...currentAuthIds }
+      if (Object.keys(updatedOidcIds).length > 0) {
+        updatedAuthIds[AuthProvider.Oidc] = updatedOidcIds
+      } else {
+        delete updatedAuthIds[AuthProvider.Oidc]
+      }
+      await fastify.db.User.update(
+        { authIds: updatedAuthIds },
+        { where: { id: req.user.id } }
+      )
       return reply.ok()
     }
   )
