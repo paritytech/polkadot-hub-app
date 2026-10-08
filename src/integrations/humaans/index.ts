@@ -1,4 +1,6 @@
 import axios from 'axios'
+import dayjs from 'dayjs'
+import { DATE_FORMAT } from '#server/constants'
 import { Integration } from '../integration'
 import {
   CustomValue,
@@ -106,7 +108,12 @@ class Humaans extends Integration {
     const jobRoles = await this.makePaginatedRequest<JobRole>('/job-roles', {
       personId,
     })
-    return jobRoles.find((x) => !x.endDate) || null
+    const today = dayjs().format(DATE_FORMAT)
+    return (
+      jobRoles
+        .filter((x) => x.effectiveDate <= today)
+        .sort(fp.sortBy('effectiveDate', 'desc'))[0] || null
+    )
   }
 
   async getCustomValue(
@@ -119,6 +126,16 @@ class Humaans extends Integration {
     }).then((xs) => {
       if (!xs.length) return null
       return xs.sort(fp.sortBy('createdAt', 'desc'))[0]
+    })
+  }
+
+  async getCustomValues(
+    personId: string,
+    customFieldId: string
+  ): Promise<CustomValue[]> {
+    return this.makePaginatedRequest<CustomValue>('/custom-values', {
+      personId,
+      customFieldId,
     })
   }
 }
