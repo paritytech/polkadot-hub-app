@@ -75,7 +75,7 @@
     "react-table": "^7.8.0",
     "sequelize": "^6.29.0",
     "uuid": "^9.0.0",
-    "zod": "^3.22.3",
+    "zod": "^4.6.6",
     "zod-validation-error": "^1.5.0"
   },
   "devDependencies": {
